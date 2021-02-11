@@ -1,0 +1,12 @@
+[package]
+name = "rust_motd"
+version = "0.1.0"
+authors = ["Marcel Robitaille <mail@marcelrobitaille.me>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+systemstat = "0.1.7"
+bytesize = "1.0.1"
+termion = "1.5.6"
