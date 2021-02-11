@@ -2,6 +2,20 @@ use std::path::Path;
 use bytesize::ByteSize;
 use systemstat::{System, Platform};
 use termion::{color, style};
+use serde::Deserialize;
+
+#[derive(Debug, Deserialize)]
+struct Config {
+    ascii_text_art: Option<Ata>,
+
+}
+
+#[derive(Debug, Deserialize)]
+struct Ata {
+    font: String,
+    color: String,
+    command: String,
+}
 
 const LINE_WIDTH: u64 = 60;
 const BAR_WIDTH: u64 = LINE_WIDTH - 2;

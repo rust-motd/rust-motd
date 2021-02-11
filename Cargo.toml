@@ -10,3 +10,5 @@ edition = "2018"
 systemstat = "0.1.7"
 bytesize = "1.0.1"
 termion = "1.5.6"
+serde = {version = "1.0", features = ["derive"] } 
+toml = "0.5"
