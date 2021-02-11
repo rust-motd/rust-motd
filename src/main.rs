@@ -1,7 +1,3 @@
-extern crate systemstat;
-extern crate bytesize;
-extern crate termion;
-
 use std::path::Path;
 use bytesize::ByteSize;
 use systemstat::{System, Platform};
