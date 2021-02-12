@@ -53,7 +53,15 @@ fn main() {
             let config: Config = toml::from_str(&config_str).unwrap();
             let sys = System::new();
 
-            let mounts = sys.mounts();
+            let mounts = sys.mounts().unwrap();
+            let mounts: HashMap<String, &Filesystem> = mounts
+                .iter()
+                .map(|fs| (fs.fs_mounted_on.clone(), fs))
+                .collect();
+
+            println!("{:?}", mounts);
+
+            /*
             let mounts: HashMap<&str, &Filesystem> = mounts
                 .iter()
                 .group_by(|x| &x.into_iter().nth(0).unwrap().fs_mounted_on[..])
@@ -65,7 +73,7 @@ fn main() {
             for (filesystem_name, mount_point) in config.filesystems.unwrap().iter() {
                 println!("{}: {}", filesystem_name, mount_point);
             }
-            println!("{:?}", mounts);
+            */
         }
         Err(e) => println!("Error reading config file: {}", e),
     }
