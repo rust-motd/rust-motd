@@ -53,63 +53,49 @@ fn main() {
             let config: Config = toml::from_str(&config_str).unwrap();
             let sys = System::new();
 
-            let mounts = sys.mounts().unwrap();
-            let mounts: HashMap<String, &Filesystem> = mounts
-                .iter()
-                .map(|fs| (fs.fs_mounted_on.clone(), fs))
-                .collect();
+            if let Some(filesystems) = config.filesystems {
+                match sys.mounts() {
+                    Ok(mounts) => {
+                        let mounts: HashMap<String, &Filesystem> = mounts
+                            .iter()
+                            .map(|fs| (fs.fs_mounted_on.clone(), fs))
+                            .collect();
 
-            println!("{:?}", mounts);
+                        for (filesystem_name, mount_point) in filesystems {
+                            match mounts.get(&mount_point) {
+                                Some(mount) => {
+                                    let total = mount.total.as_u64();
+                                    let avail = mount.avail.as_u64();
+                                    let used = total - avail;
+                                    let bar_full = BAR_WIDTH * used / total;
+                                    let bar_empty = BAR_WIDTH - bar_full;
 
-            /*
-            let mounts: HashMap<&str, &Filesystem> = mounts
-                .iter()
-                .group_by(|x| &x.into_iter().nth(0).unwrap().fs_mounted_on[..])
-                .into_iter()
-                .map(|(k, mut v)| (k, v.next().unwrap().into_iter().nth(0).unwrap()))
-                .collect();
-            println!("{:?}", config);
-
-            for (filesystem_name, mount_point) in config.filesystems.unwrap().iter() {
-                println!("{}: {}", filesystem_name, mount_point);
+                                    println!(
+                                        "{} {} -> {} ({}) {}/{}",
+                                        filesystem_name,
+                                        mount.fs_mounted_from,
+                                        mount.fs_mounted_on,
+                                        mount.fs_type,
+                                        ByteSize::b(used),
+                                        ByteSize::b(total)
+                                    );
+                                    println!(
+                                        "[{}{}{}{}{}]",
+                                        color::Fg(color::Green),
+                                        "=".repeat(bar_full as usize),
+                                        color::Fg(color::LightBlack),
+                                        "=".repeat(bar_empty as usize),
+                                        style::Reset,
+                                    );
+                                }
+                                None => println!("Could not find mount {}", mount_point),
+                            }
+                        }
+                    }
+                    Err(e) => println!("Error reading mounts: {}", e),
+                }
             }
-            */
         }
         Err(e) => println!("Error reading config file: {}", e),
     }
-
-    // match sys.mounts() {
-    //     Ok(mounts) => {
-    //         for mount in mounts.iter() {
-    //         }
-    //     }
-    //     Err(x) => println!("\nMounts: error: {}", x),
-    // }
-
-    // match sys.mount_at(Path::new("/")) {
-    //     Ok(mount) => {
-    //         let total = mount.total.as_u64();
-    //         let avail = mount.avail.as_u64();
-    //         let used = total - avail;
-    //         let bar_full = BAR_WIDTH * used / total;
-    //         let bar_empty = BAR_WIDTH - bar_full;
-
-    //         println!(
-    //             "{} -> {} ({}) {}/{}",
-    //             mount.fs_mounted_from,
-    //             mount.fs_mounted_on,
-    //             mount.fs_type,
-    //             ByteSize::b(used),
-    //             ByteSize::b(total)
-    //         );
-    //         println!(
-    //             "[{}{}{}{}{}]",
-    //             color::Fg(color::Green),
-    //             "=".repeat(bar_full as usize),
-    //             color::Fg(color::LightBlack),
-    //             "=".repeat(bar_empty as usize),
-    //             style::Reset,
-    //         );
-    //     }
-    // }
 }
