@@ -1,0 +1,28 @@
+[ascii_text_art]
+font = "slant"
+color = "red"
+command = "hostname"
+
+[service_status]
+Accounts = "accounts-daemon"
+Cron = "cron"
+
+[uptime]
+prefix = "up"
+
+[ssl_certificates]
+sort_method = "alphabetical"
+
+    [ssl_certificates.certs]
+    Certigna = "Certigna.pem"
+    GoDaddy = "Go_Daddy_Root_Certificate_Authority_-_G2.pem"
+
+[filesystems]
+root = "/"
+
+[fail_2_ban]
+jails = ["sshd", "anotherjail"]
+
+[last_login]
+aaron = 2
+marcel = 1
