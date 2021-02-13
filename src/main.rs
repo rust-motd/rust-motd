@@ -43,7 +43,8 @@ struct Fail2Ban {
 }
 
 const LINE_WIDTH: u64 = 60;
-const BAR_WIDTH: u64 = LINE_WIDTH - 2;
+const INDENT_WIDTH: u64 = 2;
+const BAR_WIDTH: u64 = LINE_WIDTH - INDENT_WIDTH - 2;
 
 fn main() {
     match fs::read_to_string("default_config.toml") {
@@ -88,6 +89,8 @@ fn main() {
                             .map(|fs| (fs.fs_mounted_on.clone(), fs))
                             .collect();
 
+                        println!();
+                        println!("Filsystems");
                         for (filesystem_name, mount_point) in filesystems {
                             match mounts.get(&mount_point) {
                                 Some(mount) => {
@@ -98,7 +101,8 @@ fn main() {
                                     let bar_empty = BAR_WIDTH - bar_full;
 
                                     println!(
-                                        "{} {} -> {} ({}) {}/{}",
+                                        "{}{} {} -> {} ({}) {}/{}",
+                                        " ".repeat(INDENT_WIDTH as usize),
                                         filesystem_name,
                                         mount.fs_mounted_from,
                                         mount.fs_mounted_on,
@@ -107,7 +111,8 @@ fn main() {
                                         ByteSize::b(total)
                                     );
                                     println!(
-                                        "[{}{}{}{}{}]",
+                                        "{}[{}{}{}{}{}]",
+                                        " ".repeat(INDENT_WIDTH as usize),
                                         color::Fg(color::Green),
                                         "=".repeat(bar_full as usize),
                                         color::Fg(color::LightBlack),
