@@ -51,19 +51,6 @@ fn main() {
             let config: Config = toml::from_str(&config_str).unwrap();
             let sys = System::new();
 
-            if let Some(uptime_config) = config.uptime {
-                match sys.uptime() {
-                    Ok(uptime) => {
-                        println!(
-                            "{} {}",
-                            uptime_config.prefix,
-                            format_duration(uptime).to_string()
-                        )
-                    }
-                    Err(x) => println!("Uptime error: {}", x),
-                }
-            }
-
             // TODO: Make colour configurable
             if let Some(banner) = config.banner {
                 let output = Command::new("sh")
@@ -78,6 +65,19 @@ fn main() {
                     &String::from_utf8_lossy(&output),
                     style::Reset
                 );
+            }
+
+            if let Some(uptime_config) = config.uptime {
+                match sys.uptime() {
+                    Ok(uptime) => {
+                        println!(
+                            "{} {}",
+                            uptime_config.prefix,
+                            format_duration(uptime).to_string()
+                        )
+                    }
+                    Err(x) => println!("Uptime error: {}", x),
+                }
             }
 
             if let Some(filesystems) = config.filesystems {
