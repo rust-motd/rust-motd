@@ -1,5 +1,6 @@
 use bytesize::ByteSize;
 use figlet_rs::FIGfont;
+use humantime::format_duration;
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::fs;
@@ -51,6 +52,19 @@ fn main() {
         Ok(config_str) => {
             let config: Config = toml::from_str(&config_str).unwrap();
             let sys = System::new();
+
+            if let Some(uptime_config) = config.uptime {
+                match sys.uptime() {
+                    Ok(uptime) => {
+                        println!(
+                            "{} {}",
+                            uptime_config.prefix,
+                            format_duration(uptime).to_string()
+                        )
+                    }
+                    Err(x) => println!("Uptime error: {}", x),
+                }
+            }
 
             // TODO: Fix space between characters
             // https://github.com/yuanbohan/rs-figlet/issues/9
