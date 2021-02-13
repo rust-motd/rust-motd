@@ -1,7 +1,9 @@
 use bytesize::ByteSize;
+use figlet_rs::FIGfont;
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::fs;
+use std::process::Command;
 use systemstat::{Filesystem, Platform, System};
 use termion::{color, style};
 
@@ -49,6 +51,25 @@ fn main() {
         Ok(config_str) => {
             let config: Config = toml::from_str(&config_str).unwrap();
             let sys = System::new();
+
+            // TODO: Fix space between characters
+            // https://github.com/yuanbohan/rs-figlet/issues/9
+            if let Some(ascii_text_art) = config.ascii_text_art {
+                let slant_font = FIGfont::from_file("resources/slant.flf").unwrap();
+                let output = Command::new("sh")
+                    .arg("-c")
+                    .arg(ascii_text_art.command)
+                    .output()
+                    .unwrap()
+                    .stdout;
+                let figure = slant_font.convert(&String::from_utf8_lossy(&output));
+                println!(
+                    "{}{}{}",
+                    color::Fg(color::Red),
+                    figure.unwrap(),
+                    style::Reset
+                );
+            }
 
             if let Some(filesystems) = config.filesystems {
                 match sys.mounts() {

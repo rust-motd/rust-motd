@@ -12,3 +12,4 @@ bytesize = "1.0.1"
 termion = "1.5.6"
 serde = {version = "1.0", features = ["derive"] }
 toml = "0.5"
+figlet-rs = "0.1.3"
