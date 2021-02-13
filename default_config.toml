@@ -1,7 +1,6 @@
-[ascii_text_art]
-font = "slant"
+[banner]
 color = "red"
-command = "hostname"
+command = "hostname | figlet -f slant"
 
 [service_status]
 Accounts = "accounts-daemon"

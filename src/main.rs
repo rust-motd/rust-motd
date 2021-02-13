@@ -1,5 +1,4 @@
 use bytesize::ByteSize;
-use figlet_rs::FIGfont;
 use humantime::format_duration;
 use serde::Deserialize;
 use std::collections::HashMap;
@@ -11,7 +10,7 @@ use termion::{color, style};
 // TODO: Move config to it's own file
 #[derive(Debug, Deserialize)]
 struct Config {
-    ascii_text_art: Option<Ata>,
+    banner: Option<Banner>,
     service_status: Option<HashMap<String, String>>,
     uptime: Option<Uptime>,
     ssl_certificates: Option<SSLCerts>,
@@ -21,8 +20,7 @@ struct Config {
 }
 
 #[derive(Debug, Deserialize)]
-struct Ata {
-    font: String,
+struct Banner {
     color: String,
     command: String,
 }
@@ -66,21 +64,18 @@ fn main() {
                 }
             }
 
-            // TODO: Fix space between characters
-            // https://github.com/yuanbohan/rs-figlet/issues/9
-            if let Some(ascii_text_art) = config.ascii_text_art {
-                let slant_font = FIGfont::from_file("resources/slant.flf").unwrap();
+            // TODO: Make colour configurable
+            if let Some(banner) = config.banner {
                 let output = Command::new("sh")
                     .arg("-c")
-                    .arg(ascii_text_art.command)
+                    .arg(banner.command)
                     .output()
                     .unwrap()
                     .stdout;
-                let figure = slant_font.convert(&String::from_utf8_lossy(&output));
                 println!(
                     "{}{}{}",
                     color::Fg(color::Red),
-                    figure.unwrap(),
+                    &String::from_utf8_lossy(&output),
                     style::Reset
                 );
             }
