@@ -1,10 +1,7 @@
 use bytesize::ByteSize;
-use itertools::Itertools;
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::fs;
-use std::hash::Hash;
-use std::path::Path;
 use systemstat::{Filesystem, Platform, System};
 use termion::{color, style};
 
