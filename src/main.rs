@@ -12,7 +12,7 @@ use termion::{color, style};
 #[derive(Debug, Deserialize)]
 struct Config {
     banner: Option<BannerCfg>,
-    service_status: Option<HashMap<String, String>>,
+    service_status: Option<ServiceStatusCfg>,
     uptime: Option<UptimeCfg>,
     ssl_certificates: Option<SSLCertsCfg>,
     filesystems: Option<FilesystemsCfg>,
@@ -25,6 +25,8 @@ struct BannerCfg {
     color: String,
     command: String,
 }
+
+type ServiceStatusCfg = HashMap<String, String>;
 
 #[derive(Debug, Deserialize)]
 struct UptimeCfg {
