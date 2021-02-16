@@ -9,40 +9,43 @@ use std::process::Command;
 use systemstat::{Filesystem, Platform, System};
 use termion::{color, style};
 
-// TODO: Move config to it's own file
 #[derive(Debug, Deserialize)]
 struct Config {
-    banner: Option<Banner>,
+    banner: Option<BannerCfg>,
     service_status: Option<HashMap<String, String>>,
-    uptime: Option<Uptime>,
-    ssl_certificates: Option<SSLCerts>,
-    filesystems: Option<HashMap<String, String>>,
-    fail_2_ban: Option<Fail2Ban>,
-    last_login: Option<HashMap<String, usize>>,
+    uptime: Option<UptimeCfg>,
+    ssl_certificates: Option<SSLCertsCfg>,
+    filesystems: Option<FilesystemsCfg>,
+    fail_2_ban: Option<Fail2BanCfg>,
+    last_login: Option<LastLoginCfg>,
 }
 
 #[derive(Debug, Deserialize)]
-struct Banner {
+struct BannerCfg {
     color: String,
     command: String,
 }
 
 #[derive(Debug, Deserialize)]
-struct Uptime {
+struct UptimeCfg {
     prefix: String,
 }
 
 #[derive(Debug, Deserialize)]
-struct SSLCerts {
+struct SSLCertsCfg {
     sort_method: String, // TODO: Maybe switch to enum insead of string
     // need to figure out how to do this in Serde
     certs: HashMap<String, String>,
 }
 
+type FilesystemsCfg = HashMap<String, String>;
+
 #[derive(Debug, Deserialize)]
-struct Fail2Ban {
+struct Fail2BanCfg {
     jails: Vec<String>,
 }
+
+type LastLoginCfg = HashMap<String, usize>;
 
 const LINE_WIDTH: u64 = 60;
 const INDENT_WIDTH: u64 = 2;
@@ -54,89 +57,18 @@ fn main() {
             let config: Config = toml::from_str(&config_str).unwrap();
             let sys = System::new();
 
-            // TODO: Make colour configurable
-            if let Some(banner) = config.banner {
-                let output = Command::new("sh")
-                    .arg("-c")
-                    .arg(banner.command)
-                    .output()
-                    .unwrap()
-                    .stdout;
-                println!(
-                    "{}{}{}",
-                    color::Fg(color::Red),
-                    &String::from_utf8_lossy(&output),
-                    style::Reset
-                );
+            if let Some(banner_config) = config.banner {
+                disp_banner(banner_config);
             }
 
             if let Some(uptime_config) = config.uptime {
-                match sys.uptime() {
-                    Ok(uptime) => {
-                        println!(
-                            "{} {}",
-                            uptime_config.prefix,
-                            format_duration(uptime).to_string()
-                        )
-                    }
-                    Err(x) => println!("Uptime error: {}", x),
-                }
+                disp_uptime(uptime_config, &sys)
+                    .unwrap_or_else(|err| println!("Uptime error: {}", err));
             }
 
-            // TODO: Support time zone
-            // chrono does not support %Z
-            if let Some(ssl_certificates) = config.ssl_certificates {
-                let re =
-                    Regex::new(r"notAfter=([A-Za-z]+ +\d+ +[\d:]+ +\d{4}) +[A-Za-z]+\n").unwrap();
-
-                println!();
-                println!("SSL Certificates");
-                for (name, path) in ssl_certificates.certs {
-                    let output = Command::new("openssl")
-                        .arg("x509")
-                        .arg("-in")
-                        .arg(&path)
-                        .arg("-dates")
-                        .output()
-                        .unwrap();
-                    let output = String::from_utf8_lossy(&output.stdout);
-                    match re.captures(&output) {
-                        Some(captures) => match Utc.datetime_from_str(&captures[1], "%B %_d %T %Y")
-                        {
-                            Ok(date) => {
-                                let now = Utc::now();
-                                let status = if date < now {
-                                    format!("{}expired on{}", color::Fg(color::Red), style::Reset)
-                                } else if date < now + Duration::days(30) {
-                                    format!(
-                                        "{}expiring on{}",
-                                        color::Fg(color::Yellow),
-                                        style::Reset
-                                    )
-                                } else {
-                                    format!(
-                                        "{}valid until{}",
-                                        color::Fg(color::Green),
-                                        style::Reset
-                                    )
-                                };
-                                println!(
-                                    "{}{} {} {}",
-                                    " ".repeat(INDENT_WIDTH as usize),
-                                    name,
-                                    status,
-                                    date
-                                );
-                            }
-                            Err(x) => println!("{}", x),
-                        },
-                        None => println!(
-                            "{}Error parsing certificate {}",
-                            " ".repeat(INDENT_WIDTH as usize),
-                            name
-                        ),
-                    }
-                }
+            if let Some(ssl_certificates_config) = config.ssl_certificates {
+                disp_ssl(ssl_certificates_config)
+                    .unwrap_or_else(|err| println!("SSL Certificate error: {}", err));
             }
 
             if let Some(filesystems) = config.filesystems {
@@ -188,4 +120,76 @@ fn main() {
         }
         Err(e) => println!("Error reading config file: {}", e),
     }
+}
+
+fn disp_banner(config: BannerCfg) {
+    // TODO: Make colour configurable
+    let output = Command::new("sh")
+        .arg("-c")
+        .arg(config.command)
+        .output()
+        .unwrap()
+        .stdout;
+    println!(
+        "{}{}{}",
+        color::Fg(color::Red),
+        &String::from_utf8_lossy(&output),
+        style::Reset
+    );
+}
+
+fn disp_uptime(config: UptimeCfg, sys: &System) -> Result<(), std::io::Error> {
+    let uptime = sys.uptime()?;
+    println!("{} {}", config.prefix, format_duration(uptime).to_string());
+    Ok(())
+}
+
+fn disp_ssl(config: SSLCertsCfg) -> Result<(), chrono::ParseError> {
+    // TODO: Support time zone
+    // chrono does not support %Z
+    let re = Regex::new(r"notAfter=([A-Za-z]+ +\d+ +[\d:]+ +\d{4}) +[A-Za-z]+\n").unwrap();
+
+    println!();
+    println!("SSL Certificates");
+    for (name, path) in config.certs {
+        let output = Command::new("openssl")
+            .arg("x509")
+            .arg("-in")
+            .arg(&path)
+            .arg("-dates")
+            .output()
+            .unwrap();
+        let output = String::from_utf8_lossy(&output.stdout);
+        match re.captures(&output) {
+            Some(captures) => {
+                let date = Utc.datetime_from_str(&captures[1], "%B %_d %T %Y")?;
+
+                let now = Utc::now();
+                let status = if date < now {
+                    format!("{}expired on{}", color::Fg(color::Red), style::Reset)
+                } else if date < now + Duration::days(30) {
+                    format!("{}expiring on{}", color::Fg(color::Yellow), style::Reset)
+                } else {
+                    format!("{}valid until{}", color::Fg(color::Green), style::Reset)
+                };
+                println!(
+                    "{}{} {} {}",
+                    " ".repeat(INDENT_WIDTH as usize),
+                    name,
+                    status,
+                    date
+                );
+            }
+            None => println!(
+                "{}Error parsing certificate {}",
+                " ".repeat(INDENT_WIDTH as usize),
+                name
+            ),
+        }
+    }
+    Ok(())
+}
+
+fn disp_filesystem(config: FilesystemsCfg) -> Result<(), ()> {
+    todo!();
 }
