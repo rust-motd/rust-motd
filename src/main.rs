@@ -11,6 +11,8 @@ use termion::{color, style};
 mod components;
 use components::banner::{disp_banner, BannerCfg};
 use components::uptime::{disp_uptime, UptimeCfg};
+mod constants;
+use constants::{BAR_WIDTH, INDENT_WIDTH};
 
 #[derive(Debug, Deserialize)]
 struct Config {
@@ -40,10 +42,6 @@ struct Fail2BanCfg {
 }
 
 type LastLoginCfg = HashMap<String, usize>;
-
-const LINE_WIDTH: u64 = 60;
-const INDENT_WIDTH: u64 = 2;
-const BAR_WIDTH: u64 = LINE_WIDTH - INDENT_WIDTH - 2;
 
 fn main() {
     match fs::read_to_string("default_config.toml") {
