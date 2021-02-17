@@ -1,6 +1,5 @@
 use bytesize::ByteSize;
 use chrono::{Duration, TimeZone, Utc};
-use humantime::format_duration;
 use regex::Regex;
 use serde::Deserialize;
 use std::collections::HashMap;
@@ -8,6 +7,9 @@ use std::fs;
 use std::process::Command;
 use systemstat::{Filesystem, Platform, System};
 use termion::{color, style};
+
+mod components;
+use components::uptime::{disp_uptime, UptimeCfg};
 
 #[derive(Debug, Deserialize)]
 struct Config {
@@ -27,11 +29,6 @@ struct BannerCfg {
 }
 
 type ServiceStatusCfg = HashMap<String, String>;
-
-#[derive(Debug, Deserialize)]
-struct UptimeCfg {
-    prefix: String,
-}
 
 #[derive(Debug, Deserialize)]
 struct SSLCertsCfg {
@@ -138,12 +135,6 @@ fn disp_banner(config: BannerCfg) {
         &String::from_utf8_lossy(&output),
         style::Reset
     );
-}
-
-fn disp_uptime(config: UptimeCfg, sys: &System) -> Result<(), std::io::Error> {
-    let uptime = sys.uptime()?;
-    println!("{} {}", config.prefix, format_duration(uptime).to_string());
-    Ok(())
 }
 
 fn disp_ssl(config: SSLCertsCfg) -> Result<(), chrono::ParseError> {
