@@ -9,6 +9,7 @@ use systemstat::{Filesystem, Platform, System};
 use termion::{color, style};
 
 mod components;
+use components::banner::{disp_banner, BannerCfg};
 use components::uptime::{disp_uptime, UptimeCfg};
 
 #[derive(Debug, Deserialize)]
@@ -20,12 +21,6 @@ struct Config {
     filesystems: Option<FilesystemsCfg>,
     fail_2_ban: Option<Fail2BanCfg>,
     last_login: Option<LastLoginCfg>,
-}
-
-#[derive(Debug, Deserialize)]
-struct BannerCfg {
-    color: String,
-    command: String,
 }
 
 type ServiceStatusCfg = HashMap<String, String>;
@@ -119,22 +114,6 @@ fn main() {
         }
         Err(e) => println!("Error reading config file: {}", e),
     }
-}
-
-fn disp_banner(config: BannerCfg) {
-    // TODO: Make colour configurable
-    let output = Command::new("sh")
-        .arg("-c")
-        .arg(config.command)
-        .output()
-        .unwrap()
-        .stdout;
-    println!(
-        "{}{}{}",
-        color::Fg(color::Red),
-        &String::from_utf8_lossy(&output),
-        style::Reset
-    );
 }
 
 fn disp_ssl(config: SSLCertsCfg) -> Result<(), chrono::ParseError> {
