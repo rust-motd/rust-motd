@@ -1,13 +1,13 @@
 use humantime::format_duration;
-
-pub mod components::uptime;
+use serde::Deserialize;
+use systemstat::{Platform, System};
 
 #[derive(Debug, Deserialize)]
-struct UptimeCfg {
+pub struct UptimeCfg {
     prefix: String,
 }
 
-fn disp_uptime(config: UptimeCfg, sys: &System) -> Result<(), std::io::Error> {
+pub fn disp_uptime(config: UptimeCfg, sys: &System) -> Result<(), std::io::Error> {
     let uptime = sys.uptime()?;
     println!("{} {}", config.prefix, format_duration(uptime).to_string());
     Ok(())
