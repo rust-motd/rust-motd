@@ -20,7 +20,7 @@ pub fn disp_ssl(config: SSLCertsCfg) -> Result<(), chrono::ParseError> {
     let re = Regex::new(r"notAfter=([A-Za-z]+ +\d+ +[\d:]+ +\d{4}) +[A-Za-z]+\n").unwrap();
 
     println!();
-    println!("SSL Certificates");
+    println!("SSL Certificates:");
     for (name, path) in config.certs {
         let output = Command::new("openssl")
             .arg("x509")
