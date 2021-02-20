@@ -1,11 +1,11 @@
 use serde::Deserialize;
-use std::collections::HashMap;
 use std::fs;
 use systemstat::{Platform, System};
 
 mod components;
 use components::banner::{disp_banner, BannerCfg};
 use components::filesystem::{disp_filesystem, FilesystemsCfg};
+use components::last_login::{disp_last_login, LastLoginCfg};
 use components::service_status::{disp_service_status, ServiceStatusCfg};
 use components::ssl_certs::{disp_ssl, SSLCertsCfg};
 use components::uptime::{disp_uptime, UptimeCfg};
@@ -26,8 +26,6 @@ struct Config {
 struct Fail2BanCfg {
     jails: Vec<String>,
 }
-
-type LastLoginCfg = HashMap<String, usize>;
 
 fn main() {
     match fs::read_to_string("default_config.toml") {
@@ -57,6 +55,11 @@ fn main() {
             if let Some(filesystems) = config.filesystems {
                 disp_filesystem(filesystems, &sys)
                     .unwrap_or_else(|err| println!("Filesystem error: {}", err));
+            }
+
+            if let Some(last_login_config) = config.last_login {
+                disp_last_login(last_login_config)
+                    .unwrap_or_else(|err| println!("Last login error: {}", err));
             }
         }
         Err(e) => println!("Error reading config file: {}", e),
