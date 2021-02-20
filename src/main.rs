@@ -4,6 +4,7 @@ use systemstat::{Platform, System};
 
 mod components;
 use components::banner::{disp_banner, BannerCfg};
+use components::fail_2_ban::{disp_fail_2_ban, Fail2BanCfg};
 use components::filesystem::{disp_filesystem, FilesystemsCfg};
 use components::last_login::{disp_last_login, LastLoginCfg};
 use components::service_status::{disp_service_status, ServiceStatusCfg};
@@ -20,11 +21,6 @@ struct Config {
     filesystems: Option<FilesystemsCfg>,
     fail_2_ban: Option<Fail2BanCfg>,
     last_login: Option<LastLoginCfg>,
-}
-
-#[derive(Debug, Deserialize)]
-struct Fail2BanCfg {
-    jails: Vec<String>,
 }
 
 fn main() {
@@ -60,6 +56,11 @@ fn main() {
             if let Some(last_login_config) = config.last_login {
                 disp_last_login(last_login_config)
                     .unwrap_or_else(|err| println!("Last login error: {}", err));
+            }
+
+            if let Some(fail_2_ban_config) = config.fail_2_ban {
+                disp_fail_2_ban(fail_2_ban_config)
+                    .unwrap_or_else(|err| println!("Fail2Ban error: {}", err));
             }
         }
         Err(e) => println!("Error reading config file: {}", e),
