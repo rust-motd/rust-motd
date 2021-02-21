@@ -11,6 +11,7 @@ use crate::constants::INDENT_WIDTH;
 pub struct SSLCertsCfg {
     sort_method: String, // TODO: Maybe switch to enum insead of string
     // need to figure out how to do this in Serde
+    // Also TODO: Implement this ^
     certs: HashMap<String, String>,
 }
 
