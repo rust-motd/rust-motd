@@ -4,6 +4,7 @@ use serde::Deserialize;
 use std::collections::HashMap;
 use std::process::Command;
 use termion::{color, style};
+use thiserror::Error;
 
 use crate::constants::INDENT_WIDTH;
 
@@ -15,10 +16,22 @@ pub struct SSLCertsCfg {
     certs: HashMap<String, String>,
 }
 
-pub fn disp_ssl(config: SSLCertsCfg) -> Result<(), chrono::ParseError> {
+#[derive(Error, Debug)]
+pub enum SSLCertsError {
+    #[error("Failed to parse timestamp")]
+    ChronoParseError(#[from] chrono::ParseError),
+
+    #[error("Failed to compile Regex")]
+    RegexError(#[from] regex::Error),
+
+    #[error(transparent)]
+    IOError(#[from] std::io::Error),
+}
+
+pub fn disp_ssl(config: SSLCertsCfg) -> Result<(), SSLCertsError> {
     // TODO: Support time zone
     // chrono does not support %Z
-    let re = Regex::new(r"notAfter=([A-Za-z]+ +\d+ +[\d:]+ +\d{4}) +[A-Za-z]+\n").unwrap();
+    let re = Regex::new(r"notAfter=([A-Za-z]+ +\d+ +[\d:]+ +\d{4}) +[A-Za-z]+\n")?;
 
     println!();
     println!("SSL Certificates:");
@@ -28,8 +41,7 @@ pub fn disp_ssl(config: SSLCertsCfg) -> Result<(), chrono::ParseError> {
             .arg("-in")
             .arg(&path)
             .arg("-dates")
-            .output()
-            .unwrap();
+            .output()?;
         let output = String::from_utf8_lossy(&output.stdout);
         match re.captures(&output) {
             Some(captures) => {
