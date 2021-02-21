@@ -11,10 +11,6 @@ pub type ServiceStatusCfg = HashMap<String, String>;
 
 #[derive(Error, Debug)]
 pub enum ServiceStatusError {
-    // TODO: The executable should be configurable too
-    #[error("systemctl failed with exit code {exit_code:?}:\n{error:?}")]
-    CommandError { exit_code: i32, error: String },
-
     #[error(transparent)]
     IOError(#[from] std::io::Error),
 }
@@ -35,13 +31,6 @@ fn get_service_status(service: &str) -> Result<String, ServiceStatusError> {
             }
             err
         })?;
-
-    if !output.status.success() {
-        return Err(ServiceStatusError::CommandError {
-            exit_code: output.status.code().unwrap(),
-            error: String::from_utf8_lossy(&output.stderr).to_string(),
-        });
-    }
 
     Ok(String::from_utf8_lossy(&output.stdout)
         .into_owned()
