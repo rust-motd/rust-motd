@@ -30,7 +30,7 @@ fn main() {
             let sys = System::new();
 
             if let Some(banner_config) = config.banner {
-                disp_banner(banner_config);
+                disp_banner(banner_config).unwrap_or_else(|err| println!("Banner error: {}", err));
             }
 
             if let Some(uptime_config) = config.uptime {

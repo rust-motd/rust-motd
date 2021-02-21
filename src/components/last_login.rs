@@ -2,9 +2,10 @@ use crate::constants::INDENT_WIDTH;
 use chrono::DateTime;
 use regex::Regex;
 use std::collections::HashMap;
-use std::io::{Error, ErrorKind};
+use std::io::ErrorKind;
 use std::process::Command;
 use termion::{color, style};
+use thiserror::Error;
 
 pub type LastLoginCfg = HashMap<String, usize>;
 
@@ -14,6 +15,22 @@ struct Entry<'a> {
     location: &'a str,
     start_time: &'a str,
     end_time: &'a str,
+}
+
+#[derive(Error, Debug)]
+pub enum LastLoginError {
+    // TODO: The executable should be configurable too
+    #[error("tail failed with exit code {exit_code:?}:\n{error:?}")]
+    CommandError { exit_code: i32, error: String },
+
+    #[error("Could not find any logins for user {username:?}")]
+    NoUser { username: String },
+
+    #[error(transparent)]
+    ChronoParseError(#[from] chrono::ParseError),
+
+    #[error(transparent)]
+    IOError(#[from] std::io::Error),
 }
 
 fn parse_entry(line: &str) -> Entry {
@@ -29,7 +46,7 @@ fn parse_entry(line: &str) -> Entry {
     }
 }
 
-fn format_entry(entry: &Entry, longest_location: usize) -> Result<String, chrono::ParseError> {
+fn format_entry(entry: &Entry, longest_location: usize) -> Result<String, LastLoginError> {
     let location = format!("{:>width$}", entry.location, width = longest_location);
     let start_time = DateTime::parse_from_rfc3339(entry.start_time)?;
 
@@ -54,7 +71,7 @@ fn format_entry(entry: &Entry, longest_location: usize) -> Result<String, chrono
     ))
 }
 
-pub fn disp_last_login(config: LastLoginCfg) -> Result<(), std::io::Error> {
+pub fn disp_last_login(config: LastLoginCfg) -> Result<(), LastLoginError> {
     // TODO: Clean this up
 
     println!();
@@ -64,14 +81,31 @@ pub fn disp_last_login(config: LastLoginCfg) -> Result<(), std::io::Error> {
         println!("{}{}:", " ".repeat(INDENT_WIDTH as usize), username);
 
         // Use `last` command to get last logins
-        let output = Command::new("last")
+        let executable = "last";
+        let output = Command::new(executable)
             .arg("--time-format=iso")
             .arg(&username)
-            .output()?
-            .stdout;
+            .output()
+            // TODO: Try to clean this up
+            .map_err(|err| {
+                if err.kind() == ErrorKind::NotFound {
+                    return std::io::Error::new(
+                        ErrorKind::NotFound,
+                        format!("Command not found: {}", executable),
+                    );
+                }
+                err
+            })?;
+
+        if !output.status.success() {
+            return Err(LastLoginError::CommandError {
+                exit_code: output.status.code().unwrap(),
+                error: String::from_utf8_lossy(&output.stderr).to_string(),
+            });
+        }
 
         // Output to string
-        let output = String::from_utf8_lossy(&output);
+        let output = String::from_utf8_lossy(&output.stdout);
 
         // Split lines and take desigred number
         let mut output = output
@@ -81,10 +115,7 @@ pub fn disp_last_login(config: LastLoginCfg) -> Result<(), std::io::Error> {
             .peekable();
 
         if output.peek().is_none() {
-            return Err(Error::new(
-                ErrorKind::Other,
-                format!("Could not find any logins for user {}", username),
-            ));
+            return Err(LastLoginError::NoUser { username });
         }
 
         let entries = output.map(parse_entry).collect::<Vec<Entry>>();

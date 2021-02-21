@@ -1,25 +1,55 @@
 use itertools::Itertools;
 use std::collections::HashMap;
+use std::io::ErrorKind;
 use std::process::Command;
 use termion::{color, style};
+use thiserror::Error;
 
 use crate::constants::INDENT_WIDTH;
 
 pub type ServiceStatusCfg = HashMap<String, String>;
 
-fn get_service_status(service: &str) -> Result<String, std::io::Error> {
-    let output = Command::new("systemctl")
+#[derive(Error, Debug)]
+pub enum ServiceStatusError {
+    // TODO: The executable should be configurable too
+    #[error("systemctl failed with exit code {exit_code:?}:\n{error:?}")]
+    CommandError { exit_code: i32, error: String },
+
+    #[error(transparent)]
+    IOError(#[from] std::io::Error),
+}
+
+fn get_service_status(service: &str) -> Result<String, ServiceStatusError> {
+    let executable = "systemctl";
+    let output = Command::new(executable)
         .arg("is-active")
         .arg(service)
-        .output()?
-        .stdout;
-    Ok(String::from_utf8_lossy(&output)
+        .output()
+        // TODO: Try to clean this up
+        .map_err(|err| {
+            if err.kind() == ErrorKind::NotFound {
+                return std::io::Error::new(
+                    ErrorKind::NotFound,
+                    format!("Command not found: {}", executable),
+                );
+            }
+            err
+        })?;
+
+    if !output.status.success() {
+        return Err(ServiceStatusError::CommandError {
+            exit_code: output.status.code().unwrap(),
+            error: String::from_utf8_lossy(&output.stderr).to_string(),
+        });
+    }
+
+    Ok(String::from_utf8_lossy(&output.stdout)
         .into_owned()
         .split_whitespace()
         .collect())
 }
 
-pub fn disp_service_status(config: ServiceStatusCfg) -> Result<(), std::io::Error> {
+pub fn disp_service_status(config: ServiceStatusCfg) -> Result<(), ServiceStatusError> {
     let padding = config.keys().map(|x| x.len()).max().unwrap();
 
     println!();

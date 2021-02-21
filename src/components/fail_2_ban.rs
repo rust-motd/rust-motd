@@ -17,6 +17,7 @@ struct Entry {
 
 #[derive(Error, Debug)]
 pub enum Fail2BanError {
+    // TODO: The executable should be configurable too
     #[error("fail2ban-client failed with exit code {exit_code:?}:\n{error:?}")]
     CommandError { exit_code: i32, error: String },
 
