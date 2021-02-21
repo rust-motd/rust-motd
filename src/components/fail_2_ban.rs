@@ -1,6 +1,7 @@
 use crate::constants::INDENT_WIDTH;
 use regex::Regex;
 use serde::Deserialize;
+use std::io::ErrorKind;
 use std::process::Command;
 use thiserror::Error;
 
@@ -16,7 +17,6 @@ struct Entry {
 
 #[derive(Error, Debug)]
 pub enum Fail2BanError {
-    // ParseIntError,
     #[error("fail2ban-client failed with exit code {exit_code:?}:\n{error:?}")]
     CommandError { exit_code: i32, error: String },
 
@@ -31,10 +31,21 @@ pub enum Fail2BanError {
 }
 
 fn get_jail_status(jail: &str) -> Result<Entry, Fail2BanError> {
-    let output = Command::new("fail2ban-client")
+    let executable = "fail2ban-client";
+    let output = Command::new(executable)
         .arg("status")
         .arg(jail)
-        .output()?;
+        .output()
+        // TODO: Try to clean this up
+        .map_err(|err| {
+            if err.kind() == ErrorKind::NotFound {
+                return std::io::Error::new(
+                    ErrorKind::NotFound,
+                    format!("Command not found: {}", executable),
+                );
+            }
+            err
+        })?;
 
     if !output.status.success() {
         return Err(Fail2BanError::CommandError {
