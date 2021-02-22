@@ -1,6 +1,9 @@
 use serde::Deserialize;
+use std::env;
 use std::fs;
+use std::path::Path;
 use systemstat::{Platform, System};
+use thiserror::Error;
 
 mod components;
 use components::banner::{disp_banner, BannerCfg};
@@ -24,9 +27,9 @@ struct Config {
 }
 
 fn main() {
-    match fs::read_to_string("default_config.toml") {
-        Ok(config_str) => {
-            let config: Config = toml::from_str(&config_str).unwrap();
+    let args = env::args();
+    match get_config(args) {
+        Ok(config) => {
             let sys = System::new();
 
             if let Some(banner_config) = config.banner {
@@ -65,4 +68,43 @@ fn main() {
         }
         Err(e) => println!("Error reading config file: {}", e),
     }
+}
+
+#[derive(Error, Debug)]
+pub enum ConfigError {
+    #[error("Unable to parse config home directory as valid path")]
+    ConfigDirError { error: String },
+
+    #[error(transparent)]
+    ConfigHomeError(#[from] std::env::VarError),
+
+    #[error(transparent)]
+    IOError(#[from] std::io::Error),
+
+    #[error(transparent)]
+    ConfigParseError(#[from] toml::de::Error),
+}
+
+fn get_config(mut args: env::Args) -> Result<Config, ConfigError> {
+    let config_path = match args.nth(1) {
+        Some(file_path) => file_path,
+        None => {
+            let config_base = env::var("XDG_CONFIG_HOME").unwrap_or(env::var("HOME")? + "/.config");
+            let config_base = Path::new(&config_base).join(Path::new("motd-rust/config.toml"));
+            if config_base.exists() {
+                config_base.to_string_lossy().to_owned().to_string()
+            } else {
+                println!("Doesn't exist!");
+                fs::create_dir_all(config_base.parent().ok_or(ConfigError::ConfigDirError {
+                    error: "Unable to parse config home".to_owned(),
+                })?)?;
+                fs::copy("default_config.toml", &config_base)?;
+
+                config_base.to_string_lossy().to_owned().to_string()
+            }
+        }
+    };
+    let config_str = fs::read_to_string(config_path)?;
+    let config = toml::from_str(&config_str)?;
+    Ok(config)
 }

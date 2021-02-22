@@ -2,19 +2,19 @@
 color = "red"
 command = "hostname | figlet -f slant"
 
-[service_status]
-Accounts = "accounts-daemon"
-Cron = "cron"
+#[service_status]
+#Accounts = "accounts-daemon"
+#Cron = "cron"
 
 [uptime]
 prefix = "up"
 
-[ssl_certificates]
-sort_method = "alphabetical"
-
-    [ssl_certificates.certs]
-    Certigna = "Certigna.pem"
-    GoDaddy = "Go_Daddy_Root_Certificate_Authority_-_G2.pem"
+#[ssl_certificates]
+#sort_method = "alphabetical"
+#
+#    [ssl_certificates.certs]
+#    CertName1 = "/path/to/cert1.pem"
+#    CertName2 = "/path/to/cert2.pem"
 
 [filesystems]
 root = "/"
@@ -22,6 +22,6 @@ root = "/"
 [fail_2_ban]
 jails = ["sshd", "anotherjail"]
 
-[last_login]
-aaron = 2
-marcel = 1
+#[last_login]
+#sally = 2
+#jimmy = 1
