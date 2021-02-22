@@ -94,12 +94,13 @@ fn get_config(mut args: env::Args) -> Result<Config, ConfigError> {
             if config_base.exists() {
                 config_base
             } else {
-                println!("Doesn't exist!");
-                fs::create_dir_all(config_base.parent().ok_or(ConfigError::ConfigDirError {
+                let parent_dir = config_base.parent().ok_or(ConfigError::ConfigDirError {
                     error: "Unable to parse config home".to_owned(),
-                })?)?;
+                })?;
+                if !parent_dir.exists() {
+                    fs::create_dir_all(parent_dir)?;
+                }
                 fs::copy("default_config.toml", &config_base)?;
-
                 config_base
             }
         }
