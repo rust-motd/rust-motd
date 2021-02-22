@@ -1,7 +1,7 @@
 use serde::Deserialize;
 use std::env;
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use systemstat::{Platform, System};
 use thiserror::Error;
 
@@ -87,12 +87,12 @@ pub enum ConfigError {
 
 fn get_config(mut args: env::Args) -> Result<Config, ConfigError> {
     let config_path = match args.nth(1) {
-        Some(file_path) => file_path,
+        Some(file_path) => PathBuf::from(file_path),
         None => {
             let config_base = env::var("XDG_CONFIG_HOME").unwrap_or(env::var("HOME")? + "/.config");
             let config_base = Path::new(&config_base).join(Path::new("motd-rust/config.toml"));
             if config_base.exists() {
-                config_base.to_string_lossy().to_owned().to_string()
+                config_base
             } else {
                 println!("Doesn't exist!");
                 fs::create_dir_all(config_base.parent().ok_or(ConfigError::ConfigDirError {
@@ -100,7 +100,7 @@ fn get_config(mut args: env::Args) -> Result<Config, ConfigError> {
                 })?)?;
                 fs::copy("default_config.toml", &config_base)?;
 
-                config_base.to_string_lossy().to_owned().to_string()
+                config_base
             }
         }
     };
