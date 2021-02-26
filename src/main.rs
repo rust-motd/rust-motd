@@ -73,8 +73,9 @@ fn main() {
 #[derive(Error, Debug)]
 pub enum ConfigError {
     #[error(
-        "Configuration file not found. Config file needs to be passed either as \
-        an arg or in a default location. See ReadMe for details."
+        "Configuration file not found.\n\
+        Make a copy of default config and either specify it as an arg or \n\
+        place it in a default location.  See ReadMe for details."
     )]
     ConfigNotFound,
 
