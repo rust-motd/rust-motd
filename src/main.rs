@@ -13,6 +13,7 @@ use components::last_login::{disp_last_login, LastLoginCfg};
 use components::service_status::{disp_service_status, ServiceStatusCfg};
 use components::ssl_certs::{disp_ssl, SSLCertsCfg};
 use components::uptime::{disp_uptime, UptimeCfg};
+use components::weather::{disp_weather, WeatherCfg};
 mod constants;
 
 #[derive(Debug, Deserialize)]
@@ -24,6 +25,7 @@ struct Config {
     filesystems: Option<FilesystemsCfg>,
     fail_2_ban: Option<Fail2BanCfg>,
     last_login: Option<LastLoginCfg>,
+    weather: Option<WeatherCfg>,
 }
 
 fn main() {
@@ -34,6 +36,11 @@ fn main() {
 
             if let Some(banner_config) = config.banner {
                 disp_banner(banner_config).unwrap_or_else(|err| println!("Banner error: {}", err));
+            }
+
+            if let Some(weather_config) = config.weather {
+                disp_weather(weather_config)
+                    .unwrap_or_else(|err| println!("Weather error: {}", err));
             }
 
             if let Some(uptime_config) = config.uptime {
