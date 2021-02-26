@@ -66,14 +66,17 @@ fn main() {
                     .unwrap_or_else(|err| println!("Fail2Ban error: {}", err));
             }
         }
-        Err(e) => println!("Error reading config file: {}", e),
+        Err(e) => println!("Config Error: {}", e),
     }
 }
 
 #[derive(Error, Debug)]
 pub enum ConfigError {
-    #[error("Unable to parse config home directory as valid path")]
-    ConfigDirError { error: String },
+    #[error(
+        "Configuration file not found. Config file needs to be passed either as \
+        an arg or in a default location. See ReadMe for details."
+    )]
+    ConfigNotFound,
 
     #[error(transparent)]
     ConfigHomeError(#[from] std::env::VarError),
@@ -87,25 +90,19 @@ pub enum ConfigError {
 
 fn get_config(mut args: env::Args) -> Result<Config, ConfigError> {
     let config_path = match args.nth(1) {
-        Some(file_path) => PathBuf::from(file_path),
+        Some(file_path) => Some(PathBuf::from(file_path)),
         None => {
             let config_base = env::var("XDG_CONFIG_HOME").unwrap_or(env::var("HOME")? + "/.config");
             let config_base = Path::new(&config_base).join(Path::new("motd-rust/config.toml"));
             if config_base.exists() {
-                config_base
+                Some(config_base)
             } else {
-                let parent_dir = config_base.parent().ok_or(ConfigError::ConfigDirError {
-                    error: "Unable to parse config home".to_owned(),
-                })?;
-                if !parent_dir.exists() {
-                    fs::create_dir_all(parent_dir)?;
-                }
-                fs::copy("default_config.toml", &config_base)?;
-                config_base
+                None
             }
         }
     };
-    let config_str = fs::read_to_string(config_path)?;
-    let config = toml::from_str(&config_str)?;
-    Ok(config)
+    match config_path {
+        Some(path) => Ok(toml::from_str(&fs::read_to_string(path)?)?),
+        None => Err(ConfigError::ConfigNotFound),
+    }
 }
