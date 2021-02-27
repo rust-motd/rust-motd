@@ -91,6 +91,8 @@ pub fn disp_last_login(config: LastLoginCfg) -> Result<(), LastLoginError> {
         // Use `last` command to get last logins
         let executable = "last";
         let output = Command::new(executable)
+            // Sometimes last doesn't show location otherwise for some reason
+            .arg("--ip")
             .arg("--time-format=iso")
             .arg(&username)
             .output()
