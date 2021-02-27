@@ -14,7 +14,6 @@ pub fn disp_filesystem(config: FilesystemsCfg, sys: &System) -> Result<(), std::
         .map(|fs| (fs.fs_mounted_on.clone(), fs))
         .collect();
 
-    println!();
     println!("Filsystems");
     for (filesystem_name, mount_point) in config {
         if let Some(mount) = mounts.get(&mount_point) {
@@ -47,5 +46,6 @@ pub fn disp_filesystem(config: FilesystemsCfg, sys: &System) -> Result<(), std::
             println!("Could not find mount {}", mount_point);
         }
     }
+
     Ok(())
 }

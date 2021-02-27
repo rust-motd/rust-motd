@@ -10,5 +10,6 @@ pub struct UptimeCfg {
 pub fn disp_uptime(config: UptimeCfg, sys: &System) -> Result<(), std::io::Error> {
     let uptime = sys.uptime()?;
     println!("{} {}", config.prefix, format_duration(uptime).to_string());
+
     Ok(())
 }

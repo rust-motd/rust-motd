@@ -34,7 +34,7 @@ pub fn disp_banner(config: BannerCfg) -> Result<(), BannerError> {
     println!(
         "{}{}{}",
         color::Fg(color::Red),
-        &String::from_utf8_lossy(&output.stdout),
+        &String::from_utf8_lossy(&output.stdout).trim_end(),
         style::Reset
     );
 

@@ -38,7 +38,6 @@ pub fn disp_ssl(config: SSLCertsCfg) -> Result<(), SSLCertsError> {
     // chrono does not support %Z
     let re = Regex::new(r"notAfter=([A-Za-z]+ +\d+ +[\d:]+ +\d{4}) +[A-Za-z]+\n")?;
 
-    println!();
     println!("SSL Certificates:");
     for (name, path) in config.certs {
         let executable = "openssl";
@@ -94,5 +93,6 @@ pub fn disp_ssl(config: SSLCertsCfg) -> Result<(), SSLCertsError> {
             ),
         }
     }
+
     Ok(())
 }

@@ -67,7 +67,6 @@ fn get_jail_status(jail: &str) -> Result<Entry, Fail2BanError> {
 }
 
 pub fn disp_fail_2_ban(config: Fail2BanCfg) -> Result<(), Fail2BanError> {
-    println!();
     println!("Fail2Ban:");
 
     for jail in config.jails {

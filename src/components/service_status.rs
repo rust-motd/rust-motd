@@ -41,7 +41,6 @@ fn get_service_status(service: &str) -> Result<String, ServiceStatusError> {
 pub fn disp_service_status(config: ServiceStatusCfg) -> Result<(), ServiceStatusError> {
     let padding = config.keys().map(|x| x.len()).max().unwrap();
 
-    println!();
     println!("Services:");
     for key in config.keys().sorted() {
         let status = get_service_status(config.get(key).unwrap())?;

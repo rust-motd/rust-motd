@@ -36,41 +36,49 @@ fn main() {
 
             if let Some(banner_config) = config.banner {
                 disp_banner(banner_config).unwrap_or_else(|err| println!("Banner error: {}", err));
+                println!();
             }
 
             if let Some(weather_config) = config.weather {
                 disp_weather(weather_config)
                     .unwrap_or_else(|err| println!("Weather error: {}", err));
+                println!();
             }
 
             if let Some(uptime_config) = config.uptime {
                 disp_uptime(uptime_config, &sys)
                     .unwrap_or_else(|err| println!("Uptime error: {}", err));
+                println!();
             }
 
             if let Some(service_status_config) = config.service_status {
                 disp_service_status(service_status_config)
                     .unwrap_or_else(|err| println!("Service status error: {}", err));
+                println!();
             }
 
             if let Some(ssl_certificates_config) = config.ssl_certificates {
                 disp_ssl(ssl_certificates_config)
                     .unwrap_or_else(|err| println!("SSL Certificate error: {}", err));
+                println!();
             }
 
             if let Some(filesystems) = config.filesystems {
                 disp_filesystem(filesystems, &sys)
                     .unwrap_or_else(|err| println!("Filesystem error: {}", err));
+                println!();
             }
 
             if let Some(last_login_config) = config.last_login {
                 disp_last_login(last_login_config)
                     .unwrap_or_else(|err| println!("Last login error: {}", err));
+                println!();
             }
 
             if let Some(fail_2_ban_config) = config.fail_2_ban {
                 disp_fail_2_ban(fail_2_ban_config)
                     .unwrap_or_else(|err| println!("Fail2Ban error: {}", err));
+                println!();
             }
         }
         Err(e) => println!("Config Error: {}", e),
