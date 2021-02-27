@@ -26,6 +26,9 @@ pub enum LastLoginError {
     #[error("Could not find any logins for user {username:?}")]
     NoUser { username: String },
 
+    #[error("Failed to parse output from `last`")]
+    ParseError,
+
     #[error(transparent)]
     ChronoParseError(#[from] chrono::ParseError),
 
@@ -33,17 +36,22 @@ pub enum LastLoginError {
     IOError(#[from] std::io::Error),
 }
 
-fn parse_entry(line: &str) -> Entry {
+fn parse_entry(line: &str) -> Result<Entry, LastLoginError> {
     // TODO: Use lazy_static
     let separator_regex = Regex::new(r"(?:\s{2,})|(?:\s-\s)").unwrap();
 
     let items = separator_regex.split(line).collect::<Vec<_>>();
-    Entry {
+
+    if items.len() < 5 {
+        return Err(LastLoginError::ParseError);
+    }
+
+    Ok(Entry {
         username: items[0],
         location: items[2],
         start_time: items[3],
         end_time: items[4],
-    }
+    })
 }
 
 fn format_entry(entry: &Entry, longest_location: usize) -> Result<String, LastLoginError> {
@@ -118,7 +126,9 @@ pub fn disp_last_login(config: LastLoginCfg) -> Result<(), LastLoginError> {
             return Err(LastLoginError::NoUser { username });
         }
 
-        let entries = output.map(parse_entry).collect::<Vec<Entry>>();
+        let entries = output
+            .map(parse_entry)
+            .collect::<Result<Vec<Entry>, LastLoginError>>()?;
         let longest_location = entries
             .iter()
             .map(|entry| entry.location.len())
