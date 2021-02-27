@@ -20,7 +20,7 @@ struct Entry<'a> {
 #[derive(Error, Debug)]
 pub enum LastLoginError {
     // TODO: The executable should be configurable too
-    #[error("tail failed with exit code {exit_code:?}:\n{error:?}")]
+    #[error("last failed with exit code {exit_code:?}:\n{error:?}")]
     CommandError { exit_code: i32, error: String },
 
     #[error("Could not find any logins for user {username:?}")]
