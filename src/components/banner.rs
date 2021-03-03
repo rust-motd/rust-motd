@@ -56,7 +56,6 @@ pub enum BannerError {
 }
 
 pub fn disp_banner(config: BannerCfg) -> Result<(), BannerError> {
-    // TODO: Make colour configurable
     // We probably don't have to handle command not found for sh
     let output = Command::new("sh").arg("-c").arg(config.command).output()?;
 
