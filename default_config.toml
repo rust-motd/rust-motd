@@ -1,6 +1,6 @@
-[banner]
-color = "red"
-command = "hostname | figlet -f slant"
+#[banner]
+#color = "red"
+#command = "hostname | figlet -f slant"
 
 #[weather]
 #url = "wttr.in/New+York,New+York?0"
@@ -9,8 +9,8 @@ command = "hostname | figlet -f slant"
 #Accounts = "accounts-daemon"
 #Cron = "cron"
 
-[uptime]
-prefix = "up"
+#[uptime]
+#prefix = "up"
 
 #[ssl_certificates]
 #sort_method = "alphabetical"
@@ -19,11 +19,11 @@ prefix = "up"
 #    CertName1 = "/path/to/cert1.pem"
 #    CertName2 = "/path/to/cert2.pem"
 
-[filesystems]
-root = "/"
+#[filesystems]
+#root = "/"
 
-[fail_2_ban]
-jails = ["sshd", "anotherjail"]
+#[fail_2_ban]
+#jails = ["sshd", "anotherjail"]
 
 #[last_login]
 #sally = 2
