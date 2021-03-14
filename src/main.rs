@@ -10,6 +10,7 @@ use components::banner::{disp_banner, BannerCfg};
 use components::fail_2_ban::{disp_fail_2_ban, Fail2BanCfg};
 use components::filesystem::{disp_filesystem, FilesystemsCfg};
 use components::last_login::{disp_last_login, LastLoginCfg};
+use components::last_run::{disp_last_run, LastRunConfig};
 use components::service_status::{disp_service_status, ServiceStatusCfg};
 use components::ssl_certs::{disp_ssl, SSLCertsCfg};
 use components::uptime::{disp_uptime, UptimeCfg};
@@ -26,6 +27,7 @@ struct Config {
     fail_2_ban: Option<Fail2BanCfg>,
     last_login: Option<LastLoginCfg>,
     weather: Option<WeatherCfg>,
+    last_run: Option<LastRunConfig>,
 }
 
 fn main() {
@@ -79,6 +81,11 @@ fn main() {
                 disp_fail_2_ban(fail_2_ban_config)
                     .unwrap_or_else(|err| println!("Fail2Ban error: {}", err));
                 println!();
+            }
+
+            if let Some(last_run_config) = config.last_run {
+                disp_last_run(last_run_config)
+                    .unwrap_or_else(|err| println!("Last run error: {}", err));
             }
         }
         Err(e) => println!("Config Error: {}", e),
