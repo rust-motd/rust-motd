@@ -37,7 +37,7 @@ pub fn disp_weather(config: WeatherCfg) -> Result<(), WeatherError> {
         Some(url) => url,
         None => {
             let mut base = String::from("wttr.in/");
-            let loc = config.loc.unwrap_or("New+York,New+York".to_owned());
+            let loc = config.loc.unwrap_or("".to_owned());
             let loc = loc.replace(", ", ",").replace(" ", "+");
             base.push_str(&loc);
             match config.style.unwrap_or(WeatherStyle::Day) {
