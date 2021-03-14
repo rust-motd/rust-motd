@@ -21,6 +21,7 @@ mod constants;
 struct Config {
     banner: Option<BannerCfg>,
     service_status: Option<ServiceStatusCfg>,
+    user_service_status: Option<ServiceStatusCfg>,
     uptime: Option<UptimeCfg>,
     ssl_certificates: Option<SSLCertsCfg>,
     filesystems: Option<FilesystemsCfg>,
@@ -54,8 +55,16 @@ fn main() {
             }
 
             if let Some(service_status_config) = config.service_status {
-                disp_service_status(service_status_config)
+                println!("System Services:");
+                disp_service_status(service_status_config, false)
                     .unwrap_or_else(|err| println!("Service status error: {}", err));
+                println!();
+            }
+
+            if let Some(service_status_config) = config.user_service_status {
+                println!("User Services:");
+                disp_service_status(service_status_config, true)
+                    .unwrap_or_else(|err| println!("User service status error: {}", err));
                 println!();
             }
 

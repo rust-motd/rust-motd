@@ -18,11 +18,16 @@ pub enum ServiceStatusError {
     IOError(#[from] std::io::Error),
 }
 
-fn get_service_status(service: &str) -> Result<String, ServiceStatusError> {
+fn get_service_status(service: &str, user: bool) -> Result<String, ServiceStatusError> {
     let executable = "systemctl";
+    let mut args = vec!["is-active", service];
+
+    if user {
+        args.insert(0, "--user");
+    }
+
     let output = Command::new(executable)
-        .arg("is-active")
-        .arg(service)
+        .args(args)
         .output()
         // TODO: Try to clean this up
         .map_err(|err| {
@@ -41,16 +46,15 @@ fn get_service_status(service: &str) -> Result<String, ServiceStatusError> {
         .collect())
 }
 
-pub fn disp_service_status(config: ServiceStatusCfg) -> Result<(), ServiceStatusError> {
+pub fn disp_service_status(config: ServiceStatusCfg, user: bool) -> Result<(), ServiceStatusError> {
     if config.is_empty() {
         return Err(ServiceStatusError::ConfigEmtpyError);
     }
 
     let padding = config.keys().map(|x| x.len()).max().unwrap();
 
-    println!("Services:");
     for key in config.keys().sorted() {
-        let status = get_service_status(config.get(key).unwrap())?;
+        let status = get_service_status(config.get(key).unwrap(), user)?;
 
         let status_color = match status.as_ref() {
             "active" => color::Fg(color::Green).to_string(),

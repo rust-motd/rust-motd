@@ -11,6 +11,8 @@
 
 #[uptime]
 #prefix = "up"
+# [user_service_status]
+# gpg-agent = "gpg-agent"
 
 #[ssl_certificates]
 #sort_method = "alphabetical"
