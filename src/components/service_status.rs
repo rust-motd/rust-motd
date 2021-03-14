@@ -11,6 +11,9 @@ pub type ServiceStatusCfg = HashMap<String, String>;
 
 #[derive(Error, Debug)]
 pub enum ServiceStatusError {
+    #[error("Empty configuration for system services.")]
+    ConfigEmtpyError,
+
     #[error(transparent)]
     IOError(#[from] std::io::Error),
 }
@@ -39,6 +42,10 @@ fn get_service_status(service: &str) -> Result<String, ServiceStatusError> {
 }
 
 pub fn disp_service_status(config: ServiceStatusCfg) -> Result<(), ServiceStatusError> {
+    if config.is_empty() {
+        return Err(ServiceStatusError::ConfigEmtpyError);
+    }
+
     let padding = config.keys().map(|x| x.len()).max().unwrap();
 
     println!("Services:");
