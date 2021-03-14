@@ -116,7 +116,7 @@ fn get_config(mut args: env::Args) -> Result<Config, ConfigError> {
         Some(file_path) => Some(PathBuf::from(file_path)),
         None => {
             let config_base = env::var("XDG_CONFIG_HOME").unwrap_or(env::var("HOME")? + "/.config");
-            let config_base = Path::new(&config_base).join(Path::new("motd-rust/config.toml"));
+            let config_base = Path::new(&config_base).join(Path::new("rust-motd/config.toml"));
             if config_base.exists() {
                 Some(config_base)
             } else {
