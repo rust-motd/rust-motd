@@ -1,7 +1,8 @@
 use serde::Deserialize;
-use std::process::Command;
 use termion::{color, style};
 use thiserror::Error;
+
+use crate::command::{BetterCommand, BetterCommandError};
 
 #[derive(Debug, Deserialize)]
 pub struct BannerCfg {
@@ -47,9 +48,8 @@ enum BannerColor {
 
 #[derive(Error, Debug)]
 pub enum BannerError {
-    // TODO: The executable should be configurable too
-    #[error("failed with exit code {exit_code:?}:\n{error:?}")]
-    CommandError { exit_code: i32, error: String },
+    #[error(transparent)]
+    BetterCommandError(#[from] BetterCommandError),
 
     #[error(transparent)]
     IOError(#[from] std::io::Error),
@@ -57,14 +57,10 @@ pub enum BannerError {
 
 pub fn disp_banner(config: BannerCfg) -> Result<(), BannerError> {
     // We probably don't have to handle command not found for sh
-    let output = Command::new("sh").arg("-c").arg(config.command).output()?;
-
-    if !output.status.success() {
-        return Err(BannerError::CommandError {
-            exit_code: output.status.code().unwrap(),
-            error: String::from_utf8_lossy(&output.stderr).to_string(),
-        });
-    }
+    let output = BetterCommand::new("sh")
+        .arg("-c")
+        .arg(config.command)
+        .check_status_and_get_output_string()?;
 
     let banner_color = match config.color {
         BannerColor::Black => color::Black.fg_str(),
@@ -85,12 +81,7 @@ pub fn disp_banner(config: BannerCfg) -> Result<(), BannerError> {
         BannerColor::LightWhite => color::LightWhite.fg_str(),
     };
 
-    println!(
-        "{}{}{}",
-        banner_color,
-        &String::from_utf8_lossy(&output.stdout).trim_end(),
-        style::Reset
-    );
+    println!("{}{}{}", banner_color, &output.trim_end(), style::Reset);
 
     Ok(())
 }

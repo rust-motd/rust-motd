@@ -1,9 +1,9 @@
 use crate::constants::INDENT_WIDTH;
 use regex::Regex;
 use serde::Deserialize;
-use std::io::ErrorKind;
-use std::process::Command;
 use thiserror::Error;
+
+use crate::command::{BetterCommand, BetterCommandError};
 
 #[derive(Debug, Deserialize)]
 pub struct Fail2BanCfg {
@@ -17,9 +17,8 @@ struct Entry {
 
 #[derive(Error, Debug)]
 pub enum Fail2BanError {
-    // TODO: The executable should be configurable too
-    #[error("fail2ban-client failed with exit code {exit_code:?}:\n{error:?}")]
-    CommandError { exit_code: i32, error: String },
+    #[error(transparent)]
+    BetterCommandError(#[from] BetterCommandError),
 
     #[error("Failed to parse int in output")]
     ParseIntError(#[from] std::num::ParseIntError),
@@ -33,28 +32,10 @@ pub enum Fail2BanError {
 
 fn get_jail_status(jail: &str) -> Result<Entry, Fail2BanError> {
     let executable = "fail2ban-client";
-    let output = Command::new(executable)
+    let output = BetterCommand::new(executable)
         .arg("status")
         .arg(jail)
-        .output()
-        // TODO: Try to clean this up
-        .map_err(|err| {
-            if err.kind() == ErrorKind::NotFound {
-                return std::io::Error::new(
-                    ErrorKind::NotFound,
-                    format!("Command not found: {}", executable),
-                );
-            }
-            err
-        })?;
-
-    if !output.status.success() {
-        return Err(Fail2BanError::CommandError {
-            exit_code: output.status.code().unwrap(),
-            error: String::from_utf8_lossy(&output.stderr).to_string(),
-        });
-    }
-    let output = String::from_utf8_lossy(&output.stdout);
+        .check_status_and_get_output_string()?;
 
     // TODO: Use lazy_static
     let total_regex = Regex::new(r"Total banned:\s+([0-9]+)")?;

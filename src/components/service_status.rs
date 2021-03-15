@@ -1,10 +1,9 @@
 use itertools::Itertools;
 use std::collections::HashMap;
-use std::io::ErrorKind;
-use std::process::Command;
 use termion::{color, style};
 use thiserror::Error;
 
+use crate::command::{BetterCommand, BetterCommandError};
 use crate::constants::INDENT_WIDTH;
 
 pub type ServiceStatusCfg = HashMap<String, String>;
@@ -13,6 +12,9 @@ pub type ServiceStatusCfg = HashMap<String, String>;
 pub enum ServiceStatusError {
     #[error("Empty configuration for system services.")]
     ConfigEmtpyError,
+
+    #[error(transparent)]
+    BetterCommandError(#[from] BetterCommandError),
 
     #[error(transparent)]
     IOError(#[from] std::io::Error),
@@ -26,24 +28,11 @@ fn get_service_status(service: &str, user: bool) -> Result<String, ServiceStatus
         args.insert(0, "--user");
     }
 
-    let output = Command::new(executable)
+    let output = BetterCommand::new(executable)
         .args(args)
-        .output()
-        // TODO: Try to clean this up
-        .map_err(|err| {
-            if err.kind() == ErrorKind::NotFound {
-                return std::io::Error::new(
-                    ErrorKind::NotFound,
-                    format!("Command not found: {}", executable),
-                );
-            }
-            err
-        })?;
+        .get_output_string()?;
 
-    Ok(String::from_utf8_lossy(&output.stdout)
-        .into_owned()
-        .split_whitespace()
-        .collect())
+    Ok(output.split_whitespace().collect())
 }
 
 pub fn disp_service_status(config: ServiceStatusCfg, user: bool) -> Result<(), ServiceStatusError> {

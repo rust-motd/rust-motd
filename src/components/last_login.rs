@@ -2,10 +2,10 @@ use crate::constants::INDENT_WIDTH;
 use chrono::DateTime;
 use regex::Regex;
 use std::collections::HashMap;
-use std::io::ErrorKind;
-use std::process::Command;
 use termion::{color, style};
 use thiserror::Error;
+
+use crate::command::{BetterCommand, BetterCommandError};
 
 pub type LastLoginCfg = HashMap<String, usize>;
 
@@ -19,9 +19,8 @@ struct Entry<'a> {
 
 #[derive(Error, Debug)]
 pub enum LastLoginError {
-    // TODO: The executable should be configurable too
-    #[error("last failed with exit code {exit_code:?}:\n{error:?}")]
-    CommandError { exit_code: i32, error: String },
+    #[error(transparent)]
+    BetterCommandError(#[from] BetterCommandError),
 
     #[error("Could not find any logins for user {username:?}")]
     NoUser { username: String },
@@ -89,32 +88,12 @@ pub fn disp_last_login(config: LastLoginCfg) -> Result<(), LastLoginError> {
 
         // Use `last` command to get last logins
         let executable = "last";
-        let output = Command::new(executable)
+        let output = BetterCommand::new(executable)
             // Sometimes last doesn't show location otherwise for some reason
             .arg("--ip")
             .arg("--time-format=iso")
             .arg(&username)
-            .output()
-            // TODO: Try to clean this up
-            .map_err(|err| {
-                if err.kind() == ErrorKind::NotFound {
-                    return std::io::Error::new(
-                        ErrorKind::NotFound,
-                        format!("Command not found: {}", executable),
-                    );
-                }
-                err
-            })?;
-
-        if !output.status.success() {
-            return Err(LastLoginError::CommandError {
-                exit_code: output.status.code().unwrap(),
-                error: String::from_utf8_lossy(&output.stderr).to_string(),
-            });
-        }
-
-        // Output to string
-        let output = String::from_utf8_lossy(&output.stdout);
+            .check_status_and_get_output_string()?;
 
         // Split lines and take desigred number
         let mut output = output

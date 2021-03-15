@@ -15,6 +15,7 @@ use components::service_status::{disp_service_status, ServiceStatusCfg};
 use components::ssl_certs::{disp_ssl, SSLCertsCfg};
 use components::uptime::{disp_uptime, UptimeCfg};
 use components::weather::{disp_weather, WeatherCfg};
+mod command;
 mod constants;
 
 #[derive(Debug, Deserialize)]

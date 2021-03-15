@@ -2,11 +2,10 @@ use chrono::{Duration, TimeZone, Utc};
 use regex::Regex;
 use serde::Deserialize;
 use std::collections::HashMap;
-use std::io::ErrorKind;
-use std::process::Command;
 use termion::{color, style};
 use thiserror::Error;
 
+use crate::command::{BetterCommand, BetterCommandError};
 use crate::constants::INDENT_WIDTH;
 
 #[derive(Debug, Deserialize)]
@@ -22,9 +21,8 @@ pub enum SSLCertsError {
     #[error("Failed to parse timestamp")]
     ChronoParseError(#[from] chrono::ParseError),
 
-    // TODO: The executable should be configurable too
-    #[error("openssl failed with exit code {exit_code:?}:\n{error:?}")]
-    CommandError { exit_code: i32, error: String },
+    #[error(transparent)]
+    BetterCommandError(#[from] BetterCommandError),
 
     #[error("Failed to compile Regex")]
     RegexError(#[from] regex::Error),
@@ -41,31 +39,13 @@ pub fn disp_ssl(config: SSLCertsCfg) -> Result<(), SSLCertsError> {
     println!("SSL Certificates:");
     for (name, path) in config.certs {
         let executable = "openssl";
-        let output = Command::new(executable)
+        let output = BetterCommand::new(executable)
             .arg("x509")
             .arg("-in")
             .arg(&path)
             .arg("-dates")
-            .output()
-            // TODO: Try to clean this up
-            .map_err(|err| {
-                if err.kind() == ErrorKind::NotFound {
-                    return std::io::Error::new(
-                        ErrorKind::NotFound,
-                        format!("Command not found: {}", executable),
-                    );
-                }
-                err
-            })?;
+            .check_status_and_get_output_string()?;
 
-        if !output.status.success() {
-            return Err(SSLCertsError::CommandError {
-                exit_code: output.status.code().unwrap(),
-                error: String::from_utf8_lossy(&output.stderr).to_string(),
-            });
-        }
-
-        let output = String::from_utf8_lossy(&output.stdout);
         match re.captures(&output) {
             Some(captures) => {
                 let date = Utc.datetime_from_str(&captures[1], "%B %_d %T %Y")?;
