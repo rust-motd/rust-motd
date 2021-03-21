@@ -15,7 +15,7 @@ pub enum LastRunError {
     IOError(#[from] std::io::Error),
 }
 
-pub fn disp_last_run(last_run_config: LastRunConfig) -> Result<(), LastRunError> {
+pub fn disp_last_run(_last_run_config: LastRunConfig) -> Result<(), LastRunError> {
     println!("Last updated: {}", Local::now().format("%Y/%m/%d %I:%M %P"));
     Ok(())
 }
