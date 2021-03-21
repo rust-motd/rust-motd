@@ -17,6 +17,7 @@ use components::uptime::{disp_uptime, UptimeCfg};
 use components::weather::{disp_weather, WeatherCfg};
 mod command;
 mod constants;
+mod tests;
 
 #[derive(Debug, Deserialize)]
 struct Config {
