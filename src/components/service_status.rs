@@ -10,7 +10,7 @@ pub type ServiceStatusCfg = HashMap<String, String>;
 
 #[derive(Error, Debug)]
 pub enum ServiceStatusError {
-    #[error("Empty configuration for system services.")]
+    #[error("Empty configuration for system services. Please remove the entire block to disable this component.")]
     ConfigEmtpyError,
 
     #[error(transparent)]
