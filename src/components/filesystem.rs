@@ -7,7 +7,7 @@ use systemstat::{Filesystem, Platform, System};
 use termion::{color, style};
 use thiserror::Error;
 
-pub const INDENT_WIDTH: usize = 2;
+use crate::constants::INDENT_WIDTH;
 
 #[derive(Error, Debug)]
 pub enum FilesystemsError {
