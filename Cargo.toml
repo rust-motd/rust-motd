@@ -1,5 +1,5 @@
 [package]
-name = "rust_motd"
+name = "rust-motd"
 version = "0.1.0"
 authors = ["Marcel Robitaille <mail@marcelrobitaille.me>"]
 edition = "2018"
