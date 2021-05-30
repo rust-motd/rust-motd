@@ -14,6 +14,17 @@ which can quickly give an overview of your server or personal computer.
 
 ## Installation
 
+### Building from source
+
+- Install [rustup](https://rustup.rs/) and [cargo](https://github.com/rust-lang/cargo/)
+- Install and configure the default toolchain with `rustup install stable` and `rustup default stable`
+- Clone this repository and enter it
+- Run `cargo build` or `cargo run`
+
+### Arch Linux
+
+`rust-motd` is in the AUR under [`rust-motd-bin`](https://aur.archlinux.org/packages/rust-motd-bin/) thanks to [`cargo-aur`](https://github.com/fosskers/cargo-aur).
+
 ## Configuration
 
 ## Setup
