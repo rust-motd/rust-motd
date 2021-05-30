@@ -1,0 +1,30 @@
+[banner]
+color = "red"
+command = "figlet nas -f slant"
+
+[weather]
+url = "wttr.in/New+York,New+York?0"
+
+[service_status]
+Accounts = "accounts-daemon"
+Cron = "cronie"
+
+[uptime]
+prefix = "up"
+
+[ssl_certificates]
+sort_method = "alphabetical"
+
+    [ssl_certificates.certs]
+    "example.com" = "./example-selfsigned.crt"
+
+[filesystems]
+root = "/"
+
+[fail_2_ban]
+jails = ["sshd"]
+
+[last_login]
+marcel = 2
+
+[last_run]
