@@ -3,6 +3,10 @@ name = "rust-motd"
 version = "0.1.0"
 authors = ["Marcel Robitaille <mail@marcelrobitaille.me>"]
 edition = "2018"
+description = "Beautiful, useful MOTD generation with zero runtime dependencies"
+homepage = "https://github.com/rust-motd/rust-motd"
+repository = "https://github.com/rust-motd/rust-motd"
+license = "MIT"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
