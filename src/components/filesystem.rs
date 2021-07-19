@@ -125,10 +125,16 @@ pub fn disp_filesystem(config: FilesystemsCfg, sys: &System) -> Result<(), Files
             &column_sizes,
         );
 
+        let full_color = match (entry.used_ratio * 100.0) as usize {
+            0..=75 => color::Fg(color::Green).to_string(),
+            76..=95 => color::Fg(color::Yellow).to_string(),
+            _ => color::Fg(color::Red).to_string(),
+        };
+
         println!(
             "{}[{}{}{}{}{}]",
             " ".repeat(INDENT_WIDTH),
-            color::Fg(color::Green),
+            full_color,
             "=".repeat(bar_full),
             color::Fg(color::LightBlack),
             "=".repeat(bar_empty),
