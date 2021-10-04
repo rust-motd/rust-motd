@@ -40,11 +40,10 @@ fn get_jail_status(jail: &str) -> Result<Entry, Fail2BanError> {
     // TODO: Use lazy_static
     let total_regex = Regex::new(r"Total banned:\s+([0-9]+)")?;
     let current_regex = Regex::new(r"Currently banned:\s+([0-9]+)")?;
+    let total = total_regex.captures_iter(&output).next().unwrap()[1].parse::<u32>()?;
+    let current = current_regex.captures_iter(&output).next().unwrap()[1].parse::<u32>()?;
 
-    Ok(Entry {
-        total: total_regex.captures_iter(&output).next().unwrap()[1].parse::<u32>()?,
-        current: current_regex.captures_iter(&output).next().unwrap()[1].parse::<u32>()?,
-    })
+    Ok(Entry { total, current })
 }
 
 pub fn disp_fail_2_ban(config: Fail2BanCfg) -> Result<(), Fail2BanError> {
