@@ -53,12 +53,14 @@ fn parse_into_entry(filesystem_name: String, mount: &Filesystem) -> Entry {
 fn print_row<'a>(items: [&str; 6], column_sizes: impl IntoIterator<Item = &'a usize>) {
     println!(
         "{}",
-        items
-            .iter()
-            .zip(column_sizes.into_iter())
-            .map(|(name, size)| format!("{: <size$}", name, size = size))
-            .intersperse(" ".repeat(INDENT_WIDTH))
-            .collect::<String>()
+        Itertools::intersperse(
+            items
+                .iter()
+                .zip(column_sizes.into_iter())
+                .map(|(name, size)| format!("{: <size$}", name, size = size)),
+            " ".repeat(INDENT_WIDTH)
+        )
+        .collect::<String>()
     );
 }
 
