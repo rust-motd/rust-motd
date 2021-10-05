@@ -27,6 +27,62 @@ which can quickly give an overview of your server or personal computer.
 
 ## Configuration
 
+`rust-motd` uses a `TOML` configuration file to determine which components to run, and any parameters for those components. Components can be enabled or disabled by including or removing/commenting out the relevant section of configuration. An example configuration file is included in [default_config.toml](default_config.toml).
+
+A configuration file can either be specified as the first argument to `rust-motd` via the comnmand line or placed in one of two default locations. If a config file is not specified as an argument, `rust-motd` will check `$XDG_CONFIG_HOME/rust-motd/config.toml` and `$HOME/.config/rust-motd/config.toml` in that order.
+
+The options for each component are listed below:
+### Banner
+
+- `color`: The color of the banner text. Options are black, red, green, yellow, blue, magenta, cyan, white, and light variants of each.
+- `command`: A command executed via `sh` which generates the banner. For example, you could pipe the output of `hostname` to `figlet` to generate a block letter banner.
+
+### Weather
+
+The weather component allows you to either specify a [wttr.in](https://wttr.in) url, or a location and display style which will be used to build the url.
+
+Either:
+
+- `url`: a [wttr.in](https://wttr.in) query url for the relevant location. E.g. "wttr.in" or "wttr.in/New+York,New+York?0". For more detail about the options available via the request url, see the [wttr.in documentation](https://github.com/chubin/wttr.in). The response of an http request to the specified url is output directly to the console, so in theory you could use a service other than wttr.in.
+
+or:
+
+- `loc`: The location to retrieve the weather for, e.g. "New York,New York".
+- `style`: One of either "oneline", "day", or "full".
+
+In the case both are specified, the `url` parameter is given priority. You can also change the command used to make the http request:
+
+- `command`: Optional, defaults to `curl`. The `url` option is passed as a parameter, so technically you could configure any command you like and use `url` to specify parameters, if you don't want to do a curl request to wttr.in.
+
+### Service Status
+
+ - List of `systemd` services to display the status of. Keys are used as the service display name, while the value is the name of the service itself.
+
+### Uptime
+
+- `prefix`: Text to print before the formatted uptime.
+
+### SSL Certificates
+
+- `sort_method`: The order to sort the displayed ssl certificates (Note: not currently implemented).
+- `[ssl_certificates.certs]`: A subsection which is a list pairs of of certificate display names (keys) and certificate paths (values).
+
+### Filesystems
+
+ - List of filesystems to print the information of, in the form of pairs of names (used for display) and mount points.
+
+### Fail2Ban
+
+- `jails`: A list of Fail2Ban jails to print the ban amounts of.
+
+### Last Login
+
+- List of users (keys) and number n (values) of that user's n most recent logins to display.
+
+### Last Run
+
+- If present, prints the time that the `rust-motd` was run (useful if updating the motd only periodically e.g. via Cron).
+
 ## Setup
 
 ### Displaying MOTD on login (server setup)
