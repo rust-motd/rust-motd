@@ -64,7 +64,7 @@ In the case both are specified, the `url` parameter is given priority. You can a
 
 ### SSL Certificates
 
-- `sort_method`: The order to sort the displayed ssl certificates (Note: not currently implemented).
+- `sort_method`: The order to sort the displayed ssl certificates. Options are "alphabetical", "expiration", or none, in which case the certs will be displayed in the same order that they appear in the config file.
 - `[ssl_certificates.certs]`: A subsection which is a list pairs of of certificate display names (keys) and certificate paths (values).
 
 ### Filesystems
