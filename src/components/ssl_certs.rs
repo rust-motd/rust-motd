@@ -10,7 +10,7 @@ use crate::constants::INDENT_WIDTH;
 
 #[derive(Debug, Deserialize)]
 pub struct SSLCertsCfg {
-    sort_method: Option<SortMethod>, 
+    sort_method: Option<SortMethod>,
     certs: HashMap<String, String>,
 }
 
@@ -37,11 +37,17 @@ pub enum SSLCertsError {
     IOError(#[from] std::io::Error),
 }
 
+struct CertInfo {
+    name: String,
+    status: String,
+    expiration: systemstat::DateTime<systemstat::Utc>,
+}
+
 pub fn disp_ssl(config: SSLCertsCfg) -> Result<(), SSLCertsError> {
     // TODO: Support time zone
     // chrono does not support %Z
     let re = Regex::new(r"notAfter=([A-Za-z]+ +\d+ +[\d:]+ +\d{4}) +[A-Za-z]+\n")?;
-    let mut cert_info: Vec<(String, String, systemstat::DateTime<systemstat::Utc>)> = Vec::new();
+    let mut cert_infos: Vec<CertInfo> = Vec::new();
 
     println!("SSL Certificates:");
     for (name, path) in config.certs {
@@ -55,17 +61,21 @@ pub fn disp_ssl(config: SSLCertsCfg) -> Result<(), SSLCertsError> {
 
         match re.captures(&output) {
             Some(captures) => {
-                let date = Utc.datetime_from_str(&captures[1], "%B %_d %T %Y")?;
+                let expiration = Utc.datetime_from_str(&captures[1], "%B %_d %T %Y")?;
 
                 let now = Utc::now();
-                let status = if date < now {
+                let status = if expiration < now {
                     format!("{}expired on{}", color::Fg(color::Red), style::Reset)
-                } else if date < now + Duration::days(30) {
+                } else if expiration < now + Duration::days(30) {
                     format!("{}expiring on{}", color::Fg(color::Yellow), style::Reset)
                 } else {
                     format!("{}valid until{}", color::Fg(color::Green), style::Reset)
                 };
-                cert_info.push((name, status, date));
+                cert_infos.push(CertInfo {
+                    name,
+                    status,
+                    expiration,
+                });
             }
             None => println!(
                 "{}Error parsing certificate {}",
@@ -78,21 +88,21 @@ pub fn disp_ssl(config: SSLCertsCfg) -> Result<(), SSLCertsError> {
     if let Some(sort_method) = config.sort_method {
         match sort_method {
             SortMethod::Alphabetical => {
-                cert_info.sort_by(|a, b| a.0.cmp(&b.0));
-            },
+                cert_infos.sort_by(|a, b| a.name.cmp(&b.name));
+            }
             SortMethod::Expiration => {
-                cert_info.sort_by(|a, b| a.2.cmp(&b.2));
+                cert_infos.sort_by(|a, b| a.expiration.cmp(&b.expiration));
             }
         }
     }
 
-    for (name, status, date) in cert_info.into_iter() {
+    for cert_info in cert_infos.into_iter() {
         println!(
             "{}{} {} {}",
             " ".repeat(INDENT_WIDTH as usize),
-            name,
-            status,
-            date
+            cert_info.name,
+            cert_info.status,
+            cert_info.expiration
         );
     }
 
