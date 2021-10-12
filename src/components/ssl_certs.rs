@@ -25,7 +25,6 @@ enum SortMethod {
     Manual,
 }
 
-// TODO: Could not figure out how to do this with a macro
 impl Default for SortMethod {
     fn default() -> Self {
         SortMethod::Manual
