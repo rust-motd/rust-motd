@@ -15,7 +15,7 @@
 # gpg-agent = "gpg-agent"
 
 #[ssl_certificates]
-#sort_method = "alphabetical"
+#sort_method = "manual"
 #
 #    [ssl_certificates.certs]
 #    CertName1 = "/path/to/cert1.pem"

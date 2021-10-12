@@ -10,7 +10,8 @@ use crate::constants::INDENT_WIDTH;
 
 #[derive(Debug, Deserialize)]
 pub struct SSLCertsCfg {
-    sort_method: Option<SortMethod>,
+    #[serde(default)]
+    sort_method: SortMethod,
     certs: HashMap<String, String>,
 }
 
@@ -20,6 +21,15 @@ enum SortMethod {
     Alphabetical,
     #[serde(alias = "expiration")] // Alias used to match lowercase spelling as well
     Expiration,
+    #[serde(alias = "manual")] // Alias used to match lowercase spelling as well
+    Manual,
+}
+
+// TODO: Could not figure out how to do this with a macro
+impl Default for SortMethod {
+    fn default() -> Self {
+        SortMethod::Manual
+    }
 }
 
 #[derive(Error, Debug)]
@@ -85,15 +95,14 @@ pub fn disp_ssl(config: SSLCertsCfg) -> Result<(), SSLCertsError> {
         }
     }
 
-    if let Some(sort_method) = config.sort_method {
-        match sort_method {
-            SortMethod::Alphabetical => {
-                cert_infos.sort_by(|a, b| a.name.cmp(&b.name));
-            }
-            SortMethod::Expiration => {
-                cert_infos.sort_by(|a, b| a.expiration.cmp(&b.expiration));
-            }
+    match config.sort_method {
+        SortMethod::Alphabetical => {
+            cert_infos.sort_by(|a, b| a.name.cmp(&b.name));
         }
+        SortMethod::Expiration => {
+            cert_infos.sort_by(|a, b| a.expiration.cmp(&b.expiration));
+        }
+        SortMethod::Manual => {}
     }
 
     for cert_info in cert_infos.into_iter() {
