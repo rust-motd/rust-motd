@@ -103,7 +103,7 @@ pub fn disp_filesystem(config: FilesystemsCfg, sys: &System) -> Result<(), Files
         .fold(vec![0; header.len()], |acc, x| {
             x.iter()
                 .zip(acc.iter())
-                .map(|(a, b)| cmp::max(a, &b).to_owned())
+                .map(|(a, b)| cmp::max(a, b).to_owned())
                 .collect()
         });
 

@@ -36,7 +36,7 @@ pub enum WeatherError {
 }
 
 pub fn disp_weather(config: WeatherCfg) -> Result<(), WeatherError> {
-    let command = config.command.unwrap_or("curl".to_string());
+    let command = config.command.unwrap_or_else(|| "curl".to_string());
     let arg = match config.url {
         Some(url) => url,
         None => {

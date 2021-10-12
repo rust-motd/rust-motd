@@ -51,12 +51,12 @@ impl BetterCommand {
     }
 
     pub fn output(&mut self) -> Result<Output, BetterCommandError> {
-        Ok(self.command.output().map_err(|err| match err.kind() {
+        self.command.output().map_err(|err| match err.kind() {
             ErrorKind::NotFound => BetterCommandError::NotFound {
                 executable: self.executable.clone(),
             },
             _ => BetterCommandError::IOError { source: err },
-        })?)
+        })
     }
 
     pub fn get_output_string(&mut self) -> Result<String, BetterCommandError> {
