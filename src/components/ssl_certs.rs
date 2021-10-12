@@ -34,16 +34,16 @@ impl Default for SortMethod {
 #[derive(Error, Debug)]
 pub enum SSLCertsError {
     #[error("Failed to parse timestamp")]
-    ChronoParseError(#[from] chrono::ParseError),
+    ChronoParse(#[from] chrono::ParseError),
 
     #[error(transparent)]
-    BetterCommandError(#[from] BetterCommandError),
+    BetterCommand(#[from] BetterCommandError),
 
     #[error("Failed to compile Regex")]
-    RegexError(#[from] regex::Error),
+    Regex(#[from] regex::Error),
 
     #[error(transparent)]
-    IOError(#[from] std::io::Error),
+    IO(#[from] std::io::Error),
 }
 
 struct CertInfo {

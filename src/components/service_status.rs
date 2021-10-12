@@ -11,13 +11,13 @@ pub type ServiceStatusCfg = HashMap<String, String>;
 #[derive(Error, Debug)]
 pub enum ServiceStatusError {
     #[error("Empty configuration for system services. Please remove the entire block to disable this component.")]
-    ConfigEmtpyError,
+    ConfigEmtpy,
 
     #[error(transparent)]
-    BetterCommandError(#[from] BetterCommandError),
+    BetterCommand(#[from] BetterCommandError),
 
     #[error(transparent)]
-    IOError(#[from] std::io::Error),
+    IO(#[from] std::io::Error),
 }
 
 fn get_service_status(service: &str, user: bool) -> Result<String, ServiceStatusError> {
@@ -37,7 +37,7 @@ fn get_service_status(service: &str, user: bool) -> Result<String, ServiceStatus
 
 pub fn disp_service_status(config: ServiceStatusCfg, user: bool) -> Result<(), ServiceStatusError> {
     if config.is_empty() {
-        return Err(ServiceStatusError::ConfigEmtpyError);
+        return Err(ServiceStatusError::ConfigEmtpy);
     }
 
     let padding = config.keys().map(|x| x.len()).max().unwrap();

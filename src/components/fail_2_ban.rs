@@ -18,16 +18,16 @@ struct Entry {
 #[derive(Error, Debug)]
 pub enum Fail2BanError {
     #[error(transparent)]
-    BetterCommandError(#[from] BetterCommandError),
+    BetterCommand(#[from] BetterCommandError),
 
     #[error("Failed to parse int in output")]
-    ParseIntError(#[from] std::num::ParseIntError),
+    ParseInt(#[from] std::num::ParseIntError),
 
     #[error("Failed to compile Regex")]
-    RegexError(#[from] regex::Error),
+    Regex(#[from] regex::Error),
 
     #[error(transparent)]
-    IOError(#[from] std::io::Error),
+    IO(#[from] std::io::Error),
 }
 
 fn get_jail_status(jail: &str) -> Result<Entry, Fail2BanError> {

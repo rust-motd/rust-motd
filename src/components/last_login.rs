@@ -20,19 +20,19 @@ struct Entry<'a> {
 #[derive(Error, Debug)]
 pub enum LastLoginError {
     #[error(transparent)]
-    BetterCommandError(#[from] BetterCommandError),
+    BetterCommand(#[from] BetterCommandError),
 
     #[error("Could not find any logins for user {username:?}")]
     NoUser { username: String },
 
     #[error("Failed to parse output from `last`")]
-    ParseError,
+    Parse,
 
     #[error(transparent)]
-    ChronoParseError(#[from] chrono::ParseError),
+    ChronoParse(#[from] chrono::ParseError),
 
     #[error(transparent)]
-    IOError(#[from] std::io::Error),
+    IO(#[from] std::io::Error),
 }
 
 fn parse_entry(line: &str) -> Result<Entry, LastLoginError> {
@@ -42,7 +42,7 @@ fn parse_entry(line: &str) -> Result<Entry, LastLoginError> {
     let items = separator_regex.split(line).collect::<Vec<_>>();
 
     if items.len() < 5 {
-        return Err(LastLoginError::ParseError);
+        return Err(LastLoginError::Parse);
     }
 
     Ok(Entry {

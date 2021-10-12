@@ -12,13 +12,13 @@ use crate::constants::INDENT_WIDTH;
 #[derive(Error, Debug)]
 pub enum FilesystemsError {
     #[error("Empty configuration for filesystems. Please remove the entire block to disable this component.")]
-    ConfigEmtpyError,
+    ConfigEmtpy,
 
     #[error("Could not find mount {mount_point:?}")]
-    MountNotFoundError { mount_point: String },
+    MountNotFound { mount_point: String },
 
     #[error(transparent)]
-    IOError(#[from] std::io::Error),
+    IO(#[from] std::io::Error),
 }
 
 #[derive(Debug)]
@@ -66,7 +66,7 @@ fn print_row<'a>(items: [&str; 6], column_sizes: impl IntoIterator<Item = &'a us
 
 pub fn disp_filesystem(config: FilesystemsCfg, sys: &System) -> Result<(), FilesystemsError> {
     if config.is_empty() {
-        return Err(FilesystemsError::ConfigEmtpyError);
+        return Err(FilesystemsError::ConfigEmtpy);
     }
 
     let mounts = sys.mounts()?;
@@ -80,7 +80,7 @@ pub fn disp_filesystem(config: FilesystemsCfg, sys: &System) -> Result<(), Files
         .map(
             |(filesystem_name, mount_point)| match mounts.get(&mount_point) {
                 Some(mount) => Ok(parse_into_entry(filesystem_name, mount)),
-                _ => Err(FilesystemsError::MountNotFoundError { mount_point }),
+                _ => Err(FilesystemsError::MountNotFound { mount_point }),
             },
         )
         .collect::<Result<Vec<Entry>, FilesystemsError>>()?;
