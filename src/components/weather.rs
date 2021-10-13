@@ -1,10 +1,8 @@
 use serde::Deserialize;
 use std::io::Write;
 use thiserror::Error;
+use ureq;
 
-use crate::command::{BetterCommand, BetterCommandError};
-
-// TODO: make config better (e.g. curl vs wget, location, format be all seperate options)
 #[derive(Debug, Deserialize)]
 pub struct WeatherCfg {
     command: Option<String>,
@@ -29,18 +27,17 @@ enum WeatherStyle {
 #[derive(Error, Debug)]
 pub enum WeatherError {
     #[error(transparent)]
-    BetterCommandError(#[from] BetterCommandError),
+    Ureq(#[from] ureq::Error),
 
     #[error(transparent)]
-    IOError(#[from] std::io::Error),
+    IO(#[from] std::io::Error),
 }
 
 pub fn disp_weather(config: WeatherCfg) -> Result<(), WeatherError> {
-    let command = config.command.unwrap_or_else(|| "curl".to_string());
-    let arg = match config.url {
+    let url = match config.url {
         Some(url) => url,
         None => {
-            let mut base = String::from("wttr.in/");
+            let mut base = String::from("https://wttr.in/");
             let loc = config.loc.replace(", ", ",").replace(" ", "+");
             base.push_str(&loc);
             match config.style.unwrap_or(WeatherStyle::Day) {
@@ -51,10 +48,13 @@ pub fn disp_weather(config: WeatherCfg) -> Result<(), WeatherError> {
             base
         }
     };
-    let output = BetterCommand::new(&command[..]).arg(arg).output()?;
+    let body = ureq::get(&url)
+        .set("User-Agent", "curl")
+        .call()?
+        .into_string()?;
 
     let mut out = std::io::stdout();
-    out.write_all(&output.stdout)?;
+    out.write_all(body.as_bytes())?;
     out.flush()?;
 
     Ok(())
