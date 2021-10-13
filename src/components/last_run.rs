@@ -1,10 +1,9 @@
 use chrono::Local;
-use std::collections::HashMap;
 use thiserror::Error;
+use serde::Deserialize;
 
-// TODO: This is either enabled or disabled so figure out what to put here
-// Emtpy struct doesn't work, but empty hashmap does
-pub type LastRunConfig = HashMap<String, usize>;
+#[derive(Debug, Deserialize)]
+pub struct LastRunConfig {}
 
 #[derive(Error, Debug)]
 pub enum LastRunError {
