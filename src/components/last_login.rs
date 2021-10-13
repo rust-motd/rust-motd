@@ -1,5 +1,6 @@
 use crate::constants::INDENT_WIDTH;
 use chrono::DateTime;
+use lazy_static::lazy_static;
 use regex::Regex;
 use std::collections::HashMap;
 use termion::{color, style};
@@ -36,10 +37,11 @@ pub enum LastLoginError {
 }
 
 fn parse_entry(line: &str) -> Result<Entry, LastLoginError> {
-    // TODO: Use lazy_static
-    let separator_regex = Regex::new(r"(?:\s{2,})|(?:\s-\s)").unwrap();
+    lazy_static! {
+        static ref SEPARATOR_REGEX: Regex = Regex::new(r"(?:\s{2,})|(?:\s-\s)").unwrap();
+    }
 
-    let items = separator_regex.split(line).collect::<Vec<_>>();
+    let items = SEPARATOR_REGEX.split(line).collect::<Vec<_>>();
 
     if items.len() < 5 {
         return Err(LastLoginError::Parse);

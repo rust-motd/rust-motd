@@ -229,6 +229,7 @@ dependencies = [
  "chrono",
  "humantime",
  "itertools",
+ "lazy_static",
  "regex",
  "serde",
  "systemstat",

@@ -1,4 +1,5 @@
 use chrono::{Duration, TimeZone, Utc};
+use lazy_static::lazy_static;
 use regex::Regex;
 use serde::Deserialize;
 use std::collections::HashMap;
@@ -39,9 +40,6 @@ pub enum SSLCertsError {
     #[error(transparent)]
     BetterCommand(#[from] BetterCommandError),
 
-    #[error("Failed to compile Regex")]
-    Regex(#[from] regex::Error),
-
     #[error(transparent)]
     IO(#[from] std::io::Error),
 }
@@ -55,7 +53,11 @@ struct CertInfo {
 pub fn disp_ssl(config: SSLCertsCfg) -> Result<(), SSLCertsError> {
     // TODO: Support time zone
     // chrono does not support %Z
-    let re = Regex::new(r"notAfter=([A-Za-z]+ +\d+ +[\d:]+ +\d{4}) +[A-Za-z]+\n")?;
+
+    lazy_static! {
+        static ref RE: Regex =
+            Regex::new(r"notAfter=([A-Za-z]+ +\d+ +[\d:]+ +\d{4}) +[A-Za-z]+\n").unwrap();
+    }
     let mut cert_infos: Vec<CertInfo> = Vec::new();
 
     println!("SSL Certificates:");
@@ -68,7 +70,7 @@ pub fn disp_ssl(config: SSLCertsCfg) -> Result<(), SSLCertsError> {
             .arg("-dates")
             .check_status_and_get_output_string()?;
 
-        match re.captures(&output) {
+        match RE.captures(&output) {
             Some(captures) => {
                 let expiration = Utc.datetime_from_str(&captures[1], "%B %_d %T %Y")?;
 
