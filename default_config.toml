@@ -3,7 +3,7 @@
 #command = "hostname | figlet -f slant"
 
 #[weather]
-#url = "wttr.in/New+York,New+York?0"
+#url = "https://wttr.in/New+York,New+York?0"
 
 #[service_status]
 #Accounts = "accounts-daemon"
