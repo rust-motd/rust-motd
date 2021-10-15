@@ -18,6 +18,7 @@ which can quickly give an overview of your server or personal computer.
 
 - Install [rustup](https://rustup.rs/) and [cargo](https://github.com/rust-lang/cargo/)
 - Install and configure the default toolchain with `rustup install stable` and `rustup default stable`
+- Install the equivalent of the `libssl-dev` package using your package manager
 - Clone this repository and enter it
 - Run `cargo build` or `cargo run`
 

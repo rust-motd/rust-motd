@@ -1,12 +1,12 @@
 use chrono::{Duration, TimeZone, Utc};
-use lazy_static::lazy_static;
-use regex::Regex;
 use serde::Deserialize;
 use std::collections::HashMap;
 use termion::{color, style};
 use thiserror::Error;
+use openssl::x509::X509;
+use std::fs::File;
+use std::io::{BufReader, Read};
 
-use crate::command::{BetterCommand, BetterCommandError};
 use crate::constants::INDENT_WIDTH;
 
 #[derive(Debug, Deserialize)]
@@ -38,10 +38,10 @@ pub enum SSLCertsError {
     ChronoParse(#[from] chrono::ParseError),
 
     #[error(transparent)]
-    BetterCommand(#[from] BetterCommandError),
+    IO(#[from] std::io::Error),
 
     #[error(transparent)]
-    IO(#[from] std::io::Error),
+    ErrorStack(#[from] openssl::error::ErrorStack),
 }
 
 struct CertInfo {
@@ -51,49 +51,30 @@ struct CertInfo {
 }
 
 pub fn disp_ssl(config: SSLCertsCfg) -> Result<(), SSLCertsError> {
-    // TODO: Support time zone
-    // chrono does not support %Z
-
-    lazy_static! {
-        static ref RE: Regex =
-            Regex::new(r"notAfter=([A-Za-z]+ +\d+ +[\d:]+ +\d{4}) +[A-Za-z]+\n").unwrap();
-    }
     let mut cert_infos: Vec<CertInfo> = Vec::new();
 
     println!("SSL Certificates:");
     for (name, path) in config.certs {
-        let executable = "openssl";
-        let output = BetterCommand::new(executable)
-            .arg("x509")
-            .arg("-in")
-            .arg(&path)
-            .arg("-dates")
-            .check_status_and_get_output_string()?;
+        let cert = File::open(&path)?;
+        let cert = BufReader::new(cert);
+        let cert: Vec<u8> = cert.bytes().collect::<Result<_, _>>()?;
+        let cert = X509::from_pem(&cert)?;
 
-        match RE.captures(&output) {
-            Some(captures) => {
-                let expiration = Utc.datetime_from_str(&captures[1], "%B %_d %T %Y")?;
+        let expiration = Utc.datetime_from_str(&format!("{}", cert.not_after()), "%B %_d %T %Y %Z")?;
 
-                let now = Utc::now();
-                let status = if expiration < now {
-                    format!("{}expired on{}", color::Fg(color::Red), style::Reset)
-                } else if expiration < now + Duration::days(30) {
-                    format!("{}expiring on{}", color::Fg(color::Yellow), style::Reset)
-                } else {
-                    format!("{}valid until{}", color::Fg(color::Green), style::Reset)
-                };
-                cert_infos.push(CertInfo {
-                    name,
-                    status,
-                    expiration,
-                });
-            }
-            None => println!(
-                "{}Error parsing certificate {}",
-                " ".repeat(INDENT_WIDTH as usize),
-                name
-            ),
-        }
+        let now = Utc::now();
+        let status = if expiration < now {
+            format!("{}expired on{}", color::Fg(color::Red), style::Reset)
+        } else if expiration < now + Duration::days(30) {
+            format!("{}expiring on{}", color::Fg(color::Yellow), style::Reset)
+        } else {
+            format!("{}valid until{}", color::Fg(color::Green), style::Reset)
+        };
+        cert_infos.push(CertInfo {
+            name,
+            status,
+            expiration,
+        });
     }
 
     match config.sort_method {
