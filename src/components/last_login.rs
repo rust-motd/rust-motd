@@ -81,8 +81,6 @@ fn format_entry(entry: &Entry, longest_location: usize) -> Result<String, LastLo
 }
 
 pub fn disp_last_login(config: LastLoginCfg) -> Result<(), LastLoginError> {
-    // TODO: Clean this up
-
     println!("Last Login:");
 
     for (username, num_logins) in config {
