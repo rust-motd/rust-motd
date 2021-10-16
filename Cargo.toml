@@ -1,6 +1,6 @@
 [package]
 name = "rust-motd"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Marcel Robitaille <mail@marcelrobitaille.me>"]
 edition = "2018"
 description = "Beautiful, useful MOTD generation with zero runtime dependencies"
