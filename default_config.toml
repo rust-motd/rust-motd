@@ -1,6 +1,9 @@
 #[banner]
 #color = "red"
 #command = "hostname | figlet -f slant"
+# if you don't want a dependency on figlet, you can generate your
+# banner however you want, put it in a file, and then use something like:
+#command = "cat banner.txt"
 
 #[weather]
 #url = "https://wttr.in/New+York,New+York?0"
