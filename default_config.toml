@@ -1,37 +1,38 @@
-#[banner]
-#color = "red"
-#command = "hostname | figlet -f slant"
+# [banner]
+# color = "red"
+# command = "hostname | figlet -f slant"
 # if you don't want a dependency on figlet, you can generate your
 # banner however you want, put it in a file, and then use something like:
-#command = "cat banner.txt"
+# command = "cat banner.txt"
 
-#[weather]
-#url = "https://wttr.in/New+York,New+York?0"
+# [weather]
+# url = "https://wttr.in/New+York,New+York?0"
 
-#[service_status]
-#Accounts = "accounts-daemon"
-#Cron = "cron"
+# [service_status]
+# Accounts = "accounts-daemon"
+# Cron = "cron"
 
-#[uptime]
-#prefix = "up"
+# [uptime]
+# prefix = "up"
+
 # [user_service_status]
 # gpg-agent = "gpg-agent"
 
-#[ssl_certificates]
-#sort_method = "manual"
+# [ssl_certificates]
+# sort_method = "manual"
 #
 #    [ssl_certificates.certs]
 #    CertName1 = "/path/to/cert1.pem"
 #    CertName2 = "/path/to/cert2.pem"
 
-#[filesystems]
-#root = "/"
+# [filesystems]
+# root = "/"
 
-#[fail_2_ban]
-#jails = ["sshd", "anotherjail"]
+# [fail_2_ban]
+# jails = ["sshd", "anotherjail"]
 
-#[last_login]
-#sally = 2
-#jimmy = 1
+# [last_login]
+# sally = 2
+# jimmy = 1
 
 [last_run]
