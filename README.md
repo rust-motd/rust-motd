@@ -138,6 +138,9 @@ cat $HOME/.local/etc/motd
 
 ## Acknowledgements
 
+A huge thank you to the kind folks at Jupiter Broadcasting
+for featuring `rust-motd` on [Linux Unplugged 428](https://linuxunplugged.com/428)!
+
 `rust-motd` is made possible by the following packages:
 
 - [wttr.in](https://github.com/chubin/wttr.in) ":partly_sunny: The right way to check the weather"
