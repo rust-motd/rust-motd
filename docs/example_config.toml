@@ -10,7 +10,7 @@ Accounts = "accounts-daemon"
 Cron = "cronie"
 
 [uptime]
-prefix = "up"
+prefix = "Up"
 
 [ssl_certificates]
 sort_method = "alphabetical"

@@ -13,7 +13,7 @@
 # Cron = "cron"
 
 # [uptime]
-# prefix = "up"
+# prefix = "Up"
 
 # [user_service_status]
 # gpg-agent = "gpg-agent"
