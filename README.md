@@ -28,7 +28,7 @@ which can quickly give an overview of your server or personal computer.
 
 ## Configuration
 
-`rust-motd` uses a `TOML` configuration file to determine which components to run, and any parameters for those components. Components can be enabled or disabled by including or removing/commenting out the relevant section of configuration. An example configuration file is included in [default_config.toml](default_config.toml).
+`rust-motd` uses a `TOML` configuration file to determine which components to run, and any parameters for those components. Components can be enabled or disabled by including or removing/commenting out the relevant section of configuration. An example configuration file is included in [example_config.toml](example_config.toml).
 
 A configuration file can either be specified as the first argument to `rust-motd` via the comnmand line or placed in one of two default locations. If a config file is not specified as an argument, `rust-motd` will check `$XDG_CONFIG_HOME/rust-motd/config.toml` and `$HOME/.config/rust-motd/config.toml` in that order.
 
