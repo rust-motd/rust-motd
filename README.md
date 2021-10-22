@@ -1,6 +1,6 @@
 # `rust-motd`
 
-> Beautiful, useful MOTD generation with zero runtime dependencies
+> Beautiful, useful, configurable MOTD generation with zero runtime dependencies
 
 <p align="center">
 	<img src="./docs/example_output.svg" />
