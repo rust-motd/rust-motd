@@ -15,7 +15,7 @@ pwd
 
 cargo build
 
-sudo ../target/debug/rust_motd ./example_config.toml > $TXT_FILE
+sudo ../target/debug/rust-motd ./example_config.toml > $TXT_FILE
 
 echo "" >> $TXT_FILE
 (tput setaf 4; echo "~/code/rust_motd") >> $TXT_FILE
