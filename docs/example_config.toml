@@ -3,7 +3,7 @@ color = "red"
 command = "figlet nas -f slant"
 
 [weather]
-url = "wttr.in/New+York,New+York?0"
+loc = "New York, New York"
 
 [service_status]
 Accounts = "accounts-daemon"
