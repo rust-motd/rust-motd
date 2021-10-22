@@ -73,19 +73,19 @@ fn main() {
             }
 
             if let Some(ssl_certificates_config) = config.ssl_certificates {
-                disp_ssl(ssl_certificates_config)
+                disp_ssl(ssl_certificates_config, &config.global)
                     .unwrap_or_else(|err| println!("SSL Certificate error: {}", err));
                 println!();
             }
 
             if let Some(filesystems) = config.filesystems {
-                disp_filesystem(filesystems, config.global, &sys)
+                disp_filesystem(filesystems, &config.global, &sys)
                     .unwrap_or_else(|err| println!("Filesystem error: {}", err));
                 println!();
             }
 
             if let Some(last_login_config) = config.last_login {
-                disp_last_login(last_login_config)
+                disp_last_login(last_login_config, &config.global)
                     .unwrap_or_else(|err| println!("Last login error: {}", err));
                 println!();
             }
@@ -97,7 +97,7 @@ fn main() {
             }
 
             if let Some(last_run_config) = config.last_run {
-                disp_last_run(last_run_config)
+                disp_last_run(last_run_config, &config.global)
                     .unwrap_or_else(|err| println!("Last run error: {}", err));
             }
         }

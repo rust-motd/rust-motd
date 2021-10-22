@@ -2,6 +2,8 @@ use chrono::Local;
 use serde::Deserialize;
 use thiserror::Error;
 
+use crate::constants::GlobalSettings;
+
 #[derive(Debug, Deserialize)]
 pub struct LastRunConfig {}
 
@@ -14,7 +16,13 @@ pub enum LastRunError {
     IO(#[from] std::io::Error),
 }
 
-pub fn disp_last_run(_last_run_config: LastRunConfig) -> Result<(), LastRunError> {
-    println!("Last updated: {}", Local::now().format("%Y/%m/%d %I:%M %P"));
+pub fn disp_last_run(
+    _last_run_config: LastRunConfig,
+    global_settings: &GlobalSettings,
+) -> Result<(), LastRunError> {
+    println!(
+        "Last updated: {}",
+        Local::now().format(&global_settings.time_format)
+    );
     Ok(())
 }

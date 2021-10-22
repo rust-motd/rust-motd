@@ -66,7 +66,7 @@ fn print_row<'a>(items: [&str; 6], column_sizes: impl IntoIterator<Item = &'a us
 
 pub fn disp_filesystem(
     config: FilesystemsCfg,
-    global_settings: GlobalSettings,
+    global_settings: &GlobalSettings,
     sys: &System,
 ) -> Result<(), FilesystemsError> {
     if config.is_empty() {

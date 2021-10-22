@@ -1,4 +1,3 @@
-use crate::constants::INDENT_WIDTH;
 use chrono::DateTime;
 use lazy_static::lazy_static;
 use regex::Regex;
@@ -7,6 +6,7 @@ use termion::{color, style};
 use thiserror::Error;
 
 use crate::command::{BetterCommand, BetterCommandError};
+use crate::constants::{GlobalSettings, INDENT_WIDTH};
 
 pub type LastLoginCfg = HashMap<String, usize>;
 
@@ -55,7 +55,11 @@ fn parse_entry(line: &str) -> Result<Entry, LastLoginError> {
     })
 }
 
-fn format_entry(entry: &Entry, longest_location: usize) -> Result<String, LastLoginError> {
+fn format_entry(
+    entry: &Entry,
+    longest_location: usize,
+    time_format: &str,
+) -> Result<String, LastLoginError> {
     let location = format!("{:>width$}", entry.location, width = longest_location);
     let start_time = DateTime::parse_from_rfc3339(entry.start_time)?;
 
@@ -74,13 +78,16 @@ fn format_entry(entry: &Entry, longest_location: usize) -> Result<String, LastLo
     Ok(format!(
         "{indent}from {location} at {start_time} ({end_time})",
         location = location,
-        start_time = start_time.format("%m/%d/%Y %I:%M%p"),
+        start_time = start_time.format(time_format),
         end_time = end_time,
         indent = " ".repeat(2 * INDENT_WIDTH as usize),
     ))
 }
 
-pub fn disp_last_login(config: LastLoginCfg) -> Result<(), LastLoginError> {
+pub fn disp_last_login(
+    config: LastLoginCfg,
+    global_settings: &GlobalSettings,
+) -> Result<(), LastLoginError> {
     println!("Last Login:");
 
     for (username, num_logins) in config {
@@ -116,7 +123,7 @@ pub fn disp_last_login(config: LastLoginCfg) -> Result<(), LastLoginError> {
             .unwrap();
         let formatted_entries = entries
             .iter()
-            .map(|entry| format_entry(entry, longest_location));
+            .map(|entry| format_entry(entry, longest_location, &global_settings.time_format));
         for entry in formatted_entries {
             match entry {
                 Ok(x) => println!("{}", x),
