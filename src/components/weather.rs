@@ -51,7 +51,11 @@ pub fn disp_weather(config: WeatherCfg) -> Result<(), WeatherError> {
     let body = ureq::get(&url)
         .set("User-Agent", "curl")
         .call()?
-        .into_string()?;
+        .into_string()?
+        .replace("+", " ") // de-slugify the placename by removing '+'
+        .replace(",", ", ") // and adding a space after commas
+        .replace("  ", " "); // necessary because sometimes there are already spaces
+                             // after the comma in the placename
 
     let mut out = std::io::stdout();
     out.write_all(body.as_bytes())?;
