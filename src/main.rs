@@ -17,6 +17,7 @@ use components::uptime::{disp_uptime, UptimeCfg};
 use components::weather::{disp_weather, WeatherCfg};
 mod command;
 mod constants;
+use constants::GlobalSettings;
 
 #[derive(Debug, Deserialize)]
 struct Config {
@@ -30,6 +31,8 @@ struct Config {
     last_login: Option<LastLoginCfg>,
     weather: Option<WeatherCfg>,
     last_run: Option<LastRunConfig>,
+    #[serde(default)]
+    global: GlobalSettings,
 }
 
 fn main() {
@@ -76,7 +79,7 @@ fn main() {
             }
 
             if let Some(filesystems) = config.filesystems {
-                disp_filesystem(filesystems, &sys)
+                disp_filesystem(filesystems, config.global, &sys)
                     .unwrap_or_else(|err| println!("Filesystem error: {}", err));
                 println!();
             }

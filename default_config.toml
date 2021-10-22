@@ -1,3 +1,9 @@
+# [global]
+# progress_full_character = "="
+# progress_empty_character = "="
+# progress_prefix = "["
+# progress_suffix = "]"
+
 # [banner]
 # color = "red"
 # command = "hostname | figlet -f slant"

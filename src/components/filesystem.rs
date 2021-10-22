@@ -7,7 +7,7 @@ use systemstat::{Filesystem, Platform, System};
 use termion::{color, style};
 use thiserror::Error;
 
-use crate::constants::INDENT_WIDTH;
+use crate::constants::{GlobalSettings, INDENT_WIDTH};
 
 #[derive(Error, Debug)]
 pub enum FilesystemsError {
@@ -64,7 +64,11 @@ fn print_row<'a>(items: [&str; 6], column_sizes: impl IntoIterator<Item = &'a us
     );
 }
 
-pub fn disp_filesystem(config: FilesystemsCfg, sys: &System) -> Result<(), FilesystemsError> {
+pub fn disp_filesystem(
+    config: FilesystemsCfg,
+    global_settings: GlobalSettings,
+    sys: &System,
+) -> Result<(), FilesystemsError> {
     if config.is_empty() {
         return Err(FilesystemsError::ConfigEmtpy);
     }
@@ -109,7 +113,11 @@ pub fn disp_filesystem(config: FilesystemsCfg, sys: &System) -> Result<(), Files
 
     print_row(header, &column_sizes);
 
-    let bar_width = column_sizes.iter().sum::<usize>() + (header.len() - 2) * INDENT_WIDTH - 2;
+    // -2 because "Filesystems" does not count (it is not indented)
+    // and because zero indexed
+    let bar_width = column_sizes.iter().sum::<usize>() + (header.len() - 2) * INDENT_WIDTH
+        - global_settings.progress_prefix.len()
+        - global_settings.progress_suffix.len();
 
     for entry in entries {
         let bar_full = ((bar_width as f64) * entry.used_ratio) as usize;
@@ -134,13 +142,24 @@ pub fn disp_filesystem(config: FilesystemsCfg, sys: &System) -> Result<(), Files
         };
 
         println!(
-            "{}[{}{}{}{}{}]",
-            " ".repeat(INDENT_WIDTH),
-            full_color,
-            "=".repeat(bar_full),
-            color::Fg(color::LightBlack),
-            "=".repeat(bar_empty),
-            style::Reset,
+            "{}",
+            [
+                " ".repeat(INDENT_WIDTH),
+                global_settings.progress_prefix.to_string(),
+                full_color,
+                global_settings
+                    .progress_full_character
+                    .to_string()
+                    .repeat(bar_full),
+                color::Fg(color::LightBlack).to_string(),
+                global_settings
+                    .progress_empty_character
+                    .to_string()
+                    .repeat(bar_empty),
+                style::Reset.to_string(),
+                global_settings.progress_suffix.to_string(),
+            ]
+            .join("")
         );
     }
 
