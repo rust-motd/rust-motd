@@ -1,6 +1,6 @@
 use chrono::Local;
-use thiserror::Error;
 use serde::Deserialize;
+use thiserror::Error;
 
 #[derive(Debug, Deserialize)]
 pub struct LastRunConfig {}

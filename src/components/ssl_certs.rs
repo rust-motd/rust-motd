@@ -1,11 +1,11 @@
 use chrono::{Duration, TimeZone, Utc};
+use openssl::x509::X509;
 use serde::Deserialize;
 use std::collections::HashMap;
-use termion::{color, style};
-use thiserror::Error;
-use openssl::x509::X509;
 use std::fs::File;
 use std::io::{BufReader, Read};
+use termion::{color, style};
+use thiserror::Error;
 
 use crate::constants::INDENT_WIDTH;
 
@@ -60,7 +60,8 @@ pub fn disp_ssl(config: SSLCertsCfg) -> Result<(), SSLCertsError> {
         let cert: Vec<u8> = cert.bytes().collect::<Result<_, _>>()?;
         let cert = X509::from_pem(&cert)?;
 
-        let expiration = Utc.datetime_from_str(&format!("{}", cert.not_after()), "%B %_d %T %Y %Z")?;
+        let expiration =
+            Utc.datetime_from_str(&format!("{}", cert.not_after()), "%B %_d %T %Y %Z")?;
 
         let now = Utc::now();
         let status = if expiration < now {
