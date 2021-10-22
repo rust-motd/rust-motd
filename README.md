@@ -134,7 +134,12 @@ cat $HOME/.local/etc/motd
 
 `rust-motd` took a lot of inspiration from `panda-motd`.
 
-- [panda-motd](https://github.com/taylorthurlow/panda-motd): "a utility for generating a more useful MOTD", written in Ruby
+- [panda-motd](https://github.com/taylorthurlow/panda-motd): "a utility for generating a more useful MOTD", Ruby
+- [motd-on-acid](https://github.com/x70b1/motd-on-acid):  "This MOTD has so many colors!", Shell
+- [fancy-motd](https://github.com/bcyran/fancy-motd): "Fancy, colorful MOTD written in bash. Server status at a glance.", Shell
+- [HermannBjorgvin/MOTD](https://github.com/HermannBjorgvin/motd): "Mini MOTD, a customizable, configurable, standardized MOTD for your homelab server or laptop", Shell
+
+Search "MOTD" on [r/unixporn](https://reddit.com/r/unixporn) for more!
 
 ## Acknowledgements
 
