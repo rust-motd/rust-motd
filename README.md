@@ -1,6 +1,6 @@
 # `rust-motd`
 
-> Beautiful, useful, configurable MOTD generation with zero runtime dependencies
+> Beautiful, useful, configurable MOTD generation with zero[¹](#footnote-1) runtime dependencies
 
 <p align="center">
 	<img src="./docs/example_output.svg" />
@@ -156,3 +156,10 @@ for featuring `rust-motd` on [Linux Unplugged 428](https://linuxunplugged.com/42
 - [termtosvg](https://github.com/nbedos/termtosvg): "Record terminal sessions as SVG animations", used to generate the preview in the README
 - [bytesize](https://docs.rs/bytesize/1.0.1/bytesize/): Rust library used for binary size representations
 - [humantime](https://docs.rs/humantime/2.0.1/humantime/): "Human-friendly time parser and formatter", used for uptime component
+
+## Footnotes
+<a id="footnote-1"></a>
+¹: Certain components do have dependencies: `fail2ban` (`fail2ban`), `service_status` (`systemd`),
+`last_login` (`last`).
+However, it would not make sense to request the status of a package that is not installed.
+[Furthermore, there are some caveats when compiling for minimal distributions like Alpine Linux.](https://www.reddit.com/r/rust/comments/qdm8gf/comment/hhor67v/?utm_source=share&utm_medium=web2x&context=3)
