@@ -22,6 +22,8 @@ which can quickly give an overview of your server or personal computer.
 - Clone this repository and enter it
 - Run `cargo build` or `cargo run`
 
+Note: To cross compile, you may need to install additional packages. For example, to cross compile for Alpine, it was necessary to install the `musl-tools` package on Ubuntu (specifically to compile the `ring` crate), after which an executable could be successfully cross-compiled with `cargo build --target x86_64-unknown-linux-musl` (assuming you've already added the musl toolchain via `rustup target add x86_64-unknown-linux-musl`).	
+
 ### Arch Linux
 
 `rust-motd` is in the AUR under [`rust-motd-bin`](https://aur.archlinux.org/packages/rust-motd-bin/) thanks to [`cargo-aur`](https://github.com/fosskers/cargo-aur).
