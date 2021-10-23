@@ -22,7 +22,9 @@ which can quickly give an overview of your server or personal computer.
 - Clone this repository and enter it
 - Run `cargo build` or `cargo run`
 
-Note: To cross compile, you may need to install additional packages. For example, to cross compile for Alpine, it was necessary to install the `musl-tools` package on Ubuntu (specifically to compile the `ring` crate), after which an executable could be successfully cross-compiled with `cargo build --target x86_64-unknown-linux-musl` (assuming you've already added the musl toolchain via `rustup target add x86_64-unknown-linux-musl`).	
+<a id="compiling-alpine"></a>
+Note: To cross compile, you may need to install additional packages. For example, to cross compile for Alpine, it was necessary to install the `musl-tools` package on Ubuntu (specifically to compile the `ring` crate), after which an executable could be successfully cross-compiled with `cargo build --target x86_64-unknown-linux-musl` (assuming you've already added the musl toolchain via `rustup target add x86_64-unknown-linux-musl`).
+[See more.](https://www.reddit.com/r/rust/comments/qdm8gf/comment/hhor67v/?utm_source=share&utm_medium=web2x&context=3)
 
 ### Arch Linux
 
@@ -162,4 +164,4 @@ for featuring `rust-motd` on [Linux Unplugged 428](https://linuxunplugged.com/42
 ¹: Certain components do have dependencies: `fail2ban` (`fail2ban`), `service_status` (`systemd`),
 `last_login` (`last`).
 However, it would not make sense to request the status of a package that is not installed.
-[Furthermore, there are some caveats when compiling for minimal distributions like Alpine Linux.](https://www.reddit.com/r/rust/comments/qdm8gf/comment/hhor67v/?utm_source=share&utm_medium=web2x&context=3)
+[Furthermore, there are some caveats when compiling for minimal distributions like Alpine Linux.](#compiling-alpine)
