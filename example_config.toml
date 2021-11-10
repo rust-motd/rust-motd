@@ -14,6 +14,7 @@
 
 # [weather]
 # url = "https://wttr.in/New+York,New+York?0"
+# proxy = "http://proxy:8080"
 
 # [service_status]
 # Accounts = "accounts-daemon"

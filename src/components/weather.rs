@@ -8,6 +8,8 @@ pub struct WeatherCfg {
     command: Option<String>,
     url: Option<String>,
 
+    proxy: Option<String>,
+
     #[serde(default = "String::new")]
     loc: String,
 
@@ -51,7 +53,17 @@ pub fn disp_weather(config: WeatherCfg) -> Result<(), WeatherError> {
             base
         }
     };
-    let body = ureq::get(&url)
+
+    let agent = match config.proxy {
+        Some(proxy) => {
+            let proxy = ureq::Proxy::new(proxy)?;
+            ureq::AgentBuilder::new().proxy(proxy).build()
+        }
+        None => {
+            ureq::AgentBuilder::new().build()
+        }
+    };
+    let body = agent.get(&url)
         .set("User-Agent", "curl")
         .call()?
         .into_string()?;
