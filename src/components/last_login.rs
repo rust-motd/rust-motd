@@ -38,7 +38,7 @@ pub enum LastLoginError {
 
 fn parse_entry(line: &str) -> Result<Entry, LastLoginError> {
     lazy_static! {
-        static ref SEPARATOR_REGEX: Regex = Regex::new(r"(?:\s{2,})|(?:\s-\s)").unwrap();
+        static ref SEPARATOR_REGEX: Regex = Regex::new(r"(?:\s-\s)|(?:\s+)").unwrap();
     }
 
     let items = SEPARATOR_REGEX.split(line).collect::<Vec<_>>();
