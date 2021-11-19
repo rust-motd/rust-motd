@@ -41,17 +41,29 @@ fn parse_entry(line: &str) -> Result<Entry, LastLoginError> {
         static ref SEPARATOR_REGEX: Regex = Regex::new(r"(?:\s{2,})|(?:\s-\s)").unwrap();
     }
 
-    let items = SEPARATOR_REGEX.split(line).collect::<Vec<_>>();
+    const INDEX_USERNAME: usize = 0;
+    const INDEX_LOCATION: usize = 2;
+    const INDEX_START_TIME: usize = 3;
+    const INDEX_END_TIME: usize = 4;
+
+    let mut items = SEPARATOR_REGEX.split(line).collect::<Vec<_>>();
+
+    // Handle case where there is only a single space between location and start time
+    if items[INDEX_LOCATION].contains(' ') {
+        let mut split = items[INDEX_LOCATION].split(' ');
+        items[INDEX_LOCATION] = split.next().unwrap();
+        items.insert(INDEX_START_TIME, split.next().unwrap());
+    }
 
     if items.len() < 5 {
         return Err(LastLoginError::Parse);
     }
 
     Ok(Entry {
-        username: items[0],
-        location: items[2],
-        start_time: items[3],
-        end_time: items[4],
+        username: items[INDEX_USERNAME],
+        location: items[INDEX_LOCATION],
+        start_time: items[INDEX_START_TIME],
+        end_time: items[INDEX_END_TIME],
     })
 }
 
