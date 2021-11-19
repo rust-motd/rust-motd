@@ -49,7 +49,7 @@ fn parse_entry(line: &str) -> Result<Entry, LastLoginError> {
 
     Ok(Entry {
         username: items[0],
-        location: items[2],
+        location: items[1],
         start_time: items[3],
         end_time: items[4],
     })
@@ -94,12 +94,10 @@ pub fn disp_last_login(
         println!("{}{}:", " ".repeat(INDENT_WIDTH as usize), username);
 
         // Use `last` command to get last logins
-        let executable = "last";
-        let output = BetterCommand::new(executable)
+        let output = BetterCommand::new("bash")
             // Sometimes last doesn't show location otherwise for some reason
-            .arg("--ip")
-            .arg("--time-format=iso")
-            .arg(&username)
+            .arg("-c")
+            .arg(format!("last --time-format iso --ip {} | awk '{{ out=$1\"  \"$3; $3=\"\"; gsub(/ still/, \"  still\", $0); print out\"  \"$0; }}'", &username))
             .check_status_and_get_output_string()?;
 
         // Split lines and take desigred number
