@@ -78,6 +78,10 @@ If you need a proxy to access the internet, specify it in below item:
 
  - List of filesystems to print the information of, in the form of pairs of names (used for display) and mount points.
 
+ ### Memory
+
+ - `swap_pos`: Either `beside`, `below` or `none` to indicate the location to display the sawp memory usage, if any.
+
 ### Fail2Ban
 
 - `jails`: A list of Fail2Ban jails to print the ban amounts of.
@@ -89,6 +93,16 @@ If you need a proxy to access the internet, specify it in below item:
 ### Last Run
 
 - If present, prints the time that the `rust-motd` was run (useful if updating the motd only periodically e.g. via Cron).
+
+### Global Config
+The global configuration is used for settings that may span multiple components, e.g. the time format string, and progress bar style.
+
+- `progress_full_character` (Default `'='`): The character to use for the line segment of the progress bar indicating the "active" portion of the quantity represented
+- `progress_empty_character` (Default `'='`): The character to use for the line segment of the progress bar indicating the "inactive" portion of the quantity represented
+- `progress_prefix` (Default `"["`): The character to used to cap the left side of the progress bar
+- `progress_suffix` (Default `"]"`): The character to used to cap the right side of the progress bar
+- `progress_width` (Default `80`): The default width of the progress bar, used only if no other "size hint" is available. More specifically, the `filesystem` component will automatically determine its width. If the `filesystem` component is present, then the `memory` component will use the width of the filesystem as its size hint. Otherwise it will use the configured value.
+- `time_format` (Default `"%Y-%m-%d %H:%M:%S"`): time format string
 
 ## Setup
 

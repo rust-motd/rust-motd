@@ -68,7 +68,7 @@ pub fn disp_filesystem(
     config: FilesystemsCfg,
     global_settings: &GlobalSettings,
     sys: &System,
-) -> Result<(), FilesystemsError> {
+) -> Result<Option<usize>, FilesystemsError> {
     if config.is_empty() {
         return Err(FilesystemsError::ConfigEmtpy);
     }
@@ -118,6 +118,8 @@ pub fn disp_filesystem(
     let bar_width = column_sizes.iter().sum::<usize>() + (header.len() - 2) * INDENT_WIDTH
         - global_settings.progress_prefix.len()
         - global_settings.progress_suffix.len();
+    let fs_display_width =
+        bar_width + global_settings.progress_prefix.len() + global_settings.progress_suffix.len();
 
     for entry in entries {
         let bar_full = ((bar_width as f64) * entry.used_ratio) as usize;
@@ -163,5 +165,5 @@ pub fn disp_filesystem(
         );
     }
 
-    Ok(())
+    Ok(Some(fs_display_width))
 }

@@ -12,6 +12,8 @@ pub struct GlobalSettings {
     pub progress_prefix: String,
     #[serde(default = "default_progress_suffix")]
     pub progress_suffix: String,
+    #[serde(default = "default_progress_width")]
+    pub progress_width: usize,
     #[serde(default = "default_time_format")]
     pub time_format: String,
 }
@@ -28,6 +30,10 @@ fn default_progress_suffix() -> String {
     "]".to_string()
 }
 
+fn default_progress_width() -> usize {
+    80
+}
+
 fn default_time_format() -> String {
     "%Y-%m-%d %H:%M:%S".to_string()
 }
@@ -40,6 +46,7 @@ impl Default for GlobalSettings {
             progress_empty_character: default_progress_character(),
             progress_prefix: default_progress_prefix(),
             progress_suffix: default_progress_suffix(),
+            progress_width: default_progress_width(),
             time_format: default_time_format(),
         }
     }

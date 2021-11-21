@@ -2,6 +2,7 @@ use serde::Deserialize;
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
+use systemstat::Memory;
 use systemstat::{Platform, System};
 use thiserror::Error;
 
@@ -11,6 +12,7 @@ use components::fail_2_ban::{disp_fail_2_ban, Fail2BanCfg};
 use components::filesystem::{disp_filesystem, FilesystemsCfg};
 use components::last_login::{disp_last_login, LastLoginCfg};
 use components::last_run::{disp_last_run, LastRunConfig};
+use components::memory::{disp_memory, MemoryCfg};
 use components::service_status::{disp_service_status, ServiceStatusCfg};
 use components::ssl_certs::{disp_ssl, SSLCertsCfg};
 use components::uptime::{disp_uptime, UptimeCfg};
@@ -27,6 +29,7 @@ struct Config {
     uptime: Option<UptimeCfg>,
     ssl_certificates: Option<SSLCertsCfg>,
     filesystems: Option<FilesystemsCfg>,
+    memory: Option<MemoryCfg>,
     fail_2_ban: Option<Fail2BanCfg>,
     last_login: Option<LastLoginCfg>,
     weather: Option<WeatherCfg>,
@@ -78,8 +81,18 @@ fn main() {
                 println!();
             }
 
+            let mut bar_size_hint: Option<usize> = None;
             if let Some(filesystems) = config.filesystems {
-                disp_filesystem(filesystems, &config.global, &sys)
+                bar_size_hint =
+                    disp_filesystem(filesystems, &config.global, &sys).unwrap_or_else(|err| {
+                        println!("Filesystem error: {}", err);
+                        None
+                    });
+                println!();
+            }
+
+            if let Some(memory) = config.memory {
+                disp_memory(memory, &config.global, &sys, bar_size_hint) // TODO:
                     .unwrap_or_else(|err| println!("Filesystem error: {}", err));
                 println!();
             }

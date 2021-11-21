@@ -36,6 +36,9 @@
 # [filesystems]
 # root = "/"
 
+# [memory]
+# swap_pos = "beside" # or "below" or "none"
+
 # [fail_2_ban]
 # jails = ["sshd", "anotherjail"]
 
