@@ -2,7 +2,6 @@ use serde::Deserialize;
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
-use systemstat::Memory;
 use systemstat::{Platform, System};
 use thiserror::Error;
 

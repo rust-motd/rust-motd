@@ -1,4 +1,3 @@
-use bytesize::ByteSize;
 use serde::Deserialize;
 use systemstat::{saturating_sub_bytes, Platform, System};
 use termion::{color, style};
