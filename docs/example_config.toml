@@ -21,6 +21,9 @@ sort_method = "alphabetical"
 [filesystems]
 root = "/"
 
+[memory]
+swap_pos = "beside"
+
 [fail_2_ban]
 jails = ["sshd"]
 
