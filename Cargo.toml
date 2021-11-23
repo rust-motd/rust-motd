@@ -23,4 +23,6 @@ itertools = "0.8"
 thiserror = "1.0.24"
 lazy_static = "1.4.0"
 ureq = "2.2.0"
+time = "0.1.44"
+last-rs = { path = "../last-rs" }
 openssl = { version = "0.10.36", features = ["vendored"] }

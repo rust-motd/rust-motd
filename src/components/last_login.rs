@@ -1,97 +1,64 @@
-use chrono::DateTime;
-use lazy_static::lazy_static;
-use regex::Regex;
+use humantime::format_duration;
+use last_rs::{iter_logins, Enter, Exit, LastError};
 use std::collections::HashMap;
+use std::time::Duration;
 use termion::{color, style};
 use thiserror::Error;
+use time;
 
-use crate::command::{BetterCommand, BetterCommandError};
+use crate::command::BetterCommandError;
 use crate::constants::{GlobalSettings, INDENT_WIDTH};
 
 pub type LastLoginCfg = HashMap<String, usize>;
-
-#[derive(Debug)]
-struct Entry<'a> {
-    username: &'a str,
-    location: &'a str,
-    start_time: &'a str,
-    end_time: &'a str,
-}
 
 #[derive(Error, Debug)]
 pub enum LastLoginError {
     #[error(transparent)]
     BetterCommand(#[from] BetterCommandError),
 
-    #[error("Could not find any logins for user {username:?}")]
-    NoUser { username: String },
-
-    #[error("Failed to parse output from `last`")]
-    Parse,
-
     #[error(transparent)]
     ChronoParse(#[from] chrono::ParseError),
 
     #[error(transparent)]
+    ChronoOutOfRange(#[from] time::OutOfRangeError),
+
+    #[error(transparent)]
     IO(#[from] std::io::Error),
-}
 
-fn parse_entry(line: &str) -> Result<Entry, LastLoginError> {
-    lazy_static! {
-        static ref SEPARATOR_REGEX: Regex = Regex::new(r"(?:\s{2,})|(?:\s-\s)|(?:\s\()").unwrap();
-    }
-
-    const INDEX_USERNAME: usize = 0;
-    const INDEX_LOCATION: usize = 2;
-    const INDEX_START_TIME: usize = 3;
-    const INDEX_END_TIME: usize = 4;
-
-    let mut items = SEPARATOR_REGEX.split(line).collect::<Vec<_>>();
-
-    // Handle case where there is only a single space between location and start time
-    if items[INDEX_LOCATION].contains(' ') {
-        let mut split = items[INDEX_LOCATION].split(' ');
-        items[INDEX_LOCATION] = split.next().unwrap();
-        items.insert(INDEX_START_TIME, split.next().unwrap());
-    }
-
-    if items.len() < 5 {
-        return Err(LastLoginError::Parse);
-    }
-
-    Ok(Entry {
-        username: items[INDEX_USERNAME],
-        location: items[INDEX_LOCATION],
-        start_time: items[INDEX_START_TIME],
-        end_time: items[INDEX_END_TIME],
-    })
+    #[error(transparent)]
+    Last(#[from] LastError),
 }
 
 fn format_entry(
-    entry: &Entry,
+    entry: &Enter,
     longest_location: usize,
     time_format: &str,
 ) -> Result<String, LastLoginError> {
-    let location = format!("{:>width$}", entry.location, width = longest_location);
-    let start_time = DateTime::parse_from_rfc3339(entry.start_time)?;
+    let location = format!("{:>width$}", entry.host, width = longest_location);
+    let login_time = entry.login_time;
 
-    let end_time = match DateTime::parse_from_rfc3339(entry.end_time) {
-        Ok(end_time) => format!("{} minutes", (end_time - start_time).num_minutes()),
-        Err(_) => {
-            let colour = if entry.end_time == "still logged in" {
-                format!("{}", color::Fg(color::Green))
-            } else {
-                format!("{}", color::Fg(color::Yellow))
+    let exit = match entry.exit {
+        Exit::Logout(time) => {
+            let delta_time = (time - login_time).to_std()?;
+            let delta_time = Duration::new((delta_time.as_secs() / 60) * 60, 0);
+            format_duration(delta_time).to_string()
+        }
+        _ => {
+            let (colour, message) = match entry.exit {
+                Exit::StillLoggedIn => (color::Fg(color::Green).to_string(), "still logged in"),
+                Exit::Crash(_) => (color::Fg(color::Yellow).to_string(), "crash"),
+                Exit::Reboot(_) => (color::Fg(color::Yellow).to_string(), "down"),
+                Exit::Logout(_) => unreachable!(),
             };
-            format!("{}{}{}", colour, entry.end_time.to_string(), style::Reset)
+            format!("{}{}{}", colour, message, style::Reset)
         }
     };
 
     Ok(format!(
-        "{indent}from {location} at {start_time} ({end_time})",
+        "{indent}from {location} at {login_time} ({exit})",
         location = location,
-        start_time = start_time.format(time_format),
-        end_time = end_time,
+        login_time = login_time.format(time_format),
+        exit = exit,
         indent = " ".repeat(2 * INDENT_WIDTH as usize),
     ))
 }
@@ -104,35 +71,13 @@ pub fn disp_last_login(
 
     for (username, num_logins) in config {
         println!("{}{}:", " ".repeat(INDENT_WIDTH as usize), username);
-
-        // Use `last` command to get last logins
-        let executable = "last";
-        let output = BetterCommand::new(executable)
-            // Sometimes last doesn't show location otherwise for some reason
-            .arg("--ip")
-            .arg("--time-format=iso")
-            .arg(&username)
-            .check_status_and_get_output_string()?;
-
-        // Split lines and take desigred number
-        let mut output = output
-            .lines()
-            .filter(|line| line.starts_with(&username))
+        let entries = iter_logins()?
+            .into_iter()
+            .filter(|entry| entry.user == username)
             .take(num_logins)
-            .peekable();
+            .collect::<Vec<Enter>>();
 
-        if output.peek().is_none() {
-            return Err(LastLoginError::NoUser { username });
-        }
-
-        let entries = output
-            .map(parse_entry)
-            .collect::<Result<Vec<Entry>, LastLoginError>>()?;
-        let longest_location = entries
-            .iter()
-            .map(|entry| entry.location.len())
-            .max()
-            .unwrap();
+        let longest_location = entries.iter().map(|entry| entry.host.len()).max().unwrap();
         let formatted_entries = entries
             .iter()
             .map(|entry| format_entry(entry, longest_location, &global_settings.time_format));
