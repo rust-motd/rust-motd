@@ -48,7 +48,7 @@ The weather component allows you to either specify a [wttr.in](https://wttr.in) 
 
 Either:
 
-- `url`: a [wttr.in](https://wttr.in) query url for the relevant location. E.g. `whttps://ttr.in` or `https://wttr.in/New+York,New+York?0`. For more detail about the options available via the request url, see the [wttr.in documentation](https://github.com/chubin/wttr.in). The response of an http request to the specified url is output directly to the console, so in theory you could use a service other than [wttr.in](wttr.in).
+- `url`: a [wttr.in](https://wttr.in) query url for the relevant location. E.g. `https://wttr.in` or `https://wttr.in/New+York,New+York?0`. For more detail about the options available via the request url, see the [wttr.in documentation](https://github.com/chubin/wttr.in). The response of an http request to the specified url is output directly to the console, so in theory you could use a service other than [wttr.in](wttr.in).
 
 or:
 
