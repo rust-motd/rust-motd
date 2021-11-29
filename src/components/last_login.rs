@@ -1,5 +1,5 @@
 use humantime::format_duration;
-use last_rs::{iter_logins, Enter, Exit, LastError};
+use last_rs::{get_logins, Enter, Exit, LastError};
 use std::collections::HashMap;
 use std::time::Duration;
 use termion::{color, style};
@@ -71,7 +71,7 @@ pub fn disp_last_login(
 
     for (username, num_logins) in config {
         println!("{}{}:", " ".repeat(INDENT_WIDTH as usize), username);
-        let entries = iter_logins()?
+        let entries = get_logins("/var/log/wtmp")?
             .into_iter()
             .filter(|entry| entry.user == username)
             .take(num_logins)
