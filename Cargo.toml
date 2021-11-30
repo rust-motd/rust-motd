@@ -23,4 +23,6 @@ itertools = "0.8"
 thiserror = "1.0.24"
 lazy_static = "1.4.0"
 ureq = "2.2.0"
+time = "0.1.44"
+last-rs = { git = "https://github.com/MarcelRobitaille/last-rs", rev = "2cbc842931198ad2043408842f8f0149e512f13a" }
 openssl = { version = "0.10.36", features = ["vendored"] }
