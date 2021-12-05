@@ -59,11 +59,10 @@ pub fn disp_weather(config: WeatherCfg) -> Result<(), WeatherError> {
             let proxy = ureq::Proxy::new(proxy)?;
             ureq::AgentBuilder::new().proxy(proxy).build()
         }
-        None => {
-            ureq::AgentBuilder::new().build()
-        }
+        None => ureq::AgentBuilder::new().build(),
     };
-    let body = agent.get(&url)
+    let body = agent
+        .get(&url)
         .set("User-Agent", "curl")
         .call()?
         .into_string()?;
