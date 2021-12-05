@@ -5,7 +5,6 @@ use ureq;
 
 #[derive(Debug, Deserialize)]
 pub struct WeatherCfg {
-    command: Option<String>,
     url: Option<String>,
 
     proxy: Option<String>,
