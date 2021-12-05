@@ -4,7 +4,6 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use systemstat::{Platform, System};
 use thiserror::Error;
-use tokio;
 
 mod components;
 use components::banner::{disp_banner, BannerCfg};
