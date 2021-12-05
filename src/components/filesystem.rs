@@ -1,3 +1,4 @@
+use crate::command::BetterCommand;
 use bytesize::ByteSize;
 use itertools::Itertools;
 use std::cmp;
@@ -64,6 +65,39 @@ fn print_row<'a>(items: [&str; 6], column_sizes: impl IntoIterator<Item = &'a us
     );
 }
 
+fn get_scrub_status(entry: &Entry) -> Option<String> {
+    if entry.fs_type != "btrfs" {
+        return None;
+    }
+
+    let output = BetterCommand::new("sudo")
+        .arg("btrfs")
+        .arg("scrub")
+        .arg("status")
+        .arg("/")
+        .check_status_and_get_output_string()
+        .ok()?;
+    let things: HashMap<&str, &str> = output
+        .lines()
+        .filter_map(|l| l.splitn(2, ':').map(|x| x.trim()).collect_tuple())
+        .collect();
+    let status = *things.get("Status")?;
+    let status = match status {
+        "finished" => *things.get("Scrub started")?,
+        "running" => "in progress...",
+        _ => status,
+    };
+    Some(format!(
+        "Last scrub: {} ({})",
+        status,
+        if *things.get("Error summary")? == "no errors found" {
+            format!("{}✓{}", color::Fg(color::Green), style::Reset)
+        } else {
+            format!("{}✕{}", color::Fg(color::Red), style::Reset)
+        }
+    ))
+}
+
 pub fn disp_filesystem(
     config: FilesystemsCfg,
     global_settings: &GlobalSettings,
@@ -127,7 +161,7 @@ pub fn disp_filesystem(
 
         print_row(
             [
-                &[" ".repeat(INDENT_WIDTH), entry.filesystem_name].concat(),
+                &[" ".repeat(INDENT_WIDTH), entry.filesystem_name.to_owned()].concat(),
                 entry.dev,
                 entry.mount_point,
                 entry.fs_type,
@@ -163,6 +197,12 @@ pub fn disp_filesystem(
             ]
             .join("")
         );
+
+        if let Some(scrub_status) = get_scrub_status(&entry) {
+            println!("{}", scrub_status);
+        } else {
+            println!("Fuck");
+        }
     }
 
     Ok(Some(fs_display_width))
