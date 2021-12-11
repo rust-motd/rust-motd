@@ -77,15 +77,24 @@ pub fn disp_last_login(
             .take(num_logins)
             .collect::<Vec<Enter>>();
 
-        let longest_location = entries.iter().map(|entry| entry.host.len()).max().unwrap();
-        let formatted_entries = entries
-            .iter()
-            .map(|entry| format_entry(entry, longest_location, &global_settings.time_format));
-        for entry in formatted_entries {
-            match entry {
-                Ok(x) => println!("{}", x),
-                Err(err) => println!("{}", err),
+        let longest_location = entries.iter().map(|entry| entry.host.len()).max();
+        match longest_location {
+            Some(longest_location) => {
+                let formatted_entries = entries.iter().map(|entry| {
+                    format_entry(entry, longest_location, &global_settings.time_format)
+                });
+                for entry in formatted_entries {
+                    match entry {
+                        Ok(x) => println!("{}", x),
+                        Err(err) => println!("{}", err),
+                    }
+                }
             }
+            None => println!(
+                "{indent}No logins found for `{username}'",
+                indent = " ".repeat(2 * INDENT_WIDTH as usize),
+                username = username
+            ),
         }
     }
 
