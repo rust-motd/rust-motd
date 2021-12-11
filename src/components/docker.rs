@@ -1,7 +1,6 @@
 use crate::constants::INDENT_WIDTH;
 use docker_api::{Docker, Result as DockerResult};
-use serde::Deserialize;
-use serde_plain;
+use docker_api::api::container::ContainerStatus;
 use termion::{color, style};
 
 #[derive(Debug, Deserialize)]
@@ -17,17 +16,6 @@ pub fn new_docker() -> DockerResult<Docker> {
     Docker::new("tcp://127.0.0.1:8080")
 }
 
-#[derive(Deserialize, Debug)]
-#[serde(rename_all = "lowercase")]
-enum ContainerStatus {
-    Created,
-    Restarting,
-    Running,
-    Removing,
-    Paused,
-    Exited,
-    Dead,
-}
 
 pub async fn disp_docker(_config: DockerConfig) -> Result<(), Box<dyn std::error::Error>> {
     let docker = new_docker()?;
@@ -43,7 +31,8 @@ pub async fn disp_docker(_config: DockerConfig) -> Result<(), Box<dyn std::error
             ContainerStatus::Created
             | ContainerStatus::Restarting
             | ContainerStatus::Paused
-            | ContainerStatus::Removing => color::Fg(color::Yellow).to_string(),
+            | ContainerStatus::Removing
+            | ContainerStatus::Configured => color::Fg(color::Yellow).to_string(),
             ContainerStatus::Running => color::Fg(color::Green).to_string(),
             ContainerStatus::Exited => color::Fg(color::LightBlack).to_string(),
             ContainerStatus::Dead => color::Fg(color::Red).to_string(),
