@@ -91,9 +91,11 @@ pub fn disp_last_login(
                 }
             }
             None => println!(
-                "{indent}No logins found for `{username}'",
+                "{indent}{color}No logins found for `{username}'{reset}",
                 indent = " ".repeat(2 * INDENT_WIDTH as usize),
-                username = username
+                username = username,
+                color = color::Fg(color::Red).to_string(),
+                reset = style::Reset,
             ),
         }
     }
