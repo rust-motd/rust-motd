@@ -63,7 +63,16 @@ If you need a proxy to access the internet, specify it in below item:
 
 ### Service Status
 
- - List of `systemd` services to display the status of. Keys are used as the service display name, while the value is the name of the service itself.
+- List of `systemd` services to display the status of. Keys are used as the service display name, while the value is the name of the service itself.
+
+### Docker Status
+
+- List of containers to show the status of.
+Keys are used as the internal docker names
+(`NAMES` column of `docker ps`)
+(containers can have multiple names, and the container is selected if any of the names match).
+Values are the display name shown in the output.
+The key **must** start with a `/` for internal containers (please see [here](https://github.com/moby/moby/issues/6705)).
 
 ### Uptime
 

@@ -15,6 +15,7 @@ systemstat = "0.1.7"
 bytesize = "1.0.1"
 termion = "1.5.6"
 serde = {version = "1.0", features = ["derive"] }
+serde_plain = "1.0.0"
 toml = "0.5"
 humantime = "2.1.0"
 regex = "1.1.0"
@@ -26,3 +27,5 @@ ureq = "2.2.0"
 time = "0.1.44"
 last-rs = { git = "https://github.com/MarcelRobitaille/last-rs", rev = "2cbc842931198ad2043408842f8f0149e512f13a" }
 openssl = { version = "0.10.36", features = ["vendored"] }
+docker-api = { git = "https://github.com/vv9k/docker-api-rs.git" }
+tokio = { version = "1.14.0", features = ["full"] }

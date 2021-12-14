@@ -7,6 +7,7 @@ use thiserror::Error;
 
 mod components;
 use components::banner::{disp_banner, BannerCfg};
+use components::docker::{disp_docker, DockerConfig};
 use components::fail_2_ban::{disp_fail_2_ban, Fail2BanCfg};
 use components::filesystem::{disp_filesystem, FilesystemsCfg};
 use components::last_login::{disp_last_login, LastLoginCfg};
@@ -25,6 +26,7 @@ struct Config {
     banner: Option<BannerCfg>,
     service_status: Option<ServiceStatusCfg>,
     user_service_status: Option<ServiceStatusCfg>,
+    docker_status: Option<DockerConfig>,
     uptime: Option<UptimeCfg>,
     ssl_certificates: Option<SSLCertsCfg>,
     filesystems: Option<FilesystemsCfg>,
@@ -37,7 +39,8 @@ struct Config {
     global: GlobalSettings,
 }
 
-fn main() {
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = env::args();
     match get_config(args) {
         Ok(config) => {
@@ -71,6 +74,14 @@ fn main() {
                 println!("User Services:");
                 disp_service_status(service_status_config, true)
                     .unwrap_or_else(|err| println!("User service status error: {}", err));
+                println!();
+            }
+
+            if let Some(docker_config) = config.docker_status {
+                println!("Docker:");
+                disp_docker(docker_config)
+                    .await
+                    .unwrap_or_else(|err| println!("Docker status error: {}", err));
                 println!();
             }
 
@@ -115,6 +126,7 @@ fn main() {
         }
         Err(e) => println!("Config Error: {}", e),
     }
+    Ok(())
 }
 
 #[derive(Error, Debug)]
