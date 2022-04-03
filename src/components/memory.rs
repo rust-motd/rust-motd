@@ -10,6 +10,10 @@ pub enum MemoryError {
     #[error("Could not find memory quantity {quantity:?}")]
     MemoryNotFound { quantity: String },
 
+    #[allow(dead_code)]
+    #[error("Getting memory information is not supported on the current platform (see issue #20)")]
+    UnsupportedPlatform,
+
     #[error(transparent)]
     IO(#[from] std::io::Error),
 }
@@ -37,6 +41,7 @@ struct MemoryUsage {
 }
 
 impl MemoryUsage {
+    #[cfg(any(target_os = "linux", target_os = "android"))]
     fn get_by_name(
         name: String,
         sys: &System,
@@ -69,6 +74,17 @@ impl MemoryUsage {
             used_ratio: used.as_u64() as f64 / total.as_u64() as f64,
         })
     }
+
+    #[cfg(not(any(target_os = "linux", target_os = "android")))]
+    fn get_by_name(
+        name: String,
+        sys: &System,
+        free_name: &str,
+        total_name: &str,
+    ) -> Result<Self, MemoryError> {
+        Err(MemoryError::UnsupportedPlatform)
+    }
+
 }
 
 fn print_bar(
