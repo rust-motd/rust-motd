@@ -103,7 +103,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             if let Some(memory) = config.memory {
                 disp_memory(memory, &config.global, &sys, bar_size_hint) // TODO:
-                    .unwrap_or_else(|err| println!("Filesystem error: {}", err));
+                    .unwrap_or_else(|err| println!("Memory error: {}", err));
                 println!();
             }
 
