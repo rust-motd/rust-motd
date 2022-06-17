@@ -4,7 +4,6 @@ use std::collections::HashMap;
 use std::time::Duration;
 use termion::{color, style};
 use thiserror::Error;
-use time;
 
 use crate::command::BetterCommandError;
 use crate::constants::{GlobalSettings, INDENT_WIDTH};
@@ -18,9 +17,6 @@ pub enum LastLoginError {
 
     #[error(transparent)]
     ChronoParse(#[from] chrono::ParseError),
-
-    #[error(transparent)]
-    ChronoOutOfRange(#[from] time::OutOfRangeError),
 
     #[error(transparent)]
     IO(#[from] std::io::Error),
@@ -39,8 +35,8 @@ fn format_entry(
 
     let exit = match entry.exit {
         Exit::Logout(time) => {
-            let delta_time = (time - login_time).to_std()?;
-            let delta_time = Duration::new((delta_time.as_secs() / 60) * 60, 0);
+            let delta_time = time - login_time;
+            let delta_time = Duration::new((delta_time.num_seconds() as u64 / 60) * 60, 0);
             format_duration(delta_time).to_string()
         }
         _ => {
