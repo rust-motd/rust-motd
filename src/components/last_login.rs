@@ -4,6 +4,11 @@ use std::collections::HashMap;
 use std::time::Duration;
 use termion::{color, style};
 use thiserror::Error;
+use time::error::Format as TimeFormatError;
+use time::error::IndeterminateOffset as TimeIndeterminateOffsetError;
+use time::error::InvalidFormatDescription as TimeInvalidFormatDescriptionError;
+use time::format_description;
+use time::UtcOffset;
 
 use crate::command::BetterCommandError;
 use crate::constants::{GlobalSettings, INDENT_WIDTH};
@@ -23,6 +28,15 @@ pub enum LastLoginError {
 
     #[error(transparent)]
     Last(#[from] LastError),
+
+    #[error(transparent)]
+    TimeFormat(#[from] TimeFormatError),
+
+    #[error(transparent)]
+    TimeInvalidFormatDescription(#[from] TimeInvalidFormatDescriptionError),
+
+    #[error(transparent)]
+    TimeIndeterminateOffset(#[from] TimeIndeterminateOffsetError),
 }
 
 fn format_entry(
@@ -35,8 +49,10 @@ fn format_entry(
 
     let exit = match entry.exit {
         Exit::Logout(time) => {
+            // Timezone does not matter here
+            // Were taking the difference of two times with the same offset
             let delta_time = time - login_time;
-            let delta_time = Duration::new((delta_time.num_seconds() as u64 / 60) * 60, 0);
+            let delta_time = Duration::new((delta_time.whole_seconds() as u64 / 60) * 60, 0);
             format_duration(delta_time).to_string()
         }
         _ => {
@@ -53,7 +69,9 @@ fn format_entry(
     Ok(format!(
         "{indent}from {location} at {login_time} ({exit})",
         location = location,
-        login_time = login_time.format(time_format),
+        login_time = login_time
+            .to_offset(UtcOffset::current_local_offset()?)
+            .format(&format_description::parse(time_format)?)?,
         exit = exit,
         indent = " ".repeat(2 * INDENT_WIDTH as usize),
     ))

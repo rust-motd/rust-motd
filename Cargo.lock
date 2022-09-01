@@ -117,7 +117,7 @@ dependencies = [
  "num-integer",
  "num-traits",
  "serde",
- "time",
+ "time 0.1.44",
  "wasm-bindgen",
  "winapi",
 ]
@@ -509,12 +509,13 @@ dependencies = [
 
 [[package]]
 name = "last-rs"
-version = "0.1.0"
-source = "git+https://github.com/MarcelRobitaille/last-rs?rev=2cbc842931198ad2043408842f8f0149e512f13a#2cbc842931198ad2043408842f8f0149e512f13a"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cb735347a6723741c45868f8e221527d9960efc2485202b82129aeced4918e35"
 dependencies = [
- "chrono",
  "clap",
  "thiserror",
+ "time 0.3.14",
  "utmp-rs",
 ]
 
@@ -630,6 +631,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "19e64526ebdee182341572e50e9ad03965aa510cd94427a4549448f285e957a1"
 dependencies = [
  "hermit-abi",
+ "libc",
+]
+
+[[package]]
+name = "num_threads"
+version = "0.1.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2819ce041d2ee131036f4fc9d6ae7ae125a3a40e97ba64d04fe799ad9dabbb44"
+dependencies = [
  "libc",
 ]
 
@@ -873,6 +883,7 @@ dependencies = [
  "systemstat",
  "termion",
  "thiserror",
+ "time 0.3.14",
  "tokio",
  "toml",
  "ureq",
@@ -1099,6 +1110,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "time"
+version = "0.3.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3c3f9a28b618c3a6b9251b6908e9c99e04b9e5c02e6581ccbb67d59c34ef7f9b"
+dependencies = [
+ "itoa",
+ "libc",
+ "num_threads",
+ "time-macros",
+]
+
+[[package]]
+name = "time-macros"
+version = "0.2.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "42657b1a6f4d817cda8e7a0ace261fe0cc946cf3a80314390b22cc61ae080792"
+
+[[package]]
 name = "tinyvec"
 version = "1.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1256,21 +1285,24 @@ dependencies = [
 
 [[package]]
 name = "utmp-raw"
-version = "0.2.0"
-source = "git+https://github.com/MarcelRobitaille/utmp-rs#3dc2d2bae8efbb274fe80b2dc9ba1d47bc19d10f"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d9259b18bad8808ca2b0e585d8c06a6ac7b0bb11b7bf50632d05832c25e6f91f"
 dependencies = [
+ "cfg-if",
  "libc",
  "zerocopy",
 ]
 
 [[package]]
 name = "utmp-rs"
-version = "0.1.2"
-source = "git+https://github.com/MarcelRobitaille/utmp-rs#3dc2d2bae8efbb274fe80b2dc9ba1d47bc19d10f"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8a9c97e4baf720e8a40615bd084c7e18f489d8099045f4e45f8e96d6c88c9c20"
 dependencies = [
- "chrono",
  "libc",
  "thiserror",
+ "time 0.3.14",
  "utmp-raw",
  "zerocopy",
 ]

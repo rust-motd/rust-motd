@@ -84,7 +84,6 @@ impl MemoryUsage {
     ) -> Result<Self, MemoryError> {
         Err(MemoryError::UnsupportedPlatform)
     }
-
 }
 
 fn print_bar(
