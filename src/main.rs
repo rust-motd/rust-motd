@@ -1,4 +1,4 @@
-use serde::Deserialize;
+use serde::de::{Deserialize, Visitor};
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -21,108 +21,230 @@ mod command;
 mod constants;
 use constants::GlobalSettings;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, serde::Deserialize)]
+#[serde(field_identifier, rename_all = "snake_case")]
+enum Fields {
+    Global,
+    Banner,
+    Docker,
+    Fail2Ban,
+    Filesystems,
+    LastLogin,
+    LastRun,
+    Memory,
+    ServiceStatus,
+    UserServiceStatus,
+    SSLCerts,
+    Uptime,
+    Weather,
+}
+
+#[derive(Debug)]
+// #[derive(Debug, EnumDiscriminants)]
+// #[strum_discriminants(derive(EnumString, EnumMessage, serde::Deserialize))]
+// #[strum_discriminants(serde(field_identifier, rename_all = "snake_case"))]
+enum ComponentConfig {
+    Banner(BannerCfg),
+    Docker(DockerConfig),
+    Fail2Ban(Fail2BanCfg),
+    Filesystems(FilesystemsCfg),
+    LastLogin(LastLoginCfg),
+    LastRun(LastRunConfig),
+    Memory(MemoryCfg),
+    ServiceStatus(ServiceStatusCfg),
+    UserServiceStatus(ServiceStatusCfg),
+    SSLCerts(SSLCertsCfg),
+    Uptime(UptimeCfg),
+    Weather(WeatherCfg),
+}
+
+#[derive(Debug)]
 struct Config {
-    banner: Option<BannerCfg>,
-    service_status: Option<ServiceStatusCfg>,
-    user_service_status: Option<ServiceStatusCfg>,
-    docker_status: Option<DockerConfig>,
-    uptime: Option<UptimeCfg>,
-    ssl_certificates: Option<SSLCertsCfg>,
-    filesystems: Option<FilesystemsCfg>,
-    memory: Option<MemoryCfg>,
-    fail_2_ban: Option<Fail2BanCfg>,
-    last_login: Option<LastLoginCfg>,
-    weather: Option<WeatherCfg>,
-    last_run: Option<LastRunConfig>,
-    #[serde(default)]
+    components: Vec<ComponentConfig>,
     global: GlobalSettings,
 }
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let args = env::args();
-    match get_config(args) {
-        Ok(config) => {
-            let sys = System::new();
+// https://serde.rs/deserialize-struct.html
+impl<'de> Deserialize<'de> for Config {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        struct ConfigVisitor;
 
-            if let Some(banner_config) = config.banner {
+        impl<'de> Visitor<'de> for ConfigVisitor {
+            type Value = Config;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+                formatter.write_str("struct Config")
+            }
+
+            fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error>
+            where
+                A: serde::de::MapAccess<'de>,
+            {
+                let mut result = Config {
+                    components: vec![],
+                    global: GlobalSettings::default(),
+                };
+
+                while let Some(key) = map.next_key()? {
+                    match key {
+                        Fields::Global => {
+                            result.global = map.next_value()?;
+                        }
+                        Fields::Banner => {
+                            result
+                                .components
+                                .push(ComponentConfig::Banner(map.next_value()?));
+                        }
+                        Fields::Docker => {
+                            result
+                                .components
+                                .push(ComponentConfig::Docker(map.next_value()?));
+                        }
+                        Fields::Fail2Ban => {
+                            result
+                                .components
+                                .push(ComponentConfig::Fail2Ban(map.next_value()?));
+                        }
+                        Fields::Filesystems => {
+                            result
+                                .components
+                                .push(ComponentConfig::Filesystems(map.next_value()?));
+                        }
+                        Fields::LastLogin => {
+                            result
+                                .components
+                                .push(ComponentConfig::LastLogin(map.next_value()?));
+                        }
+                        Fields::LastRun => {
+                            result
+                                .components
+                                .push(ComponentConfig::LastRun(map.next_value()?));
+                        }
+                        Fields::Memory => {
+                            result
+                                .components
+                                .push(ComponentConfig::Memory(map.next_value()?));
+                        }
+                        Fields::ServiceStatus => {
+                            result
+                                .components
+                                .push(ComponentConfig::ServiceStatus(map.next_value()?));
+                        }
+                        Fields::UserServiceStatus => {
+                            result
+                                .components
+                                .push(ComponentConfig::UserServiceStatus(map.next_value()?));
+                        }
+                        Fields::SSLCerts => {
+                            result
+                                .components
+                                .push(ComponentConfig::SSLCerts(map.next_value()?));
+                        }
+                        Fields::Uptime => {
+                            result
+                                .components
+                                .push(ComponentConfig::Uptime(map.next_value()?));
+                        }
+                        Fields::Weather => {
+                            result
+                                .components
+                                .push(ComponentConfig::Weather(map.next_value()?));
+                        }
+                    }
+                }
+                Ok(result)
+            }
+        }
+
+        deserializer.deserialize_map(ConfigVisitor)
+    }
+}
+
+async fn print_motd(config: Config) {
+    let sys = System::new();
+    let mut bar_size_hint: Option<usize> = None;
+
+    for component_config in config.components {
+        match component_config {
+            ComponentConfig::Banner(banner_config) => {
                 disp_banner(banner_config).unwrap_or_else(|err| println!("Banner error: {}", err));
                 println!();
             }
-
-            if let Some(weather_config) = config.weather {
-                disp_weather(weather_config)
-                    .unwrap_or_else(|err| println!("Weather error: {}", err));
-                println!();
-            }
-
-            if let Some(uptime_config) = config.uptime {
-                disp_uptime(uptime_config, &sys)
-                    .unwrap_or_else(|err| println!("Uptime error: {}", err));
-                println!();
-            }
-
-            if let Some(service_status_config) = config.service_status {
-                println!("System Services:");
-                disp_service_status(service_status_config, false)
-                    .unwrap_or_else(|err| println!("Service status error: {}", err));
-                println!();
-            }
-
-            if let Some(service_status_config) = config.user_service_status {
-                println!("User Services:");
-                disp_service_status(service_status_config, true)
-                    .unwrap_or_else(|err| println!("User service status error: {}", err));
-                println!();
-            }
-
-            if let Some(docker_config) = config.docker_status {
+            ComponentConfig::Docker(docker_config) => {
                 println!("Docker:");
                 disp_docker(docker_config)
                     .await
                     .unwrap_or_else(|err| println!("Docker status error: {}", err));
                 println!();
             }
-
-            if let Some(ssl_certificates_config) = config.ssl_certificates {
-                disp_ssl(ssl_certificates_config, &config.global)
-                    .unwrap_or_else(|err| println!("SSL Certificate error: {}", err));
+            ComponentConfig::Fail2Ban(fail_2_ban_config) => {
+                disp_fail_2_ban(fail_2_ban_config)
+                    .unwrap_or_else(|err| println!("Fail2Ban error: {}", err));
                 println!();
             }
-
-            let mut bar_size_hint: Option<usize> = None;
-            if let Some(filesystems) = config.filesystems {
-                bar_size_hint =
-                    disp_filesystem(filesystems, &config.global, &sys).unwrap_or_else(|err| {
+            ComponentConfig::Filesystems(filesystems_config) => {
+                bar_size_hint = disp_filesystem(filesystems_config, &config.global, &sys)
+                    .unwrap_or_else(|err| {
                         println!("Filesystem error: {}", err);
                         None
                     });
                 println!();
             }
-
-            if let Some(memory) = config.memory {
-                disp_memory(memory, &config.global, &sys, bar_size_hint) // TODO:
-                    .unwrap_or_else(|err| println!("Memory error: {}", err));
-                println!();
-            }
-
-            if let Some(last_login_config) = config.last_login {
+            ComponentConfig::LastLogin(last_login_config) => {
                 disp_last_login(last_login_config, &config.global)
                     .unwrap_or_else(|err| println!("Last login error: {}", err));
                 println!();
             }
-
-            if let Some(fail_2_ban_config) = config.fail_2_ban {
-                disp_fail_2_ban(fail_2_ban_config)
-                    .unwrap_or_else(|err| println!("Fail2Ban error: {}", err));
-                println!();
-            }
-
-            if let Some(last_run_config) = config.last_run {
+            ComponentConfig::LastRun(last_run_config) => {
                 disp_last_run(last_run_config, &config.global)
                     .unwrap_or_else(|err| println!("Last run error: {}", err));
             }
+            ComponentConfig::Memory(memory_config) => {
+                disp_memory(memory_config, &config.global, &sys, bar_size_hint) // TODO:
+                    .unwrap_or_else(|err| println!("Memory error: {}", err));
+                println!();
+            }
+            ComponentConfig::ServiceStatus(service_status_config) => {
+                println!("System Services:");
+                disp_service_status(service_status_config, false)
+                    .unwrap_or_else(|err| println!("Service status error: {}", err));
+                println!();
+            }
+            ComponentConfig::UserServiceStatus(user_service_status_config) => {
+                println!("User Services:");
+                disp_service_status(user_service_status_config, true)
+                    .unwrap_or_else(|err| println!("User service status error: {}", err));
+                println!();
+            }
+            ComponentConfig::SSLCerts(ssl_certificates_config) => {
+                disp_ssl(ssl_certificates_config, &config.global)
+                    .unwrap_or_else(|err| println!("SSL Certificate error: {}", err));
+                println!();
+            }
+            ComponentConfig::Uptime(uptime_config) => {
+                disp_uptime(uptime_config, &sys)
+                    .unwrap_or_else(|err| println!("Uptime error: {}", err));
+                println!();
+            }
+            ComponentConfig::Weather(weather_config) => {
+                disp_weather(weather_config)
+                    .unwrap_or_else(|err| println!("Weather error: {}", err));
+                println!();
+            }
+        }
+    }
+}
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let args = env::args();
+
+    match get_config(args) {
+        Ok(config) => {
+            print_motd(config).await;
         }
         Err(e) => println!("Config Error: {}", e),
     }
