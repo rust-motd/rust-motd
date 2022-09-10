@@ -4,17 +4,17 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use thiserror::Error;
 
-use crate::components::banner::BannerCfg;
+use crate::components::banner::BannerConfig;
 use crate::components::docker::DockerConfig;
-use crate::components::fail_2_ban::Fail2BanCfg;
-use crate::components::filesystem::FilesystemsCfg;
-use crate::components::last_login::LastLoginCfg;
+use crate::components::fail_2_ban::Fail2BanConfig;
+use crate::components::filesystem::FilesystemsConfig;
+use crate::components::last_login::LastLoginConfig;
 use crate::components::last_run::LastRunConfig;
-use crate::components::memory::MemoryCfg;
-use crate::components::service_status::ServiceStatusCfg;
-use crate::components::ssl_certs::SSLCertsCfg;
-use crate::components::uptime::UptimeCfg;
-use crate::components::weather::WeatherCfg;
+use crate::components::memory::MemoryConfig;
+use crate::components::service_status::ServiceStatusConfig;
+use crate::components::ssl_certs::SSLCertsConfig;
+use crate::components::uptime::UptimeConfig;
+use crate::components::weather::WeatherConfig;
 use crate::constants::GlobalConfig;
 
 #[derive(Debug, serde::Deserialize)]
@@ -40,18 +40,18 @@ enum Fields {
 // #[strum_discriminants(derive(EnumString, EnumMessage, serde::Deserialize))]
 // #[strum_discriminants(serde(field_identifier, rename_all = "snake_case"))]
 pub enum ComponentConfig {
-    Banner(BannerCfg),
+    Banner(BannerConfig),
     Docker(DockerConfig),
-    Fail2Ban(Fail2BanCfg),
-    Filesystems(FilesystemsCfg),
-    LastLogin(LastLoginCfg),
+    Fail2Ban(Fail2BanConfig),
+    Filesystems(FilesystemsConfig),
+    LastLogin(LastLoginConfig),
     LastRun(LastRunConfig),
-    Memory(MemoryCfg),
-    ServiceStatus(ServiceStatusCfg),
-    UserServiceStatus(ServiceStatusCfg),
-    SSLCerts(SSLCertsCfg),
-    Uptime(UptimeCfg),
-    Weather(WeatherCfg),
+    Memory(MemoryConfig),
+    ServiceStatus(ServiceStatusConfig),
+    UserServiceStatus(ServiceStatusConfig),
+    SSLCerts(SSLCertsConfig),
+    Uptime(UptimeConfig),
+    Weather(WeatherConfig),
 }
 
 #[derive(Debug)]

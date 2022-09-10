@@ -32,7 +32,7 @@ struct Entry<'a> {
     used_ratio: f64,
 }
 
-pub type FilesystemsCfg = HashMap<String, String>;
+pub type FilesystemsConfig = HashMap<String, String>;
 
 fn parse_into_entry(filesystem_name: String, mount: &Filesystem) -> Entry {
     let total = mount.total.as_u64();
@@ -65,7 +65,7 @@ fn print_row<'a>(items: [&str; 6], column_sizes: impl IntoIterator<Item = &'a us
 }
 
 pub fn disp_filesystem(
-    config: FilesystemsCfg,
+    config: FilesystemsConfig,
     global_config: &GlobalConfig,
     sys: &System,
 ) -> Result<Option<usize>, FilesystemsError> {

@@ -10,7 +10,7 @@ use thiserror::Error;
 use crate::constants::{GlobalConfig, INDENT_WIDTH};
 
 #[derive(Debug, Deserialize)]
-pub struct SSLCertsCfg {
+pub struct SSLCertsConfig {
     #[serde(default)]
     sort_method: SortMethod,
     certs: HashMap<String, String>,
@@ -51,7 +51,7 @@ struct CertInfo {
 }
 
 pub fn disp_ssl(
-    config: SSLCertsCfg,
+    config: SSLCertsConfig,
     global_config: &GlobalConfig,
 ) -> Result<(), SSLCertsError> {
     let mut cert_infos: Vec<CertInfo> = Vec::new();

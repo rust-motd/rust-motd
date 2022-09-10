@@ -13,7 +13,7 @@ use time::UtcOffset;
 use crate::command::BetterCommandError;
 use crate::constants::{GlobalConfig, INDENT_WIDTH};
 
-pub type LastLoginCfg = HashMap<String, usize>;
+pub type LastLoginConfig = HashMap<String, usize>;
 
 #[derive(Error, Debug)]
 pub enum LastLoginError {
@@ -78,7 +78,7 @@ fn format_entry(
 }
 
 pub fn disp_last_login(
-    config: LastLoginCfg,
+    config: LastLoginConfig,
     global_config: &GlobalConfig,
 ) -> Result<(), LastLoginError> {
     println!("Last Login:");

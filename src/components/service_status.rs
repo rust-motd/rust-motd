@@ -6,7 +6,7 @@ use thiserror::Error;
 use crate::command::{BetterCommand, BetterCommandError};
 use crate::constants::INDENT_WIDTH;
 
-pub type ServiceStatusCfg = HashMap<String, String>;
+pub type ServiceStatusConfig = HashMap<String, String>;
 
 #[derive(Error, Debug)]
 pub enum ServiceStatusError {
@@ -35,7 +35,7 @@ fn get_service_status(service: &str, user: bool) -> Result<String, ServiceStatus
     Ok(output.split_whitespace().collect())
 }
 
-pub fn disp_service_status(config: ServiceStatusCfg, user: bool) -> Result<(), ServiceStatusError> {
+pub fn disp_service_status(config: ServiceStatusConfig, user: bool) -> Result<(), ServiceStatusError> {
     if config.is_empty() {
         return Err(ServiceStatusError::ConfigEmpty);
     }

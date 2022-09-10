@@ -4,7 +4,7 @@ use thiserror::Error;
 use ureq;
 
 #[derive(Debug, Deserialize)]
-pub struct WeatherCfg {
+pub struct WeatherConfig {
     url: Option<String>,
 
     proxy: Option<String>,
@@ -38,7 +38,7 @@ pub enum WeatherError {
     IO(#[from] std::io::Error),
 }
 
-pub fn disp_weather(config: WeatherCfg) -> Result<(), WeatherError> {
+pub fn disp_weather(config: WeatherConfig) -> Result<(), WeatherError> {
     let url = match config.url {
         Some(url) => url,
         None => {

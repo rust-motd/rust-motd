@@ -7,7 +7,7 @@ use thiserror::Error;
 use crate::command::{BetterCommand, BetterCommandError};
 
 #[derive(Debug, Deserialize)]
-pub struct Fail2BanCfg {
+pub struct Fail2BanConfig {
     jails: Vec<String>,
 }
 
@@ -46,7 +46,7 @@ fn get_jail_status(jail: &str) -> Result<Entry, Fail2BanError> {
     Ok(Entry { total, current })
 }
 
-pub fn disp_fail_2_ban(config: Fail2BanCfg) -> Result<(), Fail2BanError> {
+pub fn disp_fail_2_ban(config: Fail2BanConfig) -> Result<(), Fail2BanError> {
     println!("Fail2Ban:");
 
     for jail in config.jails {

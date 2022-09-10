@@ -5,7 +5,7 @@ use thiserror::Error;
 use crate::command::{BetterCommand, BetterCommandError};
 
 #[derive(Debug, Deserialize)]
-pub struct BannerCfg {
+pub struct BannerConfig {
     color: BannerColor,
     command: String,
 }
@@ -55,7 +55,7 @@ pub enum BannerError {
     IOError(#[from] std::io::Error),
 }
 
-pub fn disp_banner(config: BannerCfg) -> Result<(), BannerError> {
+pub fn disp_banner(config: BannerConfig) -> Result<(), BannerError> {
     // We probably don't have to handle command not found for sh
     let output = BetterCommand::new("sh")
         .arg("-c")

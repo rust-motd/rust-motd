@@ -19,7 +19,7 @@ pub enum MemoryError {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct MemoryCfg {
+pub struct MemoryConfig {
     swap_pos: SwapPosition,
 }
 
@@ -123,7 +123,7 @@ fn full_color(ratio: f64) -> String {
 }
 
 pub fn disp_memory(
-    config: MemoryCfg,
+    config: MemoryConfig,
     global_config: &GlobalConfig,
     sys: &System,
     size_hint: Option<usize>,
