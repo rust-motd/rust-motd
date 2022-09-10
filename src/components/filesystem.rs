@@ -14,6 +14,7 @@ use crate::constants::INDENT_WIDTH;
 
 const HEADER: [&str; 6] = ["Filesystems", "Device", "Mount", "Type", "Used", "Total"];
 
+/// A container for the mount points specified in the configuration file
 #[derive(Clone)]
 pub struct Filesystems {
     pub mounts: HashMap<String, String>,
@@ -27,12 +28,18 @@ impl Component for Filesystems {
             .unwrap_or((self, Some(Constraints { min_width: None })))
     }
 
+    // Print should never be called on a raw `Filesystems`
+    // Prepare should be called, returning a `PreparedFilesystems`
     async fn print(self: Box<Self>, global_config: &GlobalConfig, width: Option<usize>) {
         let (prepared_filesystems, _) = self.prepare(global_config);
         prepared_filesystems.print(global_config, width).await;
     }
 }
 
+/// A prepared, ready-to-print filesystems object
+/// This is returned from the prepare phase
+/// It is generated based on the user's configuration stored in `Filesystems`
+/// and has all the information needed for printing
 struct PreparedFilesystems {
     column_sizes: Vec<usize>,
     entries: Vec<Entry>,
@@ -65,6 +72,7 @@ pub enum FilesystemsError {
     IO(#[from] std::io::Error),
 }
 
+/// Data needed to print one row of the filesystems table
 #[derive(Debug)]
 struct Entry {
     filesystem_name: String,

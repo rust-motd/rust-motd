@@ -17,6 +17,8 @@ use crate::components::uptime::Uptime;
 use crate::components::weather::Weather;
 use global_config::GlobalConfig;
 
+/// The fields available in the config file
+/// This includes all components plus the global configuration settings
 #[derive(Debug, serde::Deserialize)]
 #[serde(field_identifier, rename_all = "snake_case")]
 enum Fields {
@@ -35,12 +37,17 @@ enum Fields {
     Weather,
 }
 
+/// Configuration for all components and the global settings
+/// The order of the components in the vector is the order they appear in the configuration file
+/// and is the order in which they should be printed
+/// This way, users can configure the order of components by shifting lines in the config file
 pub struct Config {
     pub components: Vec<BoxedComponent>,
     pub global: GlobalConfig,
 }
 
-// https://serde.rs/deserialize-struct.html
+// Deserializer that pushes components in the order they appear in the configuration file
+// Reference: https://serde.rs/deserialize-struct.html
 impl<'de> Deserialize<'de> for Config {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
