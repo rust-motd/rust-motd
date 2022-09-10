@@ -3,7 +3,7 @@ use serde::Deserialize;
 pub const INDENT_WIDTH: usize = 2;
 
 #[derive(Debug, Deserialize)]
-pub struct GlobalSettings {
+pub struct GlobalConfig {
     #[serde(default = "default_progress_character")]
     pub progress_full_character: char,
     #[serde(default = "default_progress_character")]
@@ -39,9 +39,9 @@ fn default_time_format() -> String {
 }
 
 // TODO: See if we can use this: https://github.com/serde-rs/serde/issues/1416
-impl Default for GlobalSettings {
+impl Default for GlobalConfig {
     fn default() -> Self {
-        GlobalSettings {
+        GlobalConfig {
             progress_full_character: default_progress_character(),
             progress_empty_character: default_progress_character(),
             progress_prefix: default_progress_prefix(),

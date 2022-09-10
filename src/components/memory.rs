@@ -3,7 +3,7 @@ use systemstat::{saturating_sub_bytes, Platform, System};
 use termion::{color, style};
 use thiserror::Error;
 
-use crate::constants::{GlobalSettings, INDENT_WIDTH};
+use crate::constants::{GlobalConfig, INDENT_WIDTH};
 
 #[derive(Error, Debug)]
 pub enum MemoryError {
@@ -87,7 +87,7 @@ impl MemoryUsage {
 }
 
 fn print_bar(
-    global_settings: &GlobalSettings,
+    global_config: &GlobalConfig,
     full_color: String,
     bar_full: usize,
     bar_empty: usize,
@@ -96,19 +96,19 @@ fn print_bar(
         "{}",
         [
             " ".repeat(INDENT_WIDTH),
-            global_settings.progress_prefix.to_string(),
+            global_config.progress_prefix.to_string(),
             full_color,
-            global_settings
+            global_config
                 .progress_full_character
                 .to_string()
                 .repeat(bar_full),
             color::Fg(color::LightBlack).to_string(),
-            global_settings
+            global_config
                 .progress_empty_character
                 .to_string()
                 .repeat(bar_empty),
             style::Reset.to_string(),
-            global_settings.progress_suffix.to_string(),
+            global_config.progress_suffix.to_string(),
         ]
         .join("")
     );
@@ -124,11 +124,11 @@ fn full_color(ratio: f64) -> String {
 
 pub fn disp_memory(
     config: MemoryCfg,
-    global_settings: &GlobalSettings,
+    global_config: &GlobalConfig,
     sys: &System,
     size_hint: Option<usize>,
 ) -> Result<(), MemoryError> {
-    let size_hint = size_hint.unwrap_or(global_settings.progress_width - INDENT_WIDTH);
+    let size_hint = size_hint.unwrap_or(global_config.progress_width - INDENT_WIDTH);
 
     let ram_usage = MemoryUsage::get_by_name("RAM".to_string(), sys, "MemAvailable", "MemTotal")?;
     println!("Memory");
@@ -138,8 +138,8 @@ pub fn disp_memory(
                 MemoryUsage::get_by_name("Swap".to_string(), sys, "SwapFree", "SwapTotal")?;
             let entries = vec![ram_usage, swap_usage];
             let bar_width = size_hint
-                - global_settings.progress_prefix.len()
-                - global_settings.progress_suffix.len();
+                - global_config.progress_prefix.len()
+                - global_config.progress_suffix.len();
             for entry in entries {
                 let full_color = full_color(entry.used_ratio);
                 let bar_full = ((bar_width as f64) * entry.used_ratio) as usize;
@@ -151,7 +151,7 @@ pub fn disp_memory(
                     entry.used,
                     entry.total
                 );
-                print_bar(global_settings, full_color, bar_full, bar_empty);
+                print_bar(global_config, full_color, bar_full, bar_empty);
                 println!();
             }
         }
@@ -160,8 +160,8 @@ pub fn disp_memory(
                 MemoryUsage::get_by_name("Swap".to_string(), sys, "SwapFree", "SwapTotal")?;
 
             let bar_width = ((size_hint
-                - global_settings.progress_prefix.len()
-                - global_settings.progress_suffix.len())
+                - global_config.progress_prefix.len()
+                - global_config.progress_suffix.len())
                 / 2)
                 - INDENT_WIDTH;
 
@@ -183,18 +183,18 @@ pub fn disp_memory(
             let bar_color = full_color(ram_usage.used_ratio);
             let bar_full = ((bar_width as f64) * ram_usage.used_ratio) as usize;
             let bar_empty = bar_width - bar_full;
-            print_bar(global_settings, bar_color, bar_full, bar_empty);
+            print_bar(global_config, bar_color, bar_full, bar_empty);
 
             let bar_color = full_color(swap_usage.used_ratio);
             let bar_full = ((bar_width as f64) * swap_usage.used_ratio) as usize;
             let bar_empty = bar_width - bar_full;
-            print_bar(global_settings, bar_color, bar_full, bar_empty);
+            print_bar(global_config, bar_color, bar_full, bar_empty);
             println!();
         }
         SwapPosition::None => {
             let bar_width = size_hint
-                - global_settings.progress_prefix.len()
-                - global_settings.progress_suffix.len();
+                - global_config.progress_prefix.len()
+                - global_config.progress_suffix.len();
             let full_color = full_color(ram_usage.used_ratio);
             let bar_full = ((bar_width as f64) * ram_usage.used_ratio) as usize;
             let bar_empty = bar_width - bar_full;
@@ -205,7 +205,7 @@ pub fn disp_memory(
                 ram_usage.used,
                 ram_usage.total
             );
-            print_bar(global_settings, full_color, bar_full, bar_empty);
+            print_bar(global_config, full_color, bar_full, bar_empty);
             println!();
         }
     }

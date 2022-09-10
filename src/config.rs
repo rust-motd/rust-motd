@@ -15,7 +15,7 @@ use crate::components::service_status::ServiceStatusCfg;
 use crate::components::ssl_certs::SSLCertsCfg;
 use crate::components::uptime::UptimeCfg;
 use crate::components::weather::WeatherCfg;
-use crate::constants::GlobalSettings;
+use crate::constants::GlobalConfig;
 
 #[derive(Debug, serde::Deserialize)]
 #[serde(field_identifier, rename_all = "snake_case")]
@@ -57,7 +57,7 @@ pub enum ComponentConfig {
 #[derive(Debug)]
 pub struct Config {
     pub components: Vec<ComponentConfig>,
-    pub global: GlobalSettings,
+    pub global: GlobalConfig,
 }
 
 // https://serde.rs/deserialize-struct.html
@@ -81,7 +81,7 @@ impl<'de> Deserialize<'de> for Config {
             {
                 let mut result = Config {
                     components: vec![],
-                    global: GlobalSettings::default(),
+                    global: GlobalConfig::default(),
                 };
 
                 while let Some(key) = map.next_key()? {

@@ -7,7 +7,7 @@ use systemstat::{Filesystem, Platform, System};
 use termion::{color, style};
 use thiserror::Error;
 
-use crate::constants::{GlobalSettings, INDENT_WIDTH};
+use crate::constants::{GlobalConfig, INDENT_WIDTH};
 
 #[derive(Error, Debug)]
 pub enum FilesystemsError {
@@ -66,7 +66,7 @@ fn print_row<'a>(items: [&str; 6], column_sizes: impl IntoIterator<Item = &'a us
 
 pub fn disp_filesystem(
     config: FilesystemsCfg,
-    global_settings: &GlobalSettings,
+    global_config: &GlobalConfig,
     sys: &System,
 ) -> Result<Option<usize>, FilesystemsError> {
     if config.is_empty() {
@@ -116,10 +116,10 @@ pub fn disp_filesystem(
     // -2 because "Filesystems" does not count (it is not indented)
     // and because zero indexed
     let bar_width = column_sizes.iter().sum::<usize>() + (header.len() - 2) * INDENT_WIDTH
-        - global_settings.progress_prefix.len()
-        - global_settings.progress_suffix.len();
+        - global_config.progress_prefix.len()
+        - global_config.progress_suffix.len();
     let fs_display_width =
-        bar_width + global_settings.progress_prefix.len() + global_settings.progress_suffix.len();
+        bar_width + global_config.progress_prefix.len() + global_config.progress_suffix.len();
 
     for entry in entries {
         let bar_full = ((bar_width as f64) * entry.used_ratio) as usize;
@@ -147,19 +147,19 @@ pub fn disp_filesystem(
             "{}",
             [
                 " ".repeat(INDENT_WIDTH),
-                global_settings.progress_prefix.to_string(),
+                global_config.progress_prefix.to_string(),
                 full_color,
-                global_settings
+                global_config
                     .progress_full_character
                     .to_string()
                     .repeat(bar_full),
                 color::Fg(color::LightBlack).to_string(),
-                global_settings
+                global_config
                     .progress_empty_character
                     .to_string()
                     .repeat(bar_empty),
                 style::Reset.to_string(),
-                global_settings.progress_suffix.to_string(),
+                global_config.progress_suffix.to_string(),
             ]
             .join("")
         );

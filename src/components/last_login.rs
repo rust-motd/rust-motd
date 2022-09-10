@@ -11,7 +11,7 @@ use time::format_description;
 use time::UtcOffset;
 
 use crate::command::BetterCommandError;
-use crate::constants::{GlobalSettings, INDENT_WIDTH};
+use crate::constants::{GlobalConfig, INDENT_WIDTH};
 
 pub type LastLoginCfg = HashMap<String, usize>;
 
@@ -79,7 +79,7 @@ fn format_entry(
 
 pub fn disp_last_login(
     config: LastLoginCfg,
-    global_settings: &GlobalSettings,
+    global_config: &GlobalConfig,
 ) -> Result<(), LastLoginError> {
     println!("Last Login:");
 
@@ -95,7 +95,7 @@ pub fn disp_last_login(
         match longest_location {
             Some(longest_location) => {
                 let formatted_entries = entries.iter().map(|entry| {
-                    format_entry(entry, longest_location, &global_settings.time_format)
+                    format_entry(entry, longest_location, &global_config.time_format)
                 });
                 for entry in formatted_entries {
                     match entry {

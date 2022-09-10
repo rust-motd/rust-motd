@@ -7,7 +7,7 @@ use std::io::{BufReader, Read};
 use termion::{color, style};
 use thiserror::Error;
 
-use crate::constants::{GlobalSettings, INDENT_WIDTH};
+use crate::constants::{GlobalConfig, INDENT_WIDTH};
 
 #[derive(Debug, Deserialize)]
 pub struct SSLCertsCfg {
@@ -52,7 +52,7 @@ struct CertInfo {
 
 pub fn disp_ssl(
     config: SSLCertsCfg,
-    global_settings: &GlobalSettings,
+    global_config: &GlobalConfig,
 ) -> Result<(), SSLCertsError> {
     let mut cert_infos: Vec<CertInfo> = Vec::new();
 
@@ -97,7 +97,7 @@ pub fn disp_ssl(
             " ".repeat(INDENT_WIDTH as usize),
             cert_info.name,
             cert_info.status,
-            cert_info.expiration.format(&global_settings.time_format)
+            cert_info.expiration.format(&global_config.time_format)
         );
     }
 
