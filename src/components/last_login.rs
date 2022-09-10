@@ -11,7 +11,8 @@ use time::format_description;
 use time::UtcOffset;
 
 use crate::command::BetterCommandError;
-use crate::constants::{GlobalConfig, INDENT_WIDTH};
+use crate::constants::INDENT_WIDTH;
+use crate::config::global_config::GlobalConfig;
 
 pub type LastLoginConfig = HashMap<String, usize>;
 

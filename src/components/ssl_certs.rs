@@ -7,7 +7,8 @@ use std::io::{BufReader, Read};
 use termion::{color, style};
 use thiserror::Error;
 
-use crate::constants::{GlobalConfig, INDENT_WIDTH};
+use crate::constants::INDENT_WIDTH;
+use crate::config::global_config::GlobalConfig;
 
 #[derive(Debug, Deserialize)]
 pub struct SSLCertsConfig {

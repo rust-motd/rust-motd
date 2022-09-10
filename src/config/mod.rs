@@ -1,8 +1,7 @@
 use serde::de::{Deserialize, Visitor};
-use std::env;
-use std::fs;
-use std::path::{Path, PathBuf};
-use thiserror::Error;
+
+pub mod global_config;
+pub mod get_config;
 
 use crate::components::banner::BannerConfig;
 use crate::components::docker::DockerConfig;
@@ -15,7 +14,7 @@ use crate::components::service_status::ServiceStatusConfig;
 use crate::components::ssl_certs::SSLCertsConfig;
 use crate::components::uptime::UptimeConfig;
 use crate::components::weather::WeatherConfig;
-use crate::constants::GlobalConfig;
+use global_config::GlobalConfig;
 
 #[derive(Debug, serde::Deserialize)]
 #[serde(field_identifier, rename_all = "snake_case")]
@@ -156,43 +155,5 @@ impl<'de> Deserialize<'de> for Config {
         }
 
         deserializer.deserialize_map(ConfigVisitor)
-    }
-}
-
-#[derive(Error, Debug)]
-pub enum ConfigError {
-    #[error(
-        "Configuration file not found.\n\
-        Make a copy of default config and either specify it as an arg or \n\
-        place it in a default location.  See ReadMe for details."
-    )]
-    ConfigNotFound,
-
-    #[error(transparent)]
-    ConfigHomeError(#[from] std::env::VarError),
-
-    #[error(transparent)]
-    IOError(#[from] std::io::Error),
-
-    #[error(transparent)]
-    ConfigParseError(#[from] toml::de::Error),
-}
-
-pub fn get_config(mut args: env::Args) -> Result<Config, ConfigError> {
-    let config_path = match args.nth(1) {
-        Some(file_path) => Some(PathBuf::from(file_path)),
-        None => {
-            let config_base = env::var("XDG_CONFIG_HOME").unwrap_or(env::var("HOME")? + "/.config");
-            let config_base = Path::new(&config_base).join(Path::new("rust-motd/config.toml"));
-            if config_base.exists() {
-                Some(config_base)
-            } else {
-                None
-            }
-        }
-    };
-    match config_path {
-        Some(path) => Ok(toml::from_str(&fs::read_to_string(path)?)?),
-        None => Err(ConfigError::ConfigNotFound),
     }
 }

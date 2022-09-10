@@ -2,7 +2,7 @@ use chrono::Local;
 use serde::Deserialize;
 use thiserror::Error;
 
-use crate::constants::GlobalConfig;
+use crate::config::global_config::GlobalConfig;
 
 #[derive(Debug, Deserialize)]
 pub struct LastRunConfig {}

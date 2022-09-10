@@ -16,7 +16,8 @@ use components::ssl_certs::disp_ssl;
 use components::uptime::disp_uptime;
 use components::weather::disp_weather;
 mod config;
-use config::{get_config, ComponentConfig, Config};
+use config::{ComponentConfig, Config};
+use config::get_config::get_config;
 
 async fn print_motd(config: Config) {
     let sys = System::new();
