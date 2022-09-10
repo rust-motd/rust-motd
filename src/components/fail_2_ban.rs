@@ -1,14 +1,26 @@
 use crate::constants::INDENT_WIDTH;
+use async_trait::async_trait;
 use lazy_static::lazy_static;
 use regex::Regex;
 use serde::Deserialize;
 use thiserror::Error;
 
 use crate::command::{BetterCommand, BetterCommandError};
+use crate::component::Component;
+use crate::config::global_config::GlobalConfig;
 
 #[derive(Debug, Deserialize)]
-pub struct Fail2BanConfig {
+pub struct Fail2Ban {
     jails: Vec<String>,
+}
+
+#[async_trait]
+impl Component for Fail2Ban {
+    async fn print(self: Box<Self>, _global_config: &GlobalConfig) {
+        self.print_or_error()
+            .unwrap_or_else(|err| println!("Fail2Ban error: {}", err));
+        println!();
+    }
 }
 
 struct Entry {
@@ -46,23 +58,25 @@ fn get_jail_status(jail: &str) -> Result<Entry, Fail2BanError> {
     Ok(Entry { total, current })
 }
 
-pub fn disp_fail_2_ban(config: Fail2BanConfig) -> Result<(), Fail2BanError> {
-    println!("Fail2Ban:");
+impl Fail2Ban {
+    pub fn print_or_error(self) -> Result<(), Fail2BanError> {
+        println!("Fail2Ban:");
 
-    for jail in config.jails {
-        let entry = get_jail_status(&jail)?;
-        println!(
-            concat!(
-                "{indent}{jail}:\n",
-                "{indent}{indent}Total bans:   {total}\n",
-                "{indent}{indent}Current bans: {current}",
-            ),
-            jail = jail,
-            total = entry.total,
-            current = entry.current,
-            indent = " ".repeat(INDENT_WIDTH as usize),
-        );
+        for jail in self.jails {
+            let entry = get_jail_status(&jail)?;
+            println!(
+                concat!(
+                    "{indent}{jail}:\n",
+                    "{indent}{indent}Total bans:   {total}\n",
+                    "{indent}{indent}Current bans: {current}",
+                ),
+                jail = jail,
+                total = entry.total,
+                current = entry.current,
+                indent = " ".repeat(INDENT_WIDTH as usize),
+            );
+        }
+
+        Ok(())
     }
-
-    Ok(())
 }

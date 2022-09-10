@@ -1,3 +1,4 @@
+use async_trait::async_trait;
 use bytesize::ByteSize;
 use itertools::Itertools;
 use std::cmp;
@@ -7,8 +8,24 @@ use systemstat::{Filesystem, Platform, System};
 use termion::{color, style};
 use thiserror::Error;
 
-use crate::constants::INDENT_WIDTH;
+use crate::component::Component;
 use crate::config::global_config::GlobalConfig;
+use crate::constants::INDENT_WIDTH;
+
+pub struct Filesystems {
+    pub mounts: HashMap<String, String>,
+}
+
+#[async_trait]
+impl Component for Filesystems {
+    async fn print(self: Box<Self>, global_config: &GlobalConfig) {
+        self.print_or_error(global_config).unwrap_or_else(|err| {
+            println!("Filesystem error: {}", err);
+            None
+        });
+        println!();
+    }
+}
 
 #[derive(Error, Debug)]
 pub enum FilesystemsError {
@@ -32,8 +49,6 @@ struct Entry<'a> {
     total: String,
     used_ratio: f64,
 }
-
-pub type FilesystemsConfig = HashMap<String, String>;
 
 fn parse_into_entry(filesystem_name: String, mount: &Filesystem) -> Entry {
     let total = mount.total.as_u64();
@@ -65,106 +80,110 @@ fn print_row<'a>(items: [&str; 6], column_sizes: impl IntoIterator<Item = &'a us
     );
 }
 
-pub fn disp_filesystem(
-    config: FilesystemsConfig,
-    global_config: &GlobalConfig,
-    sys: &System,
-) -> Result<Option<usize>, FilesystemsError> {
-    if config.is_empty() {
-        return Err(FilesystemsError::ConfigEmtpy);
+impl Filesystems {
+    pub fn print_or_error(
+        self,
+        global_config: &GlobalConfig,
+    ) -> Result<Option<usize>, FilesystemsError> {
+        let sys = System::new();
+
+        if self.mounts.is_empty() {
+            return Err(FilesystemsError::ConfigEmtpy);
+        }
+
+        let mounts = sys.mounts()?;
+        let mounts: HashMap<String, &Filesystem> = mounts
+            .iter()
+            .map(|fs| (fs.fs_mounted_on.clone(), fs))
+            .collect();
+
+        let entries = self
+            .mounts
+            .into_iter()
+            .map(
+                |(filesystem_name, mount_point)| match mounts.get(&mount_point) {
+                    Some(mount) => Ok(parse_into_entry(filesystem_name, mount)),
+                    _ => Err(FilesystemsError::MountNotFound { mount_point }),
+                },
+            )
+            .collect::<Result<Vec<Entry>, FilesystemsError>>()?;
+
+        let header = ["Filesystems", "Device", "Mount", "Type", "Used", "Total"];
+
+        let column_sizes = entries
+            .iter()
+            .map(|entry| {
+                vec![
+                    entry.filesystem_name.len() + INDENT_WIDTH,
+                    entry.dev.len(),
+                    entry.mount_point.len(),
+                    entry.fs_type.len(),
+                    entry.used.len(),
+                    entry.total.len(),
+                ]
+            })
+            .chain(iter::once(header.iter().map(|x| x.len()).collect()))
+            .fold(vec![0; header.len()], |acc, x| {
+                x.iter()
+                    .zip(acc.iter())
+                    .map(|(a, b)| cmp::max(a, b).to_owned())
+                    .collect()
+            });
+
+        print_row(header, &column_sizes);
+
+        // -2 because "Filesystems" does not count (it is not indented)
+        // and because zero indexed
+        let bar_width = column_sizes.iter().sum::<usize>() + (header.len() - 2) * INDENT_WIDTH
+            - global_config.progress_prefix.len()
+            - global_config.progress_suffix.len();
+        let fs_display_width =
+            bar_width + global_config.progress_prefix.len() + global_config.progress_suffix.len();
+
+        for entry in entries {
+            let bar_full = ((bar_width as f64) * entry.used_ratio) as usize;
+            let bar_empty = bar_width - bar_full;
+
+            print_row(
+                [
+                    &[" ".repeat(INDENT_WIDTH), entry.filesystem_name].concat(),
+                    entry.dev,
+                    entry.mount_point,
+                    entry.fs_type,
+                    entry.used.as_str(),
+                    entry.total.as_str(),
+                ],
+                &column_sizes,
+            );
+
+            let full_color = match (entry.used_ratio * 100.0) as usize {
+                0..=75 => color::Fg(color::Green).to_string(),
+                76..=95 => color::Fg(color::Yellow).to_string(),
+                _ => color::Fg(color::Red).to_string(),
+            };
+
+            println!(
+                "{}",
+                [
+                    " ".repeat(INDENT_WIDTH),
+                    global_config.progress_prefix.to_string(),
+                    full_color,
+                    global_config
+                        .progress_full_character
+                        .to_string()
+                        .repeat(bar_full),
+                    color::Fg(color::LightBlack).to_string(),
+                    global_config
+                        .progress_empty_character
+                        .to_string()
+                        .repeat(bar_empty),
+                    style::Reset.to_string(),
+                    global_config.progress_suffix.to_string(),
+                ]
+                .join("")
+            );
+        }
+
+        Ok(Some(fs_display_width))
     }
-
-    let mounts = sys.mounts()?;
-    let mounts: HashMap<String, &Filesystem> = mounts
-        .iter()
-        .map(|fs| (fs.fs_mounted_on.clone(), fs))
-        .collect();
-
-    let entries = config
-        .into_iter()
-        .map(
-            |(filesystem_name, mount_point)| match mounts.get(&mount_point) {
-                Some(mount) => Ok(parse_into_entry(filesystem_name, mount)),
-                _ => Err(FilesystemsError::MountNotFound { mount_point }),
-            },
-        )
-        .collect::<Result<Vec<Entry>, FilesystemsError>>()?;
-
-    let header = ["Filesystems", "Device", "Mount", "Type", "Used", "Total"];
-
-    let column_sizes = entries
-        .iter()
-        .map(|entry| {
-            vec![
-                entry.filesystem_name.len() + INDENT_WIDTH,
-                entry.dev.len(),
-                entry.mount_point.len(),
-                entry.fs_type.len(),
-                entry.used.len(),
-                entry.total.len(),
-            ]
-        })
-        .chain(iter::once(header.iter().map(|x| x.len()).collect()))
-        .fold(vec![0; header.len()], |acc, x| {
-            x.iter()
-                .zip(acc.iter())
-                .map(|(a, b)| cmp::max(a, b).to_owned())
-                .collect()
-        });
-
-    print_row(header, &column_sizes);
-
-    // -2 because "Filesystems" does not count (it is not indented)
-    // and because zero indexed
-    let bar_width = column_sizes.iter().sum::<usize>() + (header.len() - 2) * INDENT_WIDTH
-        - global_config.progress_prefix.len()
-        - global_config.progress_suffix.len();
-    let fs_display_width =
-        bar_width + global_config.progress_prefix.len() + global_config.progress_suffix.len();
-
-    for entry in entries {
-        let bar_full = ((bar_width as f64) * entry.used_ratio) as usize;
-        let bar_empty = bar_width - bar_full;
-
-        print_row(
-            [
-                &[" ".repeat(INDENT_WIDTH), entry.filesystem_name].concat(),
-                entry.dev,
-                entry.mount_point,
-                entry.fs_type,
-                entry.used.as_str(),
-                entry.total.as_str(),
-            ],
-            &column_sizes,
-        );
-
-        let full_color = match (entry.used_ratio * 100.0) as usize {
-            0..=75 => color::Fg(color::Green).to_string(),
-            76..=95 => color::Fg(color::Yellow).to_string(),
-            _ => color::Fg(color::Red).to_string(),
-        };
-
-        println!(
-            "{}",
-            [
-                " ".repeat(INDENT_WIDTH),
-                global_config.progress_prefix.to_string(),
-                full_color,
-                global_config
-                    .progress_full_character
-                    .to_string()
-                    .repeat(bar_full),
-                color::Fg(color::LightBlack).to_string(),
-                global_config
-                    .progress_empty_character
-                    .to_string()
-                    .repeat(bar_empty),
-                style::Reset.to_string(),
-                global_config.progress_suffix.to_string(),
-            ]
-            .join("")
-        );
-    }
-
-    Ok(Some(fs_display_width))
 }

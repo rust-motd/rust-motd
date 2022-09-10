@@ -1,19 +1,20 @@
 use serde::de::{Deserialize, Visitor};
 
-pub mod global_config;
 pub mod get_config;
+pub mod global_config;
 
-use crate::components::banner::BannerConfig;
-use crate::components::docker::DockerConfig;
-use crate::components::fail_2_ban::Fail2BanConfig;
-use crate::components::filesystem::FilesystemsConfig;
-use crate::components::last_login::LastLoginConfig;
-use crate::components::last_run::LastRunConfig;
-use crate::components::memory::MemoryConfig;
-use crate::components::service_status::ServiceStatusConfig;
-use crate::components::ssl_certs::SSLCertsConfig;
-use crate::components::uptime::UptimeConfig;
-use crate::components::weather::WeatherConfig;
+use crate::component::Component;
+use crate::components::banner::Banner;
+use crate::components::docker::Docker;
+use crate::components::fail_2_ban::Fail2Ban;
+use crate::components::filesystem::Filesystems;
+use crate::components::last_login::LastLogin;
+use crate::components::last_run::LastRun;
+use crate::components::memory::Memory;
+use crate::components::service_status::{ServiceStatus, UserServiceStatus};
+use crate::components::ssl_certs::SSLCerts;
+use crate::components::uptime::Uptime;
+use crate::components::weather::Weather;
 use global_config::GlobalConfig;
 
 #[derive(Debug, serde::Deserialize)]
@@ -34,28 +35,8 @@ enum Fields {
     Weather,
 }
 
-#[derive(Debug)]
-// #[derive(Debug, EnumDiscriminants)]
-// #[strum_discriminants(derive(EnumString, EnumMessage, serde::Deserialize))]
-// #[strum_discriminants(serde(field_identifier, rename_all = "snake_case"))]
-pub enum ComponentConfig {
-    Banner(BannerConfig),
-    Docker(DockerConfig),
-    Fail2Ban(Fail2BanConfig),
-    Filesystems(FilesystemsConfig),
-    LastLogin(LastLoginConfig),
-    LastRun(LastRunConfig),
-    Memory(MemoryConfig),
-    ServiceStatus(ServiceStatusConfig),
-    UserServiceStatus(ServiceStatusConfig),
-    SSLCerts(SSLCertsConfig),
-    Uptime(UptimeConfig),
-    Weather(WeatherConfig),
-}
-
-#[derive(Debug)]
 pub struct Config {
-    pub components: Vec<ComponentConfig>,
+    pub components: Vec<Box<dyn Component>>,
     pub global: GlobalConfig,
 }
 
@@ -91,62 +72,62 @@ impl<'de> Deserialize<'de> for Config {
                         Fields::Banner => {
                             result
                                 .components
-                                .push(ComponentConfig::Banner(map.next_value()?));
+                                .push(Box::new(map.next_value::<Banner>()?));
                         }
                         Fields::Docker => {
-                            result
-                                .components
-                                .push(ComponentConfig::Docker(map.next_value()?));
+                            result.components.push(Box::new(Docker {
+                                containers: map.next_value()?,
+                            }));
                         }
                         Fields::Fail2Ban => {
                             result
                                 .components
-                                .push(ComponentConfig::Fail2Ban(map.next_value()?));
+                                .push(Box::new(map.next_value::<Fail2Ban>()?));
                         }
                         Fields::Filesystems => {
-                            result
-                                .components
-                                .push(ComponentConfig::Filesystems(map.next_value()?));
+                            result.components.push(Box::new(Filesystems {
+                                mounts: map.next_value()?,
+                            }));
                         }
                         Fields::LastLogin => {
-                            result
-                                .components
-                                .push(ComponentConfig::LastLogin(map.next_value()?));
+                            result.components.push(Box::new(LastLogin {
+                                users: map.next_value()?,
+                            }));
                         }
                         Fields::LastRun => {
                             result
                                 .components
-                                .push(ComponentConfig::LastRun(map.next_value()?));
+                                .push(Box::new(map.next_value::<LastRun>()?));
                         }
                         Fields::Memory => {
                             result
                                 .components
-                                .push(ComponentConfig::Memory(map.next_value()?));
+                                .push(Box::new(map.next_value::<Memory>()?));
                         }
                         Fields::ServiceStatus => {
-                            result
-                                .components
-                                .push(ComponentConfig::ServiceStatus(map.next_value()?));
+                            result.components.push(Box::new(ServiceStatus {
+                                services: map.next_value()?,
+                            }));
                         }
                         Fields::UserServiceStatus => {
-                            result
-                                .components
-                                .push(ComponentConfig::UserServiceStatus(map.next_value()?));
+                            result.components.push(Box::new(UserServiceStatus {
+                                services: map.next_value()?,
+                            }));
                         }
                         Fields::SSLCerts => {
                             result
                                 .components
-                                .push(ComponentConfig::SSLCerts(map.next_value()?));
+                                .push(Box::new(map.next_value::<SSLCerts>()?));
                         }
                         Fields::Uptime => {
                             result
                                 .components
-                                .push(ComponentConfig::Uptime(map.next_value()?));
+                                .push(Box::new(map.next_value::<Uptime>()?));
                         }
                         Fields::Weather => {
                             result
                                 .components
-                                .push(ComponentConfig::Weather(map.next_value()?));
+                                .push(Box::new(map.next_value::<Weather>()?));
                         }
                     }
                 }

@@ -1,3 +1,4 @@
+use async_trait::async_trait;
 use humantime::format_duration;
 use last_rs::{get_logins, Enter, Exit, LastError};
 use std::collections::HashMap;
@@ -11,10 +12,22 @@ use time::format_description;
 use time::UtcOffset;
 
 use crate::command::BetterCommandError;
-use crate::constants::INDENT_WIDTH;
+use crate::component::Component;
 use crate::config::global_config::GlobalConfig;
+use crate::constants::INDENT_WIDTH;
 
-pub type LastLoginConfig = HashMap<String, usize>;
+pub struct LastLogin {
+    pub users: HashMap<String, usize>,
+}
+
+#[async_trait]
+impl Component for LastLogin {
+    async fn print(self: Box<Self>, global_config: &GlobalConfig) {
+        self.print_or_error(global_config)
+            .unwrap_or_else(|err| println!("Last login error: {}", err));
+        println!();
+    }
+}
 
 #[derive(Error, Debug)]
 pub enum LastLoginError {
@@ -78,42 +91,41 @@ fn format_entry(
     ))
 }
 
-pub fn disp_last_login(
-    config: LastLoginConfig,
-    global_config: &GlobalConfig,
-) -> Result<(), LastLoginError> {
-    println!("Last Login:");
+impl LastLogin {
+    pub fn print_or_error(self, global_config: &GlobalConfig) -> Result<(), LastLoginError> {
+        println!("Last Login:");
 
-    for (username, num_logins) in config {
-        println!("{}{}:", " ".repeat(INDENT_WIDTH as usize), username);
-        let entries = get_logins("/var/log/wtmp")?
-            .into_iter()
-            .filter(|entry| entry.user == username)
-            .take(num_logins)
-            .collect::<Vec<Enter>>();
+        for (username, num_logins) in self.users {
+            println!("{}{}:", " ".repeat(INDENT_WIDTH as usize), username);
+            let entries = get_logins("/var/log/wtmp")?
+                .into_iter()
+                .filter(|entry| entry.user == username)
+                .take(num_logins)
+                .collect::<Vec<Enter>>();
 
-        let longest_location = entries.iter().map(|entry| entry.host.len()).max();
-        match longest_location {
-            Some(longest_location) => {
-                let formatted_entries = entries.iter().map(|entry| {
-                    format_entry(entry, longest_location, &global_config.time_format)
-                });
-                for entry in formatted_entries {
-                    match entry {
-                        Ok(x) => println!("{}", x),
-                        Err(err) => println!("{}", err),
+            let longest_location = entries.iter().map(|entry| entry.host.len()).max();
+            match longest_location {
+                Some(longest_location) => {
+                    let formatted_entries = entries.iter().map(|entry| {
+                        format_entry(entry, longest_location, &global_config.time_format)
+                    });
+                    for entry in formatted_entries {
+                        match entry {
+                            Ok(x) => println!("{}", x),
+                            Err(err) => println!("{}", err),
+                        }
                     }
                 }
+                None => println!(
+                    "{indent}{color}No logins found for `{username}'{reset}",
+                    indent = " ".repeat(2 * INDENT_WIDTH as usize),
+                    username = username,
+                    color = color::Fg(color::Red),
+                    reset = style::Reset,
+                ),
             }
-            None => println!(
-                "{indent}{color}No logins found for `{username}'{reset}",
-                indent = " ".repeat(2 * INDENT_WIDTH as usize),
-                username = username,
-                color = color::Fg(color::Red),
-                reset = style::Reset,
-            ),
         }
-    }
 
-    Ok(())
+        Ok(())
+    }
 }

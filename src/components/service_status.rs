@@ -1,12 +1,41 @@
+use async_trait::async_trait;
 use itertools::Itertools;
 use std::collections::HashMap;
 use termion::{color, style};
 use thiserror::Error;
 
 use crate::command::{BetterCommand, BetterCommandError};
+use crate::component::Component;
+use crate::config::global_config::GlobalConfig;
 use crate::constants::INDENT_WIDTH;
 
-pub type ServiceStatusConfig = HashMap<String, String>;
+pub struct ServiceStatus {
+    pub services: HashMap<String, String>,
+}
+
+pub struct UserServiceStatus {
+    pub services: HashMap<String, String>,
+}
+
+#[async_trait]
+impl Component for ServiceStatus {
+    async fn print(self: Box<Self>, _global_config: &GlobalConfig) {
+        println!("System Services:");
+        print_or_error(&self.services, false)
+            .unwrap_or_else(|err| println!("Service status error: {}", err));
+        println!();
+    }
+}
+
+#[async_trait]
+impl Component for UserServiceStatus {
+    async fn print(self: Box<Self>, _global_config: &GlobalConfig) {
+        println!("User Services:");
+        print_or_error(&self.services, true)
+            .unwrap_or_else(|err| println!("User service status error: {}", err));
+        println!();
+    }
+}
 
 #[derive(Error, Debug)]
 pub enum ServiceStatusError {
@@ -35,7 +64,10 @@ fn get_service_status(service: &str, user: bool) -> Result<String, ServiceStatus
     Ok(output.split_whitespace().collect())
 }
 
-pub fn disp_service_status(config: ServiceStatusConfig, user: bool) -> Result<(), ServiceStatusError> {
+pub fn print_or_error(
+    config: &HashMap<String, String>,
+    user: bool,
+) -> Result<(), ServiceStatusError> {
     if config.is_empty() {
         return Err(ServiceStatusError::ConfigEmpty);
     }
