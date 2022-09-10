@@ -25,6 +25,7 @@ enum WeatherStyle {
     Full,
 }
 
+#[allow(clippy::large_enum_variant)]
 #[derive(Error, Debug)]
 pub enum WeatherError {
     #[error("Empty response body from weather service")]
@@ -42,7 +43,7 @@ pub fn disp_weather(config: WeatherCfg) -> Result<(), WeatherError> {
         Some(url) => url,
         None => {
             let mut base = String::from("https://wttr.in/");
-            let loc = config.loc.replace(", ", ",").replace(" ", "+");
+            let loc = config.loc.replace(", ", ",").replace(' ', "+");
             base.push_str(&loc);
             match config.style.unwrap_or(WeatherStyle::Day) {
                 WeatherStyle::Oneline => base.push_str("?format=4"),
@@ -70,8 +71,8 @@ pub fn disp_weather(config: WeatherCfg) -> Result<(), WeatherError> {
     let first_line = body
         .next()
         .ok_or(WeatherError::ReplyEmpty)?
-        .replace("+", " ") // de-slugify the placename by removing '+'
-        .replace(",", ", ") // and adding a space after commas
+        .replace('+', " ") // de-slugify the placename by removing '+'
+        .replace(',', ", ") // and adding a space after commas
         .replace("  ", " "); // necessary because sometimes there are already spaces
                              // after the comma in the placename
     let body = body

@@ -108,7 +108,7 @@ pub fn disp_last_login(
                 "{indent}{color}No logins found for `{username}'{reset}",
                 indent = " ".repeat(2 * INDENT_WIDTH as usize),
                 username = username,
-                color = color::Fg(color::Red).to_string(),
+                color = color::Fg(color::Red),
                 reset = style::Reset,
             ),
         }
