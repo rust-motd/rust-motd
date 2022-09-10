@@ -13,6 +13,7 @@ use time::UtcOffset;
 
 use crate::command::BetterCommandError;
 use crate::component::Component;
+use crate::component::Constraints;
 use crate::config::global_config::GlobalConfig;
 use crate::constants::INDENT_WIDTH;
 
@@ -22,10 +23,16 @@ pub struct LastLogin {
 
 #[async_trait]
 impl Component for LastLogin {
-    async fn print(self: Box<Self>, global_config: &GlobalConfig) {
+    async fn print(self: Box<Self>, global_config: &GlobalConfig, _width: Option<usize>) {
         self.print_or_error(global_config)
             .unwrap_or_else(|err| println!("Last login error: {}", err));
         println!();
+    }
+    fn prepare(
+        self: Box<Self>,
+        _global_config: &GlobalConfig,
+    ) -> (Box<dyn Component>, Option<Constraints>) {
+        (self, None)
     }
 }
 

@@ -3,7 +3,7 @@ use humantime::format_duration;
 use serde::Deserialize;
 use systemstat::{Platform, System};
 
-use crate::component::Component;
+use crate::component::{Component, Constraints};
 use crate::config::global_config::GlobalConfig;
 
 #[derive(Debug, Deserialize)]
@@ -13,10 +13,16 @@ pub struct Uptime {
 
 #[async_trait]
 impl Component for Uptime {
-    async fn print(self: Box<Self>, _global_config: &GlobalConfig) {
+    async fn print(self: Box<Self>, _global_config: &GlobalConfig, _width: Option<usize>) {
         self.print_or_error()
             .unwrap_or_else(|err| println!("Uptime error: {}", err));
         println!();
+    }
+    fn prepare(
+        self: Box<Self>,
+        _global_config: &GlobalConfig,
+    ) -> (Box<dyn Component>, Option<Constraints>) {
+        (self, None)
     }
 }
 

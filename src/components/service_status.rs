@@ -5,7 +5,7 @@ use termion::{color, style};
 use thiserror::Error;
 
 use crate::command::{BetterCommand, BetterCommandError};
-use crate::component::Component;
+use crate::component::{Component, Constraints};
 use crate::config::global_config::GlobalConfig;
 use crate::constants::INDENT_WIDTH;
 
@@ -19,21 +19,33 @@ pub struct UserServiceStatus {
 
 #[async_trait]
 impl Component for ServiceStatus {
-    async fn print(self: Box<Self>, _global_config: &GlobalConfig) {
+    async fn print(self: Box<Self>, _global_config: &GlobalConfig, _width: Option<usize>) {
         println!("System Services:");
         print_or_error(&self.services, false)
             .unwrap_or_else(|err| println!("Service status error: {}", err));
         println!();
     }
+    fn prepare(
+        self: Box<Self>,
+        _global_config: &GlobalConfig,
+    ) -> (Box<dyn Component>, Option<Constraints>) {
+        (self, None)
+    }
 }
 
 #[async_trait]
 impl Component for UserServiceStatus {
-    async fn print(self: Box<Self>, _global_config: &GlobalConfig) {
+    async fn print(self: Box<Self>, _global_config: &GlobalConfig, _width: Option<usize>) {
         println!("User Services:");
         print_or_error(&self.services, true)
             .unwrap_or_else(|err| println!("User service status error: {}", err));
         println!();
+    }
+    fn prepare(
+        self: Box<Self>,
+        _global_config: &GlobalConfig,
+    ) -> (Box<dyn Component>, Option<Constraints>) {
+        (self, None)
     }
 }
 

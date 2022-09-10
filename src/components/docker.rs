@@ -6,7 +6,7 @@ use docker_api::{Docker as DockerAPI, Result as DockerResult};
 use std::collections::HashMap;
 use termion::{color, style};
 
-use crate::component::Component;
+use crate::component::{Component, Constraints};
 use crate::config::global_config::GlobalConfig;
 
 pub struct Docker {
@@ -15,12 +15,18 @@ pub struct Docker {
 
 #[async_trait]
 impl Component for Docker {
-    async fn print(self: Box<Self>, _global_config: &GlobalConfig) {
+    async fn print(self: Box<Self>, _global_config: &GlobalConfig, _width: Option<usize>) {
         println!("Docker:");
         self.print_or_error()
             .await
             .unwrap_or_else(|err| println!("Docker status error: {}", err));
         println!();
+    }
+    fn prepare(
+        self: Box<Self>,
+        _global_config: &GlobalConfig,
+    ) -> (Box<dyn Component>, Option<Constraints>) {
+        (self, None)
     }
 }
 

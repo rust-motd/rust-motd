@@ -3,16 +3,25 @@ use chrono::Local;
 use serde::Deserialize;
 use thiserror::Error;
 
-use crate::{component::Component, config::global_config::GlobalConfig};
+use crate::{
+    component::{Component, Constraints},
+    config::global_config::GlobalConfig,
+};
 
 #[derive(Debug, Deserialize)]
 pub struct LastRun {}
 
 #[async_trait]
 impl Component for LastRun {
-    async fn print(self: Box<Self>, global_config: &GlobalConfig) {
+    async fn print(self: Box<Self>, global_config: &GlobalConfig, _width: Option<usize>) {
         self.print_or_error(global_config)
             .unwrap_or_else(|err| println!("Last run error: {}", err));
+    }
+    fn prepare(
+        self: Box<Self>,
+        _global_config: &GlobalConfig,
+    ) -> (Box<dyn Component>, Option<Constraints>) {
+        (self, None)
     }
 }
 

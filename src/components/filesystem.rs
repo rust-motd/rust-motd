@@ -8,22 +8,54 @@ use systemstat::{Filesystem, Platform, System};
 use termion::{color, style};
 use thiserror::Error;
 
-use crate::component::Component;
+use crate::component::{Component, Constraints};
 use crate::config::global_config::GlobalConfig;
 use crate::constants::INDENT_WIDTH;
 
+const HEADER: [&str; 6] = ["Filesystems", "Device", "Mount", "Type", "Used", "Total"];
+
+#[derive(Clone)]
 pub struct Filesystems {
     pub mounts: HashMap<String, String>,
 }
 
 #[async_trait]
 impl Component for Filesystems {
-    async fn print(self: Box<Self>, global_config: &GlobalConfig) {
+    fn prepare(
+        self: Box<Self>,
+        global_config: &GlobalConfig,
+    ) -> (Box<dyn Component>, Option<Constraints>) {
+        self.clone()
+            .prepare_or_error(global_config)
+            .unwrap_or((self, Some(Constraints { min_width: None })))
+    }
+
+    async fn print(self: Box<Self>, global_config: &GlobalConfig, width: Option<usize>) {
+        let (prepared_filesystems, _) = self.prepare(global_config);
+        prepared_filesystems.print(global_config, width);
+    }
+}
+
+struct PreparedFilesystems {
+    column_sizes: Vec<usize>,
+    entries: Vec<Entry>,
+    bar_width: usize,
+}
+
+#[async_trait]
+impl Component for PreparedFilesystems {
+    async fn print(self: Box<Self>, global_config: &GlobalConfig, _width: Option<usize>) {
         self.print_or_error(global_config).unwrap_or_else(|err| {
             println!("Filesystem error: {}", err);
-            None
         });
         println!();
+    }
+
+    fn prepare(
+        self: Box<Self>,
+        _global_config: &GlobalConfig,
+    ) -> (Box<dyn Component>, Option<Constraints>) {
+        (self, None)
     }
 }
 
@@ -40,11 +72,11 @@ pub enum FilesystemsError {
 }
 
 #[derive(Debug)]
-struct Entry<'a> {
+struct Entry {
     filesystem_name: String,
-    dev: &'a str,
-    mount_point: &'a str,
-    fs_type: &'a str,
+    dev: String,
+    mount_point: String,
+    fs_type: String,
     used: String,
     total: String,
     used_ratio: f64,
@@ -57,9 +89,9 @@ fn parse_into_entry(filesystem_name: String, mount: &Filesystem) -> Entry {
 
     Entry {
         filesystem_name,
-        mount_point: &mount.fs_mounted_on,
-        dev: &mount.fs_mounted_from,
-        fs_type: &mount.fs_type,
+        mount_point: mount.fs_mounted_on.to_string(),
+        dev: mount.fs_mounted_from.to_string(),
+        fs_type: mount.fs_type.to_string(),
         used: ByteSize::b(used).to_string(),
         total: ByteSize::b(total).to_string(),
         used_ratio: (used as f64) / (total as f64),
@@ -81,10 +113,14 @@ fn print_row<'a>(items: [&str; 6], column_sizes: impl IntoIterator<Item = &'a us
 }
 
 impl Filesystems {
-    pub fn print_or_error(
+    pub fn new(mounts: HashMap<String, String>) -> Self {
+        Self { mounts }
+    }
+
+    fn prepare_or_error(
         self,
         global_config: &GlobalConfig,
-    ) -> Result<Option<usize>, FilesystemsError> {
+    ) -> Result<(Box<dyn Component>, Option<Constraints>), FilesystemsError> {
         let sys = System::new();
 
         if self.mounts.is_empty() {
@@ -107,9 +143,6 @@ impl Filesystems {
                 },
             )
             .collect::<Result<Vec<Entry>, FilesystemsError>>()?;
-
-        let header = ["Filesystems", "Device", "Mount", "Type", "Used", "Total"];
-
         let column_sizes = entries
             .iter()
             .map(|entry| {
@@ -122,38 +155,54 @@ impl Filesystems {
                     entry.total.len(),
                 ]
             })
-            .chain(iter::once(header.iter().map(|x| x.len()).collect()))
-            .fold(vec![0; header.len()], |acc, x| {
+            .chain(iter::once(HEADER.iter().map(|x| x.len()).collect()))
+            .fold(vec![0; HEADER.len()], |acc, x| {
                 x.iter()
                     .zip(acc.iter())
                     .map(|(a, b)| cmp::max(a, b).to_owned())
                     .collect()
             });
 
-        print_row(header, &column_sizes);
-
         // -2 because "Filesystems" does not count (it is not indented)
         // and because zero indexed
-        let bar_width = column_sizes.iter().sum::<usize>() + (header.len() - 2) * INDENT_WIDTH
+        let bar_width = column_sizes.iter().sum::<usize>() + (HEADER.len() - 2) * INDENT_WIDTH
             - global_config.progress_prefix.len()
             - global_config.progress_suffix.len();
         let fs_display_width =
             bar_width + global_config.progress_prefix.len() + global_config.progress_suffix.len();
 
-        for entry in entries {
-            let bar_full = ((bar_width as f64) * entry.used_ratio) as usize;
-            let bar_empty = bar_width - bar_full;
+        let prepared_filesystems = PreparedFilesystems {
+            bar_width,
+            column_sizes,
+            entries,
+        };
+
+        let constraints = Constraints {
+            min_width: Some(fs_display_width),
+        };
+
+        Ok((Box::new(prepared_filesystems), Some(constraints)))
+    }
+}
+
+impl PreparedFilesystems {
+    fn print_or_error(self, global_config: &GlobalConfig) -> Result<(), FilesystemsError> {
+        print_row(HEADER, &self.column_sizes);
+
+        for entry in self.entries {
+            let bar_full = ((self.bar_width as f64) * entry.used_ratio) as usize;
+            let bar_empty = self.bar_width - bar_full;
 
             print_row(
                 [
                     &[" ".repeat(INDENT_WIDTH), entry.filesystem_name].concat(),
-                    entry.dev,
-                    entry.mount_point,
-                    entry.fs_type,
+                    &entry.dev[..],
+                    &entry.mount_point[..],
+                    &entry.fs_type[..],
                     entry.used.as_str(),
                     entry.total.as_str(),
                 ],
-                &column_sizes,
+                &self.column_sizes,
             );
 
             let full_color = match (entry.used_ratio * 100.0) as usize {
@@ -184,6 +233,6 @@ impl Filesystems {
             );
         }
 
-        Ok(Some(fs_display_width))
+        Ok(())
     }
 }

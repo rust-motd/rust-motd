@@ -4,7 +4,7 @@ use termion::{color, style};
 use thiserror::Error;
 
 use crate::command::{BetterCommand, BetterCommandError};
-use crate::component::Component;
+use crate::component::{Component, Constraints};
 use crate::config::global_config::GlobalConfig;
 
 #[derive(Debug, Deserialize)]
@@ -15,10 +15,13 @@ pub struct Banner {
 
 #[async_trait]
 impl Component for Banner {
-    async fn print(self: Box<Self>, _global_config: &GlobalConfig) {
+    async fn print(self: Box<Self>, _global_config: &GlobalConfig, _width: Option<usize>) {
         self.print_or_error()
             .unwrap_or_else(|err| println!("Banner error: {}", err));
         println!();
+    }
+    fn prepare(self: Box<Self>, _global_config: &GlobalConfig) -> (Box<dyn Component>, Option<Constraints>) {
+        (self, None)
     }
 }
 

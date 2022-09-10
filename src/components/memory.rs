@@ -4,7 +4,7 @@ use systemstat::{saturating_sub_bytes, Platform, System};
 use termion::{color, style};
 use thiserror::Error;
 
-use crate::component::Component;
+use crate::component::{Component, Constraints};
 use crate::config::global_config::GlobalConfig;
 use crate::constants::INDENT_WIDTH;
 
@@ -15,10 +15,16 @@ pub struct Memory {
 
 #[async_trait]
 impl Component for Memory {
-    async fn print(self: Box<Self>, global_config: &GlobalConfig) {
-        self.print_or_error(global_config)
+    async fn print(self: Box<Self>, global_config: &GlobalConfig, width: Option<usize>) {
+        self.print_or_error(global_config, width)
             .unwrap_or_else(|err| println!("Memory error: {}", err));
         println!();
+    }
+    fn prepare(
+        self: Box<Self>,
+        _global_config: &GlobalConfig,
+    ) -> (Box<dyn Component>, Option<Constraints>) {
+        (self, None)
     }
 }
 
@@ -130,10 +136,9 @@ fn full_color(ratio: f64) -> String {
 }
 
 impl Memory {
-    pub fn print_or_error(self, global_config: &GlobalConfig) -> Result<(), MemoryError> {
+    pub fn print_or_error(self, global_config: &GlobalConfig, width: Option<usize>) -> Result<(), MemoryError> {
         let sys = System::new();
-        let size_hint = None; // TODO
-        let size_hint = size_hint.unwrap_or(global_config.progress_width - INDENT_WIDTH);
+        let width = width.unwrap_or(global_config.progress_width - INDENT_WIDTH);
 
         let ram_usage =
             MemoryUsage::get_by_name("RAM".to_string(), &sys, "MemAvailable", "MemTotal")?;
@@ -143,7 +148,7 @@ impl Memory {
                 let swap_usage =
                     MemoryUsage::get_by_name("Swap".to_string(), &sys, "SwapFree", "SwapTotal")?;
                 let entries = vec![ram_usage, swap_usage];
-                let bar_width = size_hint
+                let bar_width = width
                     - global_config.progress_prefix.len()
                     - global_config.progress_suffix.len();
                 for entry in entries {
@@ -165,7 +170,7 @@ impl Memory {
                 let swap_usage =
                     MemoryUsage::get_by_name("Swap".to_string(), &sys, "SwapFree", "SwapTotal")?;
 
-                let bar_width = ((size_hint
+                let bar_width = ((width
                     - global_config.progress_prefix.len()
                     - global_config.progress_suffix.len())
                     / 2)
@@ -198,7 +203,7 @@ impl Memory {
                 println!();
             }
             SwapPosition::None => {
-                let bar_width = size_hint
+                let bar_width = width
                     - global_config.progress_prefix.len()
                     - global_config.progress_suffix.len();
                 let full_color = full_color(ram_usage.used_ratio);

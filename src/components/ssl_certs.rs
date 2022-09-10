@@ -8,7 +8,7 @@ use std::io::{BufReader, Read};
 use termion::{color, style};
 use thiserror::Error;
 
-use crate::component::Component;
+use crate::component::{Component, Constraints};
 use crate::config::global_config::GlobalConfig;
 use crate::constants::INDENT_WIDTH;
 
@@ -37,10 +37,16 @@ pub struct SSLCerts {
 
 #[async_trait]
 impl Component for SSLCerts {
-    async fn print(self: Box<Self>, global_config: &GlobalConfig) {
+    async fn print(self: Box<Self>, global_config: &GlobalConfig, _width: Option<usize>) {
         self.print_or_error(global_config)
             .unwrap_or_else(|err| println!("SSL Certificate error: {}", err));
         println!();
+    }
+    fn prepare(
+        self: Box<Self>,
+        _global_config: &GlobalConfig,
+    ) -> (Box<dyn Component>, Option<Constraints>) {
+        (self, None)
     }
 }
 

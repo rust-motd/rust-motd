@@ -85,9 +85,9 @@ impl<'de> Deserialize<'de> for Config {
                                 .push(Box::new(map.next_value::<Fail2Ban>()?));
                         }
                         Fields::Filesystems => {
-                            result.components.push(Box::new(Filesystems {
-                                mounts: map.next_value()?,
-                            }));
+                            result
+                                .components
+                                .push(Box::new(Filesystems::new(map.next_value()?)));
                         }
                         Fields::LastLogin => {
                             result.components.push(Box::new(LastLogin {
