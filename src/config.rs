@@ -1,10 +1,9 @@
-use std::fs;
-use std::env;
-use thiserror::Error;
-use std::path::{Path, PathBuf};
 use serde::de::{Deserialize, Visitor};
+use std::env;
+use std::fs;
+use std::path::{Path, PathBuf};
+use thiserror::Error;
 
-use crate::constants::GlobalSettings;
 use crate::components::banner::BannerCfg;
 use crate::components::docker::DockerConfig;
 use crate::components::fail_2_ban::Fail2BanCfg;
@@ -16,6 +15,7 @@ use crate::components::service_status::ServiceStatusCfg;
 use crate::components::ssl_certs::SSLCertsCfg;
 use crate::components::uptime::UptimeCfg;
 use crate::components::weather::WeatherCfg;
+use crate::constants::GlobalSettings;
 
 #[derive(Debug, serde::Deserialize)]
 #[serde(field_identifier, rename_all = "snake_case")]

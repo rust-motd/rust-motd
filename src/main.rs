@@ -2,8 +2,8 @@ use std::env;
 use systemstat::{Platform, System};
 
 mod command;
-mod constants;
 mod components;
+mod constants;
 use components::banner::disp_banner;
 use components::docker::disp_docker;
 use components::fail_2_ban::disp_fail_2_ban;
@@ -16,8 +16,7 @@ use components::ssl_certs::disp_ssl;
 use components::uptime::disp_uptime;
 use components::weather::disp_weather;
 mod config;
-use config::{Config, ComponentConfig, get_config};
-
+use config::{get_config, ComponentConfig, Config};
 
 async fn print_motd(config: Config) {
     let sys = System::new();
