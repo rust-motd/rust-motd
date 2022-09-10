@@ -4,7 +4,7 @@ use std::io::Write;
 use thiserror::Error;
 use ureq;
 
-use crate::component::{Component, Constraints};
+use crate::component::{Component, PrepareReturn};
 use crate::config::global_config::GlobalConfig;
 
 #[derive(Debug, Deserialize)]
@@ -26,10 +26,7 @@ impl Component for Weather {
             .unwrap_or_else(|err| println!("Weather error: {}", err));
         println!();
     }
-    fn prepare(
-        self: Box<Self>,
-        _global_config: &GlobalConfig,
-    ) -> (Box<dyn Component>, Option<Constraints>) {
+    fn prepare(self: Box<Self>, _global_config: &GlobalConfig) -> PrepareReturn {
         (self, None)
     }
 }

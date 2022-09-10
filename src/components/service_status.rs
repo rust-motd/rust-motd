@@ -5,7 +5,7 @@ use termion::{color, style};
 use thiserror::Error;
 
 use crate::command::{BetterCommand, BetterCommandError};
-use crate::component::{Component, Constraints};
+use crate::component::{Component, PrepareReturn};
 use crate::config::global_config::GlobalConfig;
 use crate::constants::INDENT_WIDTH;
 
@@ -25,10 +25,7 @@ impl Component for ServiceStatus {
             .unwrap_or_else(|err| println!("Service status error: {}", err));
         println!();
     }
-    fn prepare(
-        self: Box<Self>,
-        _global_config: &GlobalConfig,
-    ) -> (Box<dyn Component>, Option<Constraints>) {
+    fn prepare(self: Box<Self>, _global_config: &GlobalConfig) -> PrepareReturn {
         (self, None)
     }
 }
@@ -41,10 +38,7 @@ impl Component for UserServiceStatus {
             .unwrap_or_else(|err| println!("User service status error: {}", err));
         println!();
     }
-    fn prepare(
-        self: Box<Self>,
-        _global_config: &GlobalConfig,
-    ) -> (Box<dyn Component>, Option<Constraints>) {
+    fn prepare(self: Box<Self>, _global_config: &GlobalConfig) -> PrepareReturn {
         (self, None)
     }
 }

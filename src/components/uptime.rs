@@ -3,7 +3,7 @@ use humantime::format_duration;
 use serde::Deserialize;
 use systemstat::{Platform, System};
 
-use crate::component::{Component, Constraints};
+use crate::component::{Component, PrepareReturn};
 use crate::config::global_config::GlobalConfig;
 
 #[derive(Debug, Deserialize)]
@@ -18,10 +18,7 @@ impl Component for Uptime {
             .unwrap_or_else(|err| println!("Uptime error: {}", err));
         println!();
     }
-    fn prepare(
-        self: Box<Self>,
-        _global_config: &GlobalConfig,
-    ) -> (Box<dyn Component>, Option<Constraints>) {
+    fn prepare(self: Box<Self>, _global_config: &GlobalConfig) -> PrepareReturn {
         (self, None)
     }
 }

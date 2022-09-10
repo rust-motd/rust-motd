@@ -1,6 +1,9 @@
 use crate::config::global_config::GlobalConfig;
 use async_trait::async_trait;
 
+pub type BoxedComponent = Box<dyn Component + Send>;
+pub type PrepareReturn = (BoxedComponent, Option<Constraints>);
+
 pub struct Constraints {
     pub min_width: Option<usize>,
 }
@@ -14,10 +17,7 @@ pub trait Component {
     // self
     // For example, check `PreparedFilesystems`
     // Otherwise, simply return `self` if there is no data to save from the preparation phase
-    fn prepare(
-        self: Box<Self>,
-        _global_config: &GlobalConfig,
-    ) -> (Box<dyn Component>, Option<Constraints>);
+    fn prepare(self: Box<Self>, _global_config: &GlobalConfig) -> PrepareReturn;
 
     // Print the component to stdout
     async fn print(self: Box<Self>, global_config: &GlobalConfig, width: Option<usize>);

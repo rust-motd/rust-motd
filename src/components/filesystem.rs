@@ -8,7 +8,7 @@ use systemstat::{Filesystem, Platform, System};
 use termion::{color, style};
 use thiserror::Error;
 
-use crate::component::{Component, Constraints};
+use crate::component::{Component, Constraints, PrepareReturn};
 use crate::config::global_config::GlobalConfig;
 use crate::constants::INDENT_WIDTH;
 
@@ -21,10 +21,7 @@ pub struct Filesystems {
 
 #[async_trait]
 impl Component for Filesystems {
-    fn prepare(
-        self: Box<Self>,
-        global_config: &GlobalConfig,
-    ) -> (Box<dyn Component>, Option<Constraints>) {
+    fn prepare(self: Box<Self>, global_config: &GlobalConfig) -> PrepareReturn {
         self.clone()
             .prepare_or_error(global_config)
             .unwrap_or((self, Some(Constraints { min_width: None })))
@@ -32,7 +29,7 @@ impl Component for Filesystems {
 
     async fn print(self: Box<Self>, global_config: &GlobalConfig, width: Option<usize>) {
         let (prepared_filesystems, _) = self.prepare(global_config);
-        prepared_filesystems.print(global_config, width);
+        prepared_filesystems.print(global_config, width).await;
     }
 }
 
@@ -51,10 +48,7 @@ impl Component for PreparedFilesystems {
         println!();
     }
 
-    fn prepare(
-        self: Box<Self>,
-        _global_config: &GlobalConfig,
-    ) -> (Box<dyn Component>, Option<Constraints>) {
+    fn prepare(self: Box<Self>, _global_config: &GlobalConfig) -> PrepareReturn {
         (self, None)
     }
 }
@@ -120,7 +114,7 @@ impl Filesystems {
     fn prepare_or_error(
         self,
         global_config: &GlobalConfig,
-    ) -> Result<(Box<dyn Component>, Option<Constraints>), FilesystemsError> {
+    ) -> Result<PrepareReturn, FilesystemsError> {
         let sys = System::new();
 
         if self.mounts.is_empty() {

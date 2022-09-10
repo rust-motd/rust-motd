@@ -4,7 +4,7 @@ use termion::{color, style};
 use thiserror::Error;
 
 use crate::command::{BetterCommand, BetterCommandError};
-use crate::component::{Component, Constraints};
+use crate::component::{Component, PrepareReturn};
 use crate::config::global_config::GlobalConfig;
 
 #[derive(Debug, Deserialize)]
@@ -20,7 +20,7 @@ impl Component for Banner {
             .unwrap_or_else(|err| println!("Banner error: {}", err));
         println!();
     }
-    fn prepare(self: Box<Self>, _global_config: &GlobalConfig) -> (Box<dyn Component>, Option<Constraints>) {
+    fn prepare(self: Box<Self>, _global_config: &GlobalConfig) -> PrepareReturn {
         (self, None)
     }
 }

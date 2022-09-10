@@ -4,7 +4,7 @@ use systemstat::{saturating_sub_bytes, Platform, System};
 use termion::{color, style};
 use thiserror::Error;
 
-use crate::component::{Component, Constraints};
+use crate::component::{Component, PrepareReturn};
 use crate::config::global_config::GlobalConfig;
 use crate::constants::INDENT_WIDTH;
 
@@ -20,10 +20,7 @@ impl Component for Memory {
             .unwrap_or_else(|err| println!("Memory error: {}", err));
         println!();
     }
-    fn prepare(
-        self: Box<Self>,
-        _global_config: &GlobalConfig,
-    ) -> (Box<dyn Component>, Option<Constraints>) {
+    fn prepare(self: Box<Self>, _global_config: &GlobalConfig) -> PrepareReturn {
         (self, None)
     }
 }
@@ -136,7 +133,11 @@ fn full_color(ratio: f64) -> String {
 }
 
 impl Memory {
-    pub fn print_or_error(self, global_config: &GlobalConfig, width: Option<usize>) -> Result<(), MemoryError> {
+    pub fn print_or_error(
+        self,
+        global_config: &GlobalConfig,
+        width: Option<usize>,
+    ) -> Result<(), MemoryError> {
         let sys = System::new();
         let width = width.unwrap_or(global_config.progress_width - INDENT_WIDTH);
 

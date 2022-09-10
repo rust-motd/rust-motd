@@ -13,7 +13,8 @@ use time::UtcOffset;
 
 use crate::command::BetterCommandError;
 use crate::component::Component;
-use crate::component::Constraints;
+
+use crate::component::PrepareReturn;
 use crate::config::global_config::GlobalConfig;
 use crate::constants::INDENT_WIDTH;
 
@@ -28,10 +29,7 @@ impl Component for LastLogin {
             .unwrap_or_else(|err| println!("Last login error: {}", err));
         println!();
     }
-    fn prepare(
-        self: Box<Self>,
-        _global_config: &GlobalConfig,
-    ) -> (Box<dyn Component>, Option<Constraints>) {
+    fn prepare(self: Box<Self>, _global_config: &GlobalConfig) -> PrepareReturn {
         (self, None)
     }
 }

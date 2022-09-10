@@ -4,7 +4,7 @@ use serde::Deserialize;
 use thiserror::Error;
 
 use crate::{
-    component::{Component, Constraints},
+    component::{Component, PrepareReturn},
     config::global_config::GlobalConfig,
 };
 
@@ -17,10 +17,7 @@ impl Component for LastRun {
         self.print_or_error(global_config)
             .unwrap_or_else(|err| println!("Last run error: {}", err));
     }
-    fn prepare(
-        self: Box<Self>,
-        _global_config: &GlobalConfig,
-    ) -> (Box<dyn Component>, Option<Constraints>) {
+    fn prepare(self: Box<Self>, _global_config: &GlobalConfig) -> PrepareReturn {
         (self, None)
     }
 }

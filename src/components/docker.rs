@@ -6,7 +6,7 @@ use docker_api::{Docker as DockerAPI, Result as DockerResult};
 use std::collections::HashMap;
 use termion::{color, style};
 
-use crate::component::{Component, Constraints};
+use crate::component::{Component, PrepareReturn};
 use crate::config::global_config::GlobalConfig;
 
 pub struct Docker {
@@ -22,10 +22,7 @@ impl Component for Docker {
             .unwrap_or_else(|err| println!("Docker status error: {}", err));
         println!();
     }
-    fn prepare(
-        self: Box<Self>,
-        _global_config: &GlobalConfig,
-    ) -> (Box<dyn Component>, Option<Constraints>) {
+    fn prepare(self: Box<Self>, _global_config: &GlobalConfig) -> PrepareReturn {
         (self, None)
     }
 }

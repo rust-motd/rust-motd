@@ -4,7 +4,7 @@ mod command;
 mod components;
 mod config;
 mod constants;
-use component::{Component, Constraints};
+use component::{BoxedComponent, Constraints};
 use config::get_config::get_config;
 mod component;
 
@@ -14,12 +14,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     match get_config(args) {
         Ok(config) => {
-            let (components, constraints): (Vec<Box<dyn Component>>, Vec<Option<Constraints>>) =
-                config
-                    .components
-                    .into_iter()
-                    .map(|component| component.prepare(&config.global))
-                    .unzip();
+            let (components, constraints): (Vec<BoxedComponent>, Vec<Option<Constraints>>) = config
+                .components
+                .into_iter()
+                .map(|component| component.prepare(&config.global))
+                .unzip();
 
             let min_width = constraints
                 .into_iter()

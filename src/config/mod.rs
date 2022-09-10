@@ -3,7 +3,7 @@ use serde::de::{Deserialize, Visitor};
 pub mod get_config;
 pub mod global_config;
 
-use crate::component::Component;
+use crate::component::BoxedComponent;
 use crate::components::banner::Banner;
 use crate::components::docker::Docker;
 use crate::components::fail_2_ban::Fail2Ban;
@@ -36,7 +36,7 @@ enum Fields {
 }
 
 pub struct Config {
-    pub components: Vec<Box<dyn Component>>,
+    pub components: Vec<BoxedComponent>,
     pub global: GlobalConfig,
 }
 
