@@ -6,7 +6,8 @@ use serde::Deserialize;
 use thiserror::Error;
 
 use crate::command::{BetterCommand, BetterCommandError};
-use crate::component::{Component, PrepareReturn};
+use crate::component::Component;
+use crate::default_prepare;
 use crate::config::global_config::GlobalConfig;
 
 #[derive(Debug, Deserialize)]
@@ -21,9 +22,7 @@ impl Component for Fail2Ban {
             .unwrap_or_else(|err| println!("Fail2Ban error: {}", err));
         println!();
     }
-    fn prepare(self: Box<Self>, _global_config: &GlobalConfig) -> PrepareReturn {
-        (self, None)
-    }
+    default_prepare!();
 }
 
 struct Entry {

@@ -4,8 +4,9 @@ use termion::{color, style};
 use thiserror::Error;
 
 use crate::command::{BetterCommand, BetterCommandError};
-use crate::component::{Component, PrepareReturn};
+use crate::component::Component;
 use crate::config::global_config::GlobalConfig;
+use crate::default_prepare;
 
 #[derive(Debug, Deserialize)]
 pub struct Banner {
@@ -20,9 +21,7 @@ impl Component for Banner {
             .unwrap_or_else(|err| println!("Banner error: {}", err));
         println!();
     }
-    fn prepare(self: Box<Self>, _global_config: &GlobalConfig) -> PrepareReturn {
-        (self, None)
-    }
+    default_prepare!();
 }
 
 #[derive(Debug, Deserialize)]

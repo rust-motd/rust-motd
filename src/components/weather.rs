@@ -4,7 +4,8 @@ use std::io::Write;
 use thiserror::Error;
 use ureq;
 
-use crate::component::{Component, PrepareReturn};
+use crate::component::Component;
+use crate::default_prepare;
 use crate::config::global_config::GlobalConfig;
 
 #[derive(Debug, Deserialize)]
@@ -26,9 +27,7 @@ impl Component for Weather {
             .unwrap_or_else(|err| println!("Weather error: {}", err));
         println!();
     }
-    fn prepare(self: Box<Self>, _global_config: &GlobalConfig) -> PrepareReturn {
-        (self, None)
-    }
+    default_prepare!();
 }
 
 #[derive(Debug, Deserialize)]

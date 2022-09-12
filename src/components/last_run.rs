@@ -3,10 +3,9 @@ use chrono::Local;
 use serde::Deserialize;
 use thiserror::Error;
 
-use crate::{
-    component::{Component, PrepareReturn},
-    config::global_config::GlobalConfig,
-};
+use crate::component::Component;
+use crate::default_prepare;
+use crate::config::global_config::GlobalConfig;
 
 #[derive(Debug, Deserialize)]
 pub struct LastRun {}
@@ -17,9 +16,7 @@ impl Component for LastRun {
         self.print_or_error(global_config)
             .unwrap_or_else(|err| println!("Last run error: {}", err));
     }
-    fn prepare(self: Box<Self>, _global_config: &GlobalConfig) -> PrepareReturn {
-        (self, None)
-    }
+    default_prepare!();
 }
 
 #[derive(Error, Debug)]
