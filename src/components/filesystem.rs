@@ -9,9 +9,9 @@ use termion::{color, style};
 use thiserror::Error;
 
 use crate::component::{Component, Constraints, PrepareReturn};
-use crate::default_prepare;
 use crate::config::global_config::GlobalConfig;
 use crate::constants::INDENT_WIDTH;
+use crate::default_prepare;
 
 const HEADER: [&str; 6] = ["Filesystems", "Device", "Mount", "Type", "Used", "Total"];
 

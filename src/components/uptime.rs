@@ -4,8 +4,8 @@ use serde::Deserialize;
 use systemstat::{Platform, System};
 
 use crate::component::Component;
-use crate::default_prepare;
 use crate::config::global_config::GlobalConfig;
+use crate::default_prepare;
 
 #[derive(Debug, Deserialize)]
 pub struct Uptime {

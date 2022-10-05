@@ -14,7 +14,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     match get_config(args) {
         Ok(config) => {
-
             // Run the prepare phase for each component
             // Allow each component to specify its sizing constraints (like min width)
             let (components, constraints): (Vec<BoxedComponent>, Vec<Option<Constraints>>) = config

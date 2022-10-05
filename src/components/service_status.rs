@@ -6,9 +6,9 @@ use thiserror::Error;
 
 use crate::command::{BetterCommand, BetterCommandError};
 use crate::component::Component;
-use crate::default_prepare;
 use crate::config::global_config::GlobalConfig;
 use crate::constants::INDENT_WIDTH;
+use crate::default_prepare;
 
 pub struct ServiceStatus {
     pub services: HashMap<String, String>,

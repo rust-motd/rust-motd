@@ -7,8 +7,8 @@ use std::collections::HashMap;
 use termion::{color, style};
 
 use crate::component::Component;
-use crate::default_prepare;
 use crate::config::global_config::GlobalConfig;
+use crate::default_prepare;
 
 pub struct Docker {
     pub containers: HashMap<String, String>,

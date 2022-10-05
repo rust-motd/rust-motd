@@ -53,7 +53,10 @@ pub trait Component {
 #[macro_export]
 macro_rules! default_prepare {
     () => {
-        fn prepare(self: Box<Self>, _global_config: &$crate::config::global_config::GlobalConfig) -> $crate::component::PrepareReturn {
+        fn prepare(
+            self: Box<Self>,
+            _global_config: &$crate::config::global_config::GlobalConfig,
+        ) -> $crate::component::PrepareReturn {
             (self, None)
         }
     };
