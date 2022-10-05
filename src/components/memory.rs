@@ -100,27 +100,34 @@ impl MemoryUsage {
     }
 }
 
-fn print_bar(global_config: &GlobalConfig, full_color: String, bar_full: usize, bar_empty: usize) {
-    print!(
-        "{}",
-        [
-            " ".repeat(INDENT_WIDTH),
-            global_config.progress_prefix.to_string(),
-            full_color,
-            global_config
-                .progress_full_character
-                .to_string()
-                .repeat(bar_full),
-            color::Fg(color::LightBlack).to_string(),
-            global_config
-                .progress_empty_character
-                .to_string()
-                .repeat(bar_empty),
-            style::Reset.to_string(),
-            global_config.progress_suffix.to_string(),
-        ]
-        .join("")
-    );
+fn format_bar(
+    global_config: &GlobalConfig,
+    width: usize,
+    full_ratio: f64,
+    full_color: String,
+) -> String {
+    let without_ends_width =
+        width - global_config.progress_suffix.len() - global_config.progress_prefix.len();
+
+    let bar_full = ((without_ends_width as f64) * full_ratio) as usize;
+    let bar_empty = without_ends_width - bar_full;
+
+    [
+        global_config.progress_prefix.to_string(),
+        full_color,
+        global_config
+            .progress_full_character
+            .to_string()
+            .repeat(bar_full),
+        color::Fg(color::LightBlack).to_string(),
+        global_config
+            .progress_empty_character
+            .to_string()
+            .repeat(bar_empty),
+        style::Reset.to_string(),
+        global_config.progress_suffix.to_string(),
+    ]
+    .join("")
 }
 
 fn full_color(ratio: f64) -> String {
@@ -128,6 +135,25 @@ fn full_color(ratio: f64) -> String {
         0..=75 => color::Fg(color::Green).to_string(),
         76..=95 => color::Fg(color::Yellow).to_string(),
         _ => color::Fg(color::Red).to_string(),
+    }
+}
+
+fn print_stacked(entries: Vec<MemoryUsage>, width: usize, global_config: &GlobalConfig) {
+    for entry in entries {
+        println!(
+            "{}{}: {} / {}",
+            " ".repeat(INDENT_WIDTH),
+            entry.name,
+            entry.used,
+            entry.total
+        );
+        let full_color = full_color(entry.used_ratio);
+        let bar = format_bar(global_config, width, entry.used_ratio, full_color);
+        println!(
+            "{indent}{bar}",
+            indent = " ".repeat(INDENT_WIDTH),
+            bar = bar
+        );
     }
 }
 
@@ -144,37 +170,20 @@ impl Memory {
             MemoryUsage::get_by_name("RAM".to_string(), &sys, "MemAvailable", "MemTotal")?;
         println!("Memory");
         match self.swap_pos {
+            SwapPosition::None => print_stacked(vec![ram_usage], width, global_config),
             SwapPosition::Below => {
                 let swap_usage =
                     MemoryUsage::get_by_name("Swap".to_string(), &sys, "SwapFree", "SwapTotal")?;
-                let entries = vec![ram_usage, swap_usage];
-                let bar_width = width
-                    - global_config.progress_prefix.len()
-                    - global_config.progress_suffix.len();
-                for entry in entries {
-                    let full_color = full_color(entry.used_ratio);
-                    let bar_full = ((bar_width as f64) * entry.used_ratio) as usize;
-                    let bar_empty = bar_width - bar_full;
-                    println!(
-                        "{}{}: {} / {}",
-                        " ".repeat(INDENT_WIDTH),
-                        entry.name,
-                        entry.used,
-                        entry.total
-                    );
-                    print_bar(global_config, full_color, bar_full, bar_empty);
-                    println!();
-                }
+                print_stacked(vec![ram_usage, swap_usage], width, global_config)
             }
             SwapPosition::Beside => {
                 let swap_usage =
                     MemoryUsage::get_by_name("Swap".to_string(), &sys, "SwapFree", "SwapTotal")?;
 
-                let bar_width = ((width
-                    - global_config.progress_prefix.len()
-                    - global_config.progress_suffix.len())
-                    / 2)
-                    - INDENT_WIDTH;
+                let min_spacing = 1;
+                let bar_width = (width - min_spacing) / 2;
+                let spacing = width - 2 * bar_width;
+                let spacing = " ".repeat(spacing);
 
                 let ram_label = format!(
                     "{}: {} / {}",
@@ -185,39 +194,26 @@ impl Memory {
                     swap_usage.name, swap_usage.used, swap_usage.total
                 );
                 println!(
-                    "{}{}{}{}",
+                    "{}{ram_label:padding$}{spacing}{swap_label}",
                     " ".repeat(INDENT_WIDTH),
-                    ram_label,
-                    " ".repeat(bar_width - ram_label.len() + 2 * INDENT_WIDTH),
-                    swap_label
+                    ram_label = ram_label,
+                    padding = bar_width,
+                    spacing = spacing,
+                    swap_label = swap_label
                 );
                 let bar_color = full_color(ram_usage.used_ratio);
-                let bar_full = ((bar_width as f64) * ram_usage.used_ratio) as usize;
-                let bar_empty = bar_width - bar_full;
-                print_bar(global_config, bar_color, bar_full, bar_empty);
+                let ram_bar = format_bar(global_config, bar_width, ram_usage.used_ratio, bar_color);
 
                 let bar_color = full_color(swap_usage.used_ratio);
-                let bar_full = ((bar_width as f64) * swap_usage.used_ratio) as usize;
-                let bar_empty = bar_width - bar_full;
-                print_bar(global_config, bar_color, bar_full, bar_empty);
-                println!();
-            }
-            SwapPosition::None => {
-                let bar_width = width
-                    - global_config.progress_prefix.len()
-                    - global_config.progress_suffix.len();
-                let full_color = full_color(ram_usage.used_ratio);
-                let bar_full = ((bar_width as f64) * ram_usage.used_ratio) as usize;
-                let bar_empty = bar_width - bar_full;
+                let swap_bar =
+                    format_bar(global_config, bar_width, swap_usage.used_ratio, bar_color);
                 println!(
-                    "{}{}: {} / {}",
-                    " ".repeat(INDENT_WIDTH),
-                    ram_usage.name,
-                    ram_usage.used,
-                    ram_usage.total
+                    "{indent}{ram}{spacing}{swap}",
+                    indent = " ".repeat(INDENT_WIDTH),
+                    ram = ram_bar,
+                    spacing = spacing,
+                    swap = swap_bar
                 );
-                print_bar(global_config, full_color, bar_full, bar_empty);
-                println!();
             }
         }
 
