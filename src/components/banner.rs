@@ -25,38 +25,23 @@ impl Component for Banner {
 }
 
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "snake_case")]
 enum BannerColor {
-    #[serde(alias = "black")]
     Black,
-    #[serde(alias = "red")]
     Red,
-    #[serde(alias = "green")]
     Green,
-    #[serde(alias = "yellow")]
     Yellow,
-    #[serde(alias = "blue")]
     Blue,
-    #[serde(alias = "magenta")]
     Magenta,
-    #[serde(alias = "cyan")]
     Cyan,
-    #[serde(alias = "white")]
     White,
-    #[serde(alias = "light_black")]
     LightBlack,
-    #[serde(alias = "light_red")]
     LightRed,
-    #[serde(alias = "light_green")]
     LightGreen,
-    #[serde(alias = "light_yellow")]
     LightYellow,
-    #[serde(alias = "light_blue")]
     LightBlue,
-    #[serde(alias = "light_magenta")]
     LightMagenta,
-    #[serde(alias = "light_cyan")]
     LightCyan,
-    #[serde(alias = "light_white")]
     LightWhite,
 }
 
