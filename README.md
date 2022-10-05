@@ -34,7 +34,7 @@ Note: To cross compile, you may need to install additional packages. For example
 
 `rust-motd` uses a `TOML` configuration file to determine which components to run, and any parameters for those components. Components can be enabled or disabled by including or removing/commenting out the relevant section of configuration. An example configuration file is included in [example_config.toml](example_config.toml).
 
-A configuration file can either be specified as the first argument to `rust-motd` via the comnmand line or placed in one of two default locations. If a config file is not specified as an argument, `rust-motd` will check `$XDG_CONFIG_HOME/rust-motd/config.toml` and `$HOME/.config/rust-motd/config.toml` in that order.
+A configuration file can either be specified as the first argument to `rust-motd` via the command line or placed in one of two default locations. If a config file is not specified as an argument, `rust-motd` will check `$XDG_CONFIG_HOME/rust-motd/config.toml` and `$HOME/.config/rust-motd/config.toml` in that order.
 
 The options for each component are listed below:
 ### Banner
