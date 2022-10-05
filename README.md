@@ -44,11 +44,11 @@ The options for each component are listed below:
 
 ### Weather
 
-The weather component allows you to either specify a [wttr.in](https://wttr.in) url, or a location and display style which will be used to build the url.
+The weather component allows you to either specify a [wttr.in](https://wttr.in) URL, or a location and display style which will be used to build the URL.
 
 Either:
 
-- `url`: a [wttr.in](https://wttr.in) query url for the relevant location. E.g. `https://wttr.in` or `https://wttr.in/New+York,New+York?0`. For more detail about the options available via the request url, see the [wttr.in documentation](https://github.com/chubin/wttr.in). The response of an http request to the specified url is output directly to the console, so in theory you could use a service other than [wttr.in](wttr.in).
+- `url`: a [wttr.in](https://wttr.in) query URL for the relevant location. E.g. `https://wttr.in` or `https://wttr.in/New+York,New+York?0`. For more detail about the options available via the request URL, see the [wttr.in documentation](https://github.com/chubin/wttr.in). The response of an http request to the specified URL is output directly to the console, so in theory you could use a service other than [wttr.in](wttr.in).
 
 or:
 
@@ -80,7 +80,7 @@ The key **must** start with a `/` for internal containers (please see [here](htt
 
 ### SSL Certificates
 
-- `sort_method`: The order to sort the displayed ssl certificates. Options are "alphabetical", "expiration", or "manual", in which case the certs will be displayed in the same order that they appear in the config file.
+- `sort_method`: The order to sort the displayed SSL certificates. Options are "alphabetical", "expiration", or "manual", in which case the certs will be displayed in the same order that they appear in the config file.
 - `[ssl_certificates.certs]`: A subsection which is a list pairs of of certificate display names (keys) and certificate paths (values).
 
 ### Filesystems
