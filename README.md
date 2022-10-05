@@ -89,7 +89,7 @@ The key **must** start with a `/` for internal containers (please see [here](htt
 
  ### Memory
 
- - `swap_pos`: Either `beside`, `below` or `none` to indicate the location to display the sawp memory usage, if any.
+ - `swap_pos`: Either `beside`, `below` or `none` to indicate the location to display the swap memory usage, if any.
 
 ### Fail2Ban
 
