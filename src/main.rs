@@ -1,168 +1,42 @@
-use serde::Deserialize;
 use std::env;
-use std::fs;
-use std::path::{Path, PathBuf};
-use systemstat::{Platform, System};
-use thiserror::Error;
 
-mod components;
-use components::banner::{disp_banner, BannerCfg};
-use components::docker::{disp_docker, DockerConfig};
-use components::fail_2_ban::{disp_fail_2_ban, Fail2BanCfg};
-use components::filesystem::{disp_filesystem, FilesystemsCfg};
-use components::last_login::{disp_last_login, LastLoginCfg};
-use components::last_run::{disp_last_run, LastRunConfig};
-use components::memory::{disp_memory, MemoryCfg};
-use components::service_status::{disp_service_status, ServiceStatusCfg};
-use components::ssl_certs::{disp_ssl, SSLCertsCfg};
-use components::uptime::{disp_uptime, UptimeCfg};
-use components::weather::{disp_weather, WeatherCfg};
 mod command;
+mod components;
+mod config;
 mod constants;
-use constants::GlobalSettings;
-
-#[derive(Debug, Deserialize)]
-struct Config {
-    banner: Option<BannerCfg>,
-    service_status: Option<ServiceStatusCfg>,
-    user_service_status: Option<ServiceStatusCfg>,
-    docker_status: Option<DockerConfig>,
-    uptime: Option<UptimeCfg>,
-    ssl_certificates: Option<SSLCertsCfg>,
-    filesystems: Option<FilesystemsCfg>,
-    memory: Option<MemoryCfg>,
-    fail_2_ban: Option<Fail2BanCfg>,
-    last_login: Option<LastLoginCfg>,
-    weather: Option<WeatherCfg>,
-    last_run: Option<LastRunConfig>,
-    #[serde(default)]
-    global: GlobalSettings,
-}
+use component::{BoxedComponent, Constraints};
+use config::get_config::get_config;
+mod component;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = env::args();
+
     match get_config(args) {
         Ok(config) => {
-            let sys = System::new();
 
-            if let Some(banner_config) = config.banner {
-                disp_banner(banner_config).unwrap_or_else(|err| println!("Banner error: {}", err));
-                println!();
-            }
+            // Run the prepare phase for each component
+            // Allow each component to specify its sizing constraints (like min width)
+            let (components, constraints): (Vec<BoxedComponent>, Vec<Option<Constraints>>) = config
+                .components
+                .into_iter()
+                .map(|component| component.prepare(&config.global))
+                .unzip();
 
-            if let Some(weather_config) = config.weather {
-                disp_weather(weather_config)
-                    .unwrap_or_else(|err| println!("Weather error: {}", err));
-                println!();
-            }
+            // The width to use is the maximum of all the component's minimum widths
+            // Right now, min width is the only constraint
+            let width = constraints
+                .into_iter()
+                .flatten()
+                .filter_map(|x| x.min_width)
+                .max();
 
-            if let Some(uptime_config) = config.uptime {
-                disp_uptime(uptime_config, &sys)
-                    .unwrap_or_else(|err| println!("Uptime error: {}", err));
-                println!();
-            }
-
-            if let Some(service_status_config) = config.service_status {
-                println!("System Services:");
-                disp_service_status(service_status_config, false)
-                    .unwrap_or_else(|err| println!("Service status error: {}", err));
-                println!();
-            }
-
-            if let Some(service_status_config) = config.user_service_status {
-                println!("User Services:");
-                disp_service_status(service_status_config, true)
-                    .unwrap_or_else(|err| println!("User service status error: {}", err));
-                println!();
-            }
-
-            if let Some(docker_config) = config.docker_status {
-                println!("Docker:");
-                disp_docker(docker_config)
-                    .await
-                    .unwrap_or_else(|err| println!("Docker status error: {}", err));
-                println!();
-            }
-
-            if let Some(ssl_certificates_config) = config.ssl_certificates {
-                disp_ssl(ssl_certificates_config, &config.global)
-                    .unwrap_or_else(|err| println!("SSL Certificate error: {}", err));
-                println!();
-            }
-
-            let mut bar_size_hint: Option<usize> = None;
-            if let Some(filesystems) = config.filesystems {
-                bar_size_hint =
-                    disp_filesystem(filesystems, &config.global, &sys).unwrap_or_else(|err| {
-                        println!("Filesystem error: {}", err);
-                        None
-                    });
-                println!();
-            }
-
-            if let Some(memory) = config.memory {
-                disp_memory(memory, &config.global, &sys, bar_size_hint) // TODO:
-                    .unwrap_or_else(|err| println!("Memory error: {}", err));
-                println!();
-            }
-
-            if let Some(last_login_config) = config.last_login {
-                disp_last_login(last_login_config, &config.global)
-                    .unwrap_or_else(|err| println!("Last login error: {}", err));
-                println!();
-            }
-
-            if let Some(fail_2_ban_config) = config.fail_2_ban {
-                disp_fail_2_ban(fail_2_ban_config)
-                    .unwrap_or_else(|err| println!("Fail2Ban error: {}", err));
-                println!();
-            }
-
-            if let Some(last_run_config) = config.last_run {
-                disp_last_run(last_run_config, &config.global)
-                    .unwrap_or_else(|err| println!("Last run error: {}", err));
+            // Print each component with the given width
+            for component in components {
+                component.print(&config.global, width).await;
             }
         }
         Err(e) => println!("Config Error: {}", e),
     }
     Ok(())
-}
-
-#[derive(Error, Debug)]
-pub enum ConfigError {
-    #[error(
-        "Configuration file not found.\n\
-        Make a copy of default config and either specify it as an arg or \n\
-        place it in a default location.  See ReadMe for details."
-    )]
-    ConfigNotFound,
-
-    #[error(transparent)]
-    ConfigHomeError(#[from] std::env::VarError),
-
-    #[error(transparent)]
-    IOError(#[from] std::io::Error),
-
-    #[error(transparent)]
-    ConfigParseError(#[from] toml::de::Error),
-}
-
-fn get_config(mut args: env::Args) -> Result<Config, ConfigError> {
-    let config_path = match args.nth(1) {
-        Some(file_path) => Some(PathBuf::from(file_path)),
-        None => {
-            let config_base = env::var("XDG_CONFIG_HOME").unwrap_or(env::var("HOME")? + "/.config");
-            let config_base = Path::new(&config_base).join(Path::new("rust-motd/config.toml"));
-            if config_base.exists() {
-                Some(config_base)
-            } else {
-                None
-            }
-        }
-    };
-    match config_path {
-        Some(path) => Ok(toml::from_str(&fs::read_to_string(path)?)?),
-        None => Err(ConfigError::ConfigNotFound),
-    }
 }

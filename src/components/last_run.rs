@@ -1,11 +1,23 @@
+use async_trait::async_trait;
 use chrono::Local;
 use serde::Deserialize;
 use thiserror::Error;
 
-use crate::constants::GlobalSettings;
+use crate::component::Component;
+use crate::default_prepare;
+use crate::config::global_config::GlobalConfig;
 
 #[derive(Debug, Deserialize)]
-pub struct LastRunConfig {}
+pub struct LastRun {}
+
+#[async_trait]
+impl Component for LastRun {
+    async fn print(self: Box<Self>, global_config: &GlobalConfig, _width: Option<usize>) {
+        self.print_or_error(global_config)
+            .unwrap_or_else(|err| println!("Last run error: {}", err));
+    }
+    default_prepare!();
+}
 
 #[derive(Error, Debug)]
 pub enum LastRunError {
@@ -16,13 +28,12 @@ pub enum LastRunError {
     IO(#[from] std::io::Error),
 }
 
-pub fn disp_last_run(
-    _last_run_config: LastRunConfig,
-    global_settings: &GlobalSettings,
-) -> Result<(), LastRunError> {
-    println!(
-        "Last updated: {}",
-        Local::now().format(&global_settings.time_format)
-    );
-    Ok(())
+impl LastRun {
+    pub fn print_or_error(self, global_config: &GlobalConfig) -> Result<(), LastRunError> {
+        println!(
+            "Last updated: {}",
+            Local::now().format(&global_config.time_format)
+        );
+        Ok(())
+    }
 }
