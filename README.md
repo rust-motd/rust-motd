@@ -23,7 +23,7 @@ which can quickly give an overview of your server or personal computer.
 - Run `cargo build` or `cargo run`
 
 <a id="compiling-alpine"></a>
-Note: To cross compile, you may need to install additional packages. For example, to cross compile for Alpine, it was necessary to install the `musl-tools` package on Ubuntu (specifically to compile the `ring` crate), after which an executable could be successfully cross-compiled with `cargo build --target x86_64-unknown-linux-musl` (assuming you've already added the musl toolchain via `rustup target add x86_64-unknown-linux-musl`).
+Note: To cross compile, you may need to install additional packages. For example, to cross compile for Alpine, it was necessary to install the `musl-tools` package on Ubuntu (specifically to compile the `ring` crate), after which an executable could be successfully cross-compiled with `cargo build --target x86_64-unknown-linux-musl` (assuming you've already added the `musl` toolchain via `rustup target add x86_64-unknown-linux-musl`).
 [See more.](https://www.reddit.com/r/rust/comments/qdm8gf/comment/hhor67v/?utm_source=share&utm_medium=web2x&context=3)
 
 ### Arch Linux
@@ -132,7 +132,7 @@ in order to write to the protected file `/etc/motd`.
 
 It can also be nice to show the MOTD locally every time you launch a new terminal emulator
 (or on every new pane if you use `tmux`).
-Indeed, some components make more sense on a server (ssl, fail2ban, last login)
+Indeed, some components make more sense on a server (`ssl`, `fail2ban`, `last_login`)
 whereas others make more sense on a local machine (weather, user services).
 
 The setup for this is slightly different.
@@ -142,7 +142,7 @@ This is especially true if you are using the user services component.
 This also means that you won't have permission to write to `/etc/motd`.
 I chose `~/.local/etc/motd`.
 Finally, I had to set the environment variable `DBUS_SESSION_BUS_ADDRESS`
-in my `crontab` in order to see the status of my user systemd services.
+in my `crontab` in order to see the status of my user `systemd` services.
 Without it, the underlying call to `systemctl` would return nothing
 and nothing would be shown in `rust-motd`.
 
