@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use chrono::{Local, TimeZone};
 use humantime::format_duration;
 use last_rs::{get_logins, Enter, Exit, LastError};
 use std::collections::HashMap;
@@ -8,8 +9,6 @@ use thiserror::Error;
 use time::error::Format as TimeFormatError;
 use time::error::IndeterminateOffset as TimeIndeterminateOffsetError;
 use time::error::InvalidFormatDescription as TimeInvalidFormatDescriptionError;
-use time::format_description;
-use time::UtcOffset;
 
 use crate::command::BetterCommandError;
 use crate::component::Component;
@@ -85,9 +84,11 @@ fn format_entry(
     Ok(format!(
         "{indent}from {location} at {login_time} ({exit})",
         location = location,
-        login_time = login_time
-            .to_offset(UtcOffset::current_local_offset()?)
-            .format(&format_description::parse(time_format)?)?,
+        // There has to be a better way to go from a time OffsetDateTime to a
+        // chrono DateTime
+        login_time = Local
+            .timestamp(login_time.unix_timestamp(), 0)
+            .format(time_format),
         exit = exit,
         indent = " ".repeat(2 * INDENT_WIDTH as usize),
     ))

@@ -111,7 +111,7 @@ The global configuration is used for settings that may span multiple components,
 - `progress_prefix` (Default `"["`): The character to used to cap the left side of the progress bar
 - `progress_suffix` (Default `"]"`): The character to used to cap the right side of the progress bar
 - `progress_width` (Default `80`): The default width of the progress bar, used only if no other "size hint" is available. More specifically, the `filesystem` component will automatically determine its width. If the `filesystem` component is present, then the `memory` component will use the width of the filesystem as its size hint. Otherwise it will use the configured value.
-- `time_format` (Default `"[year]-[month]-[day] [hour]:[minute]:[second]"`): time format string
+- `time_format` (Default `"%Y-%m-%d %H:%M:%S"`): time format string
 
 ## Setup
 

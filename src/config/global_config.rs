@@ -33,7 +33,7 @@ fn default_progress_width() -> usize {
 }
 
 fn default_time_format() -> String {
-    "[year]-[month]-[day] [hour]:[minute]:[second]".to_string()
+    "%Y-%m-%d %H:%M:%S".to_string()
 }
 
 // TODO: See if we can use this: https://github.com/serde-rs/serde/issues/1416
