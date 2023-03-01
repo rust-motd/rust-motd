@@ -57,6 +57,10 @@ or:
 
 In the case both are specified, the `url` parameter is given priority.
 
+User-Agent can also be specified when connecting to the `url`.
+
+- `user_agent`: A string to be supplied. If not specified, it will be "curl".
+
 If you need a proxy to access the internet, specify it in below item:
 
 - `proxy`: The http proxy server which used to access internet.

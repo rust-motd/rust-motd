@@ -11,7 +11,7 @@ use crate::default_prepare;
 #[derive(Debug, Deserialize)]
 pub struct Weather {
     url: Option<String>,
-
+    user_agent: Option<String>,
     proxy: Option<String>,
 
     #[serde(default = "String::new")]
@@ -77,9 +77,15 @@ impl Weather {
             }
             None => ureq::AgentBuilder::new().build(),
         };
+
+        let user_agent = match self.user_agent {
+            Some(user_agent) => user_agent,
+            None => String::from("curl")
+        };
+
         let body = agent
             .get(&url)
-            .set("User-Agent", "curl")
+            .set("User-Agent", &user_agent)
             .call()?
             .into_string()?;
 
