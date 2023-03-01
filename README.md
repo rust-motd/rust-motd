@@ -30,6 +30,10 @@ Note: To cross compile, you may need to install additional packages. For example
 
 `rust-motd` is in the AUR under [`rust-motd-bin`](https://aur.archlinux.org/packages/rust-motd-bin/) thanks to [`cargo-aur`](https://github.com/fosskers/cargo-aur).
 
+### Debian and derivatives
+
+There is a `.deb` file available in the [Releases](https://github.com/rust-motd/rust-motd/releases) tab.
+
 ## Configuration
 
 `rust-motd` uses a `TOML` configuration file to determine which components to run, and any parameters for those components. Components can be enabled or disabled by including or removing/commenting-out the relevant section of configuration. The enabled components will be printed in the order they appear in the configuration file. In other words, you can customize the printing order by rearranging the sections of the configuration file. An example configuration file is included in [example_config.toml](example_config.toml).
