@@ -77,9 +77,15 @@ impl Weather {
             }
             None => ureq::AgentBuilder::new().build(),
         };
+
+        let uag = match self.uag {
+            Some(uag) => uag,
+            None => {let uag = String::from("curl"); uag}
+        };
+
         let body = agent
             .get(&url)
-            .set("User-Agent", "curl")
+            .set("User-Agent", &uag)
             .call()?
             .into_string()?;
 
