@@ -25,6 +25,7 @@ enum Fields {
     Global,
     Banner,
     Docker,
+    #[serde(rename = "fail_2_ban")]
     Fail2Ban,
     Filesystems,
     LastLogin,
@@ -32,6 +33,7 @@ enum Fields {
     Memory,
     ServiceStatus,
     UserServiceStatus,
+    #[serde(rename = "ssl_certificates")]
     SSLCerts,
     Uptime,
     Weather,
