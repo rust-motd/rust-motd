@@ -89,7 +89,7 @@ The key **must** start with a `/` for internal containers (please see [here](htt
 ### SSL Certificates
 
 - `sort_method`: The order to sort the displayed SSL certificates. Options are "alphabetical", "expiration", or "manual", in which case the certs will be displayed in the same order that they appear in the config file.
-- `[ssl_certificates.certs]`: A subsection which is a list pairs of of certificate display names (keys) and certificate paths (values).
+- `[ssl_certificates.certs]`: A subsection that is a list pairs of of certificate display names (keys) and certificate paths (values). If using LetsEncrypt, this should be `cert.pem`, not `privkey.pem`.
 
 ### Filesystems
 
