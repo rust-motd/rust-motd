@@ -32,7 +32,8 @@ Note: To cross compile, you may need to install additional packages. For example
 
 ### Debian and derivatives
 
-There is a `.deb` file available in the [Releases](https://github.com/rust-motd/rust-motd/releases) tab.
+- You can install `rust-motd-deb` with [pacstall](https://github.com/pacstall/pacstall).
+- There is a `.deb` file available in the [Releases](https://github.com/rust-motd/rust-motd/releases) tab.
 
 ### NixOS
 
