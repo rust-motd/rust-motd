@@ -80,7 +80,7 @@ impl Weather {
 
         let user_agent = match self.user_agent {
             Some(user_agent) => user_agent,
-            None => String::from("curl")
+            None => String::from("curl"),
         };
 
         let body = agent
