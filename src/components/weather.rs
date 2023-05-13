@@ -3,6 +3,7 @@ use serde::Deserialize;
 use std::io::Write;
 use thiserror::Error;
 use ureq;
+use std::time::Duration;
 
 use crate::component::Component;
 use crate::config::global_config::GlobalConfig;
@@ -18,6 +19,17 @@ pub struct Weather {
     loc: String,
 
     style: Option<WeatherStyle>,
+
+    #[serde(default)]
+    timeout: Timeout,
+}
+
+#[derive(Deserialize, Debug)]
+struct Timeout(u64);
+impl Default for Timeout {
+    fn default() -> Self {
+        Timeout(5)
+    }
 }
 
 #[async_trait]
@@ -70,13 +82,13 @@ impl Weather {
             }
         };
 
-        let agent = match self.proxy {
-            Some(proxy) => {
-                let proxy = ureq::Proxy::new(proxy)?;
-                ureq::AgentBuilder::new().proxy(proxy).build()
-            }
-            None => ureq::AgentBuilder::new().build(),
-        };
+        let mut agent = ureq::AgentBuilder::new().
+            timeout(Duration::from_secs(self.timeout.0));
+        if let Some(proxy) = self.proxy {
+            let proxy = ureq::Proxy::new(proxy)?;
+            agent = agent.proxy(proxy);
+        }
+        let agent = agent.build();
 
         let user_agent = match self.user_agent {
             Some(user_agent) => user_agent,

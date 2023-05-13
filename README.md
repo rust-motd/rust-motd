@@ -74,6 +74,10 @@ If you need a proxy to access the internet, specify it in below item:
 
 - `proxy`: The http proxy server which used to access internet.
 
+You may also specify a timeout for the network request. The default is `5`.
+
+- `timeout`: Timeout, seconds
+
 ### Service Status
 
 - List of `systemd` services to display the status of. Keys are used as the service display name, while the value is the name of the service itself.
