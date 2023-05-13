@@ -24,8 +24,8 @@ pub enum ConfigError {
     ConfigParseError(#[from] toml::de::Error),
 }
 
-pub fn get_config(mut args: env::Args) -> Result<Config, ConfigError> {
-    let config_path = match args.nth(1) {
+pub fn get_config(config_path: Option<String>) -> Result<Config, ConfigError> {
+    let config_path = match config_path {
         Some(file_path) => Some(PathBuf::from(file_path)),
         None => {
             let config_base = env::var("XDG_CONFIG_HOME").unwrap_or(env::var("HOME")? + "/.config");

@@ -1,4 +1,4 @@
-use std::env;
+use clap::Parser;
 
 mod command;
 mod components;
@@ -8,11 +8,16 @@ use component::{BoxedComponent, Constraints};
 use config::get_config::get_config;
 mod component;
 
+#[derive(Parser, Debug)]
+struct Args {
+    config_path: Option<String>,
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let args = env::args();
+    let args = Args::parse();
 
-    match get_config(args) {
+    match get_config(args.config_path) {
         Ok(config) => {
             // Run the prepare phase for each component
             // Allow each component to specify its sizing constraints (like min width)
