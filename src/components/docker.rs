@@ -1,7 +1,7 @@
 use crate::constants::INDENT_WIDTH;
 use async_trait::async_trait;
-use docker_api::api::container::ContainerStatus;
-use docker_api::container::ContainerListOpts;
+use docker_api::models::ContainerSummary;
+use docker_api::opts::ContainerListOpts;
 use docker_api::{Docker as DockerAPI, Result as DockerResult};
 use std::collections::HashMap;
 use termion::{color, style};
@@ -36,60 +36,75 @@ pub fn new_docker() -> DockerResult<DockerAPI> {
     DockerAPI::new("tcp://127.0.0.1:8080")
 }
 
+struct Container {
+    summary: ContainerSummary,
+    name: String,
+}
+
 impl Docker {
-    pub async fn print_or_error(self) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn print_or_error(mut self) -> Result<(), Box<dyn std::error::Error>> {
         let docker = new_docker()?;
 
         // Get all containers from library and then filter them
         // Not perfect, but I got strange issues when trying to use `.get(id)`
-        let containers = docker
+        let containers: Vec<Container> = docker
             .containers()
             .list(&ContainerListOpts::builder().all(true).build())
-            .await?;
-        let containers = self
-            .containers
-            .iter()
-            .filter_map(|(docker_name, display_name)| {
-                match containers
-                    .iter()
-                    .find(|container| container.names.contains(docker_name))
-                {
-                    Some(container) => Some((display_name, container)),
-                    None => {
-                        println!(
-                            "{indent}{color}Could not find container with name `{name}'{reset}",
-                            indent = " ".repeat(INDENT_WIDTH as usize),
-                            color = color::Fg(color::Yellow),
-                            name = docker_name,
-                            reset = style::Reset
-                        );
-                        None
-                    }
+            .await?
+            .into_iter()
+            .filter_map(|container| {
+                match container.names.as_ref() {
+                    Some(names) => names.iter().find_map(|name| {
+                        self.containers
+                            .remove_entry(name)
+                            .map(|(_docker_name, display_name)| Container {
+                                name: display_name,
+                                summary: container.clone(),
+                            })
+                    }),
+                    _ => None,
                 }
+                // container.names.as_ref().map(|names| {
+                //     names.iter().find_map(|name| {
+                //         self.containers.remove_entry(name).map(|(_docker_name, display_name)| (display_name, container))
+                //     })
+                // })
             })
-            .collect::<Vec<_>>();
+            .collect();
+
+        for (docker_name, _display_name) in self.containers {
+            println!(
+                "{indent}{color}Warning: Could not find Docker container `{docker_name}'{reset}",
+                indent = " ".repeat(INDENT_WIDTH),
+                color = color::Fg(color::Yellow),
+                docker_name = docker_name,
+                reset = style::Reset
+            );
+        }
 
         // Max length of all the container names (first column)
         // to determine the padding
-        if let Some(max_len) = self.containers.values().map(|v| v.len()).max() {
-            for (name, container) in containers {
-                let status_color = match container.state {
-                    ContainerStatus::Created
-                    | ContainerStatus::Restarting
-                    | ContainerStatus::Paused
-                    | ContainerStatus::Removing
-                    | ContainerStatus::Configured => color::Fg(color::Yellow).to_string(),
-                    ContainerStatus::Running => color::Fg(color::Green).to_string(),
-                    ContainerStatus::Exited => color::Fg(color::LightBlack).to_string(),
-                    ContainerStatus::Dead => color::Fg(color::Red).to_string(),
+        if let Some(max_len) = containers
+            .iter()
+            .map(|container| container.name.len())
+            .max()
+        {
+            for container in containers {
+                let status_color = match container.summary.state.as_deref() {
+                    Some("Created") | Some("Restarting") | Some("Paused") | Some("Removing")
+                    | Some("Configured") => color::Fg(color::Yellow).to_string(),
+                    Some("Running") => color::Fg(color::Green).to_string(),
+                    Some("Exited") => color::Fg(color::LightBlack).to_string(),
+                    Some("Dead") => color::Fg(color::Red).to_string(),
+                    _ => color::Fg(color::White).to_string(),
                 };
                 println!(
                     "{indent}{name}: {padding}{color}{status}{reset}",
-                    indent = " ".repeat(INDENT_WIDTH as usize),
-                    name = name,
-                    padding = " ".repeat(max_len - name.len()),
+                    indent = " ".repeat(INDENT_WIDTH),
+                    name = container.name,
+                    padding = " ".repeat(max_len - container.name.len()),
                     color = status_color,
-                    status = container.status,
+                    status = container.summary.status.unwrap_or(String::from("?")),
                     reset = style::Reset,
                 );
             }
