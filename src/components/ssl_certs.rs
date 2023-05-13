@@ -13,20 +13,15 @@ use crate::config::global_config::GlobalConfig;
 use crate::constants::INDENT_WIDTH;
 use crate::default_prepare;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Default)]
 enum SortMethod {
     #[serde(alias = "alphabetical")] // Alias used to match lowercase spelling as well
     Alphabetical,
     #[serde(alias = "expiration")] // Alias used to match lowercase spelling as well
     Expiration,
+    #[default]
     #[serde(alias = "manual")] // Alias used to match lowercase spelling as well
     Manual,
-}
-
-impl Default for SortMethod {
-    fn default() -> Self {
-        SortMethod::Manual
-    }
 }
 
 #[derive(Debug, Deserialize)]
