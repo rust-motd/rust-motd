@@ -90,7 +90,7 @@ fn format_entry(
             .timestamp(login_time.unix_timestamp(), 0)
             .format(time_format),
         exit = exit,
-        indent = " ".repeat(2 * INDENT_WIDTH as usize),
+        indent = " ".repeat(2 * INDENT_WIDTH),
     ))
 }
 
@@ -99,7 +99,7 @@ impl LastLogin {
         println!("Last Login:");
 
         for (username, num_logins) in self.users {
-            println!("{}{}:", " ".repeat(INDENT_WIDTH as usize), username);
+            println!("{}{}:", " ".repeat(INDENT_WIDTH), username);
             let entries = get_logins("/var/log/wtmp")?
                 .into_iter()
                 .filter(|entry| entry.user == username)
@@ -121,7 +121,7 @@ impl LastLogin {
                 }
                 None => println!(
                     "{indent}{color}No logins found for `{username}'{reset}",
-                    indent = " ".repeat(2 * INDENT_WIDTH as usize),
+                    indent = " ".repeat(2 * INDENT_WIDTH),
                     username = username,
                     color = color::Fg(color::Red),
                     reset = style::Reset,

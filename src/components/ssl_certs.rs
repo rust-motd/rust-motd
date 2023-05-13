@@ -101,7 +101,7 @@ impl SSLCerts {
         for cert_info in cert_infos.into_iter() {
             println!(
                 "{}{} {} {}",
-                " ".repeat(INDENT_WIDTH as usize),
+                " ".repeat(INDENT_WIDTH),
                 cert_info.name,
                 cert_info.status,
                 cert_info.expiration.format(&global_config.time_format)

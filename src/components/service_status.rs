@@ -89,7 +89,7 @@ pub fn print_or_error(
 
         println!(
             "{}{}: {}{}{}{}",
-            " ".repeat(INDENT_WIDTH as usize),
+            " ".repeat(INDENT_WIDTH),
             key,
             " ".repeat(padding - key.len()),
             status_color,

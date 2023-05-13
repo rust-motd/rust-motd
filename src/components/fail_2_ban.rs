@@ -75,7 +75,7 @@ impl Fail2Ban {
                 jail = jail,
                 total = entry.total,
                 current = entry.current,
-                indent = " ".repeat(INDENT_WIDTH as usize),
+                indent = " ".repeat(INDENT_WIDTH),
             );
         }
 
