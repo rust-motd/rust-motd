@@ -126,7 +126,12 @@ impl Docker {
     }
 
     async fn print_or_error_composes(docker: &DockerAPI, composes: HashMap<String, String>) -> Result<(), Box<dyn std::error::Error>> {
-        for (compose, friendly_name) in composes.iter(){ 
+        let longest_compose_name = composes.values()
+            .map(|n| n.len())
+            .max()
+            .unwrap_or(0);
+        
+        for (compose, name) in composes.iter(){ 
             let compose_containers = docker.containers()
                 .list(&ContainerListOpts::builder()
                     .all(true)
@@ -136,9 +141,10 @@ impl Docker {
 
             if compose_containers.is_empty() {
                 println!(
-                    "{indent}{name}: {color}Not found{reset}",
+                    "{indent}{name}: {padding}{color}Not found{reset}",
                     indent = " ".repeat(INDENT_WIDTH*2),
-                    name = friendly_name,
+                    name = name,
+                    padding = " ".repeat(longest_compose_name - name.len()),
                     color = color::Fg(color::Yellow),
                     reset = style::Reset,
                 );
@@ -152,9 +158,10 @@ impl Docker {
                 .into_group_map();
 
             println!(
-                "{indent}{name}: {running_color}running({running}) {exited_color}exited({exited}){reset}",
+                "{indent}{name}: {padding}{running_color}running({running}) {exited_color}exited({exited}){reset}",
                 indent = " ".repeat(INDENT_WIDTH*2),
-                name = friendly_name,
+                name = name,
+                padding = " ".repeat(longest_compose_name - name.len()),
                 running_color = status_to_color("running"),
                 running = status_grouped_containers.get("running").map(|v| v.len()).unwrap_or(0),
                 exited_color = status_to_color("exited"),
