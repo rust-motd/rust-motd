@@ -22,10 +22,11 @@
 # Cron = "cron"
 
 # [docker]
-# Local containers MUST start with a slash
-# https://github.com/moby/moby/issues/6705
-# "/nextcloud-nextcloud-1" = "Nextcloud"
-# "/nextcloud-nextcloud-mariadb-1" = "Nextcloud Database"
+#    Local containers MUST start with a slash
+#    https://github.com/moby/moby/issues/6705
+#    [docker.containers]
+#    "/nextcloud-nextcloud-1" = "Nextcloud"
+#    "/nextcloud-nextcloud-mariadb-1" = "Nextcloud Database"
 
 # [uptime]
 # prefix = "Up"

@@ -84,9 +84,9 @@ impl<'de> Deserialize<'de> for Config {
                                 .push(Box::new(map.next_value::<Banner>()?));
                         }
                         Fields::Docker => {
-                            result.components.push(Box::new(Docker {
-                                containers: map.next_value()?,
-                            }));
+                            result
+                                .components
+                                .push(Box::new(map.next_value::<Docker>()?));
                         }
                         Fields::Fail2Ban => {
                             result

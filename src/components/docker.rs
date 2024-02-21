@@ -1,5 +1,6 @@
 use crate::constants::INDENT_WIDTH;
 use async_trait::async_trait;
+use serde::Deserialize;
 use docker_api::models::ContainerSummary;
 use docker_api::opts::ContainerListOpts;
 use docker_api::{Docker as DockerAPI, Result as DockerResult};
@@ -10,8 +11,9 @@ use crate::component::Component;
 use crate::config::global_config::GlobalConfig;
 use crate::default_prepare;
 
+#[derive(Debug, Deserialize)]
 pub struct Docker {
-    pub containers: HashMap<String, String>,
+    containers: HashMap<String, String>,
 }
 
 #[async_trait]
