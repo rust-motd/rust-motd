@@ -13,8 +13,8 @@ use crate::default_prepare;
 
 #[derive(Debug, Deserialize)]
 pub struct Docker {
-    containers: HashMap<String, String>,
-    composes: HashMap<String, String>,
+    containers: Option<HashMap<String, String>>,
+    composes: Option<HashMap<String, String>>,
 }
 
 #[async_trait]
@@ -29,9 +29,9 @@ impl Component for Docker {
             }
         };
 
-        if !self.containers.is_empty() {
+        if let Some(containers) = self.containers {
             println!("{indent}Containers:", indent = " ".repeat(INDENT_WIDTH));
-            self.print_or_error_containers(&docker)
+            Docker::print_or_error_containers(&docker, containers)
                 .await
                 .unwrap_or_else(|err| println!(
                     "{indent}{red}Error getting containers: {err}{reset}",
@@ -43,9 +43,9 @@ impl Component for Docker {
             println!();
         }
 
-        if !self.composes.is_empty() {
+        if let Some(composes) = self.composes {
             println!("{indent}Composes:", indent = " ".repeat(INDENT_WIDTH));
-            self.print_or_error_composes(&docker)
+            Docker::print_or_error_composes(&docker, composes)
                 .await
                 .unwrap_or_else(|err| println!(
                     "{indent}{red}Error getting composes: {err}{reset}",
@@ -56,7 +56,6 @@ impl Component for Docker {
                 ));
             println!();
         }
-        println!();
     }
     default_prepare!();
 }
@@ -82,13 +81,13 @@ fn status_to_color(status: &str) -> String {
 }
 
 impl Docker {    
-    async fn print_or_error_containers(&self, docker: &DockerAPI) -> Result<(), Box<dyn std::error::Error>> {
-        let longest_container_name = self.containers.values()
+    async fn print_or_error_containers(docker: &DockerAPI, containers: HashMap<String, String>) -> Result<(), Box<dyn std::error::Error>> {
+        let longest_container_name = containers.values()
             .map(|n| n.len())
             .max()
             .unwrap_or(0);
 
-        for (container_name, name) in self.containers.iter() {
+        for (container_name, name) in containers.iter() {
             let container = docker.containers()
                 .list(&ContainerListOpts::builder()
                     .all(true)
@@ -128,8 +127,8 @@ impl Docker {
         Ok(())
     }
 
-    async fn print_or_error_composes(&self, docker: &DockerAPI) -> Result<(), Box<dyn std::error::Error>> {
-        for (compose, friendly_name) in self.composes.iter(){ 
+    async fn print_or_error_composes(docker: &DockerAPI, composes: HashMap<String, String>) -> Result<(), Box<dyn std::error::Error>> {
+        for (compose, friendly_name) in composes.iter(){ 
             let compose_containers = docker.containers()
                 .list(&ContainerListOpts::builder()
                     .all(true)
