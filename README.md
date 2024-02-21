@@ -84,12 +84,12 @@ You may also specify a timeout for the network request. The default is `5`.
 
 ### Docker Status
 
-- List of containers to show the status of.
-Keys are used as the internal docker names
-(`NAMES` column of `docker ps`)
-(containers can have multiple names, and the container is selected if any of the names match).
-Values are the display name shown in the output.
-The key **must** start with a `/` for internal containers (please see [here](https://github.com/moby/moby/issues/6705)).
+- `[docker.containers]`: A subsection that is a list of containers to show the status of.
+	Keys are used as the internal docker names
+	Values are the display name shown in the output.
+- `[docker.composes]`: A subsection that is a list of compose to show the status of.
+	Keys are the docker compose project names
+	Values are the display name shown in the output.
 
 ### Uptime
 
