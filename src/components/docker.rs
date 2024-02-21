@@ -72,10 +72,9 @@ pub fn new_docker() -> DockerResult<DockerAPI> {
 
 fn status_to_color(status: &str) -> String {
     match status {
-        "created" | "restarting" | "paused" | "removing" | "configured" => color::Fg(color::Yellow).to_string(),
         "running" => color::Fg(color::Green).to_string(),
-        "exited" => color::Fg(color::LightBlack).to_string(),
-        "dead" => color::Fg(color::Red).to_string(),
+        "restarting" | "created" | "configured" => color::Fg(color::Yellow).to_string(),
+        "exited" | "dead" | "paused" | "removing" => color::Fg(color::LightBlack).to_string(),
         _ => color::Fg(color::White).to_string(),
     }
 }
@@ -163,22 +162,47 @@ impl Docker {
                  name = name, 
                  padding = " ".repeat(longest_compose_name - name.len()));
             
-            let running = status_grouped_containers.get("running").map(|v| v.len()).unwrap_or(0);
+            let running = status_grouped_containers
+                .get("running").map(|v| v.len()).unwrap_or(0);
             if running > 0 {
                 message.push_str(&format!(
-                    " {running_color}Running({running}){reset} ", 
-                    running_color = status_to_color("running"),
-                    running = running,
+                    "{color}Running({number}){reset} ", 
+                    color = status_to_color("running"),
+                    number = running,
                     reset = style::Reset,
                 ));
             }
 
-            let exited = status_grouped_containers.get("exited").map(|v| v.len()).unwrap_or(0);
-            if exited > 0 {
+            let restarting = status_grouped_containers
+                .get("restarting").map(|v| v.len()).unwrap_or(0);
+            let created = status_grouped_containers
+                .get("created").map(|v| v.len()).unwrap_or(0);
+            let configured = status_grouped_containers
+                .get("configured").map(|v| v.len()).unwrap_or(0);
+            let starting = restarting + created + configured;
+            if starting > 0 {
                 message.push_str(&format!(
-                    " {exited_color}Exited({exited}){reset} ", 
-                    exited_color = status_to_color("exited"),
-                    exited = exited,
+                    "{color}Restarting({number}){reset} ", 
+                    color = status_to_color("restarting"),
+                    number = starting,
+                    reset = style::Reset,
+                ));
+            }
+
+            let exited = status_grouped_containers
+                .get("exited").map(|v| v.len()).unwrap_or(0);
+            let dead = status_grouped_containers
+                .get("dead").map(|v| v.len()).unwrap_or(0);
+            let paused = status_grouped_containers
+                .get("paused").map(|v| v.len()).unwrap_or(0);
+            let removing = status_grouped_containers
+                .get("removing").map(|v| v.len()).unwrap_or(0);
+            let stopped = exited + dead + paused + removing;
+            if stopped > 0 {
+                message.push_str(&format!(
+                    "{color}Stopped({number}){reset} ", 
+                    color = status_to_color("exited"),
+                    number = stopped,
                     reset = style::Reset,
                 ));
             }
