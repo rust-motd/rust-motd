@@ -21,13 +21,12 @@
 # Accounts = "accounts-daemon"
 # Cron = "cron"
 
-# [docker]
-#    [docker.containers]
-#    "nextcloud-nextcloud-1" = "Nextcloud"
-#    "nextcloud-mariadb-1" = "Nextcloud Database"
-#
-#    [docker.composes]
-#    "nextcloud" = "Nextcloud"
+# [docker.containers]
+# "nextcloud-nextcloud-1" = "Nextcloud"
+# "nextcloud-mariadb-1" = "Nextcloud Database"
+
+# [docker.composes]
+# "nextcloud" = "Nextcloud"
 
 # [uptime]
 # prefix = "Up"
