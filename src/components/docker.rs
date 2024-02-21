@@ -98,15 +98,13 @@ impl Docker {
             
             match container.first() {
                 Some(container) => {
-                    let status = container.state.clone().unwrap_or("unknown".to_owned());
-
                     println!(
                         "{indent}{name}: {padding}{color}{status}{reset}",
                         indent = " ".repeat(INDENT_WIDTH*2),
                         name = name,
                         padding = " ".repeat(longest_container_name - name.len()),
-                        color = status_to_color(&status),
-                        status = status,
+                        color = status_to_color(&container.state.clone().unwrap_or("exited".to_owned())),
+                        status = container.status.clone().unwrap_or("unknown".to_owned()),
                         reset = style::Reset,
                     );
                 },
