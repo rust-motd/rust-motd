@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use chrono::{Duration, TimeZone, Utc};
+use chrono::{DateTime, Duration, TimeZone, Utc};
 use openssl::x509::X509;
 use serde::Deserialize;
 use std::collections::HashMap;
@@ -56,7 +56,7 @@ pub enum SSLCertsError {
 struct CertInfo {
     name: String,
     status: String,
-    expiration: systemstat::DateTime<systemstat::Utc>,
+    expiration: DateTime<Utc>,
 }
 
 impl SSLCerts {
