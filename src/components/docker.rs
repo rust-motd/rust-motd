@@ -156,18 +156,34 @@ impl Docker {
                     (container.state.clone().unwrap_or("unknown".to_owned()), container)
                 })
                 .into_group_map();
-
-            println!(
-                "{indent}{name}: {padding}{running_color}running({running}) {exited_color}exited({exited}){reset}",
+            
+            let mut message = format!(
+                "{indent}{name}: {padding}", 
                 indent = " ".repeat(INDENT_WIDTH*2),
-                name = name,
-                padding = " ".repeat(longest_compose_name - name.len()),
-                running_color = status_to_color("running"),
-                running = status_grouped_containers.get("running").map(|v| v.len()).unwrap_or(0),
-                exited_color = status_to_color("exited"),
-                exited = status_grouped_containers.get("exited").map(|v| v.len()).unwrap_or(0),
-                reset = style::Reset,
-            );
+                 name = name, 
+                 padding = " ".repeat(longest_compose_name - name.len()));
+            
+            let running = status_grouped_containers.get("running").map(|v| v.len()).unwrap_or(0);
+            if running > 0 {
+                message.push_str(&format!(
+                    " {running_color}Running({running}){reset} ", 
+                    running_color = status_to_color("running"),
+                    running = running,
+                    reset = style::Reset,
+                ));
+            }
+
+            let exited = status_grouped_containers.get("exited").map(|v| v.len()).unwrap_or(0);
+            if exited > 0 {
+                message.push_str(&format!(
+                    " {exited_color}Exited({exited}){reset} ", 
+                    exited_color = status_to_color("exited"),
+                    exited = exited,
+                    reset = style::Reset,
+                ));
+            }
+
+            println!("{}", message);
         }
         Ok(())
     }
