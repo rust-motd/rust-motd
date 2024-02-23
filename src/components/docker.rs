@@ -1,7 +1,8 @@
 use crate::constants::INDENT_WIDTH;
 use async_trait::async_trait;
-use docker_api::models::ContainerSummary;
-use docker_api::opts::ContainerListOpts;
+use itertools::Itertools;
+use serde::Deserialize;
+use docker_api::opts::{ContainerFilter, ContainerListOpts};
 use docker_api::{Docker as DockerAPI, Result as DockerResult};
 use std::collections::HashMap;
 use termion::{color, style};
@@ -10,18 +11,51 @@ use crate::component::Component;
 use crate::config::global_config::GlobalConfig;
 use crate::default_prepare;
 
+#[derive(Debug, Deserialize)]
 pub struct Docker {
-    pub containers: HashMap<String, String>,
+    containers: Option<HashMap<String, String>>,
+    composes: Option<HashMap<String, String>>,
 }
 
 #[async_trait]
 impl Component for Docker {
     async fn print(self: Box<Self>, _global_config: &GlobalConfig, _width: Option<usize>) {
         println!("Docker:");
-        self.print_or_error()
-            .await
-            .unwrap_or_else(|err| println!("Docker status error: {}", err));
-        println!();
+        let docker = match new_docker() {
+            Ok(docker) => docker,
+            Err(err) => {
+                println!("{indent}Error: {err}", err = err, indent = " ".repeat(INDENT_WIDTH));
+                return;
+            }
+        };
+
+        if let Some(containers) = self.containers {
+            println!("{indent}Containers:", indent = " ".repeat(INDENT_WIDTH));
+            Docker::print_or_error_containers(&docker, containers)
+                .await
+                .unwrap_or_else(|err| println!(
+                    "{indent}{red}Error getting containers: {err}{reset}",
+                    indent = " ".repeat(INDENT_WIDTH),
+                    red = color::Fg(color::Red),
+                    reset = style::Reset,
+                    err = err,
+                ));
+            println!();
+        }
+
+        if let Some(composes) = self.composes {
+            println!("{indent}Composes:", indent = " ".repeat(INDENT_WIDTH));
+            Docker::print_or_error_composes(&docker, composes)
+                .await
+                .unwrap_or_else(|err| println!(
+                    "{indent}{red}Error getting composes: {err}{reset}",
+                    indent = " ".repeat(INDENT_WIDTH),
+                    red = color::Fg(color::Red),
+                    reset = style::Reset,
+                    err = err,
+                ));
+            println!();
+        }
     }
     default_prepare!();
 }
@@ -36,80 +70,145 @@ pub fn new_docker() -> DockerResult<DockerAPI> {
     DockerAPI::new("tcp://127.0.0.1:8080")
 }
 
-struct Container {
-    summary: ContainerSummary,
-    name: String,
+fn status_to_color(status: &str) -> String {
+    match status {
+        "running" => color::Fg(color::Green).to_string(),
+        "restarting" | "created" | "configured" => color::Fg(color::Yellow).to_string(),
+        "exited" | "dead" | "paused" | "removing" => color::Fg(color::LightBlack).to_string(),
+        _ => color::Fg(color::White).to_string(),
+    }
 }
 
-impl Docker {
-    pub async fn print_or_error(mut self) -> Result<(), Box<dyn std::error::Error>> {
-        let docker = new_docker()?;
-
-        // Get all containers from library and then filter them
-        // Not perfect, but I got strange issues when trying to use `.get(id)`
-        let containers: Vec<Container> = docker
-            .containers()
-            .list(&ContainerListOpts::builder().all(true).build())
-            .await?
-            .into_iter()
-            .filter_map(|container| {
-                match container.names.as_ref() {
-                    Some(names) => names.iter().find_map(|name| {
-                        self.containers
-                            .remove_entry(name)
-                            .map(|(_docker_name, display_name)| Container {
-                                name: display_name,
-                                summary: container.clone(),
-                            })
-                    }),
-                    _ => None,
-                }
-                // container.names.as_ref().map(|names| {
-                //     names.iter().find_map(|name| {
-                //         self.containers.remove_entry(name).map(|(_docker_name, display_name)| (display_name, container))
-                //     })
-                // })
-            })
-            .collect();
-
-        for (docker_name, _display_name) in self.containers {
-            println!(
-                "{indent}{color}Warning: Could not find Docker container `{docker_name}'{reset}",
-                indent = " ".repeat(INDENT_WIDTH),
-                color = color::Fg(color::Yellow),
-                docker_name = docker_name,
-                reset = style::Reset
-            );
-        }
-
-        // Max length of all the container names (first column)
-        // to determine the padding
-        if let Some(max_len) = containers
-            .iter()
-            .map(|container| container.name.len())
+impl Docker {    
+    async fn print_or_error_containers(docker: &DockerAPI, containers: HashMap<String, String>) -> Result<(), Box<dyn std::error::Error>> {
+        let longest_container_name = containers.values()
+            .map(|n| n.len())
             .max()
-        {
-            for container in containers {
-                let status_color = match container.summary.state.as_deref() {
-                    Some("Created") | Some("Restarting") | Some("Paused") | Some("Removing")
-                    | Some("Configured") => color::Fg(color::Yellow).to_string(),
-                    Some("Running") => color::Fg(color::Green).to_string(),
-                    Some("Exited") => color::Fg(color::LightBlack).to_string(),
-                    Some("Dead") => color::Fg(color::Red).to_string(),
-                    _ => color::Fg(color::White).to_string(),
-                };
-                println!(
-                    "{indent}{name}: {padding}{color}{status}{reset}",
-                    indent = " ".repeat(INDENT_WIDTH),
-                    name = container.name,
-                    padding = " ".repeat(max_len - container.name.len()),
-                    color = status_color,
-                    status = container.summary.status.unwrap_or(String::from("?")),
-                    reset = style::Reset,
-                );
+            .unwrap_or(0);
+
+        for (container_name, name) in containers.iter() {
+            let container = docker.containers()
+                .list(&ContainerListOpts::builder()
+                    .all(true)
+                    .filter([ContainerFilter::Name(container_name.to_string())])
+                    .build())
+                .await?;
+            
+            
+            match container.first() {
+                Some(container) => {
+                    println!(
+                        "{indent}{name}: {padding}{color}{status}{reset}",
+                        indent = " ".repeat(INDENT_WIDTH*2),
+                        name = name,
+                        padding = " ".repeat(longest_container_name - name.len()),
+                        color = status_to_color(&container.state.clone().unwrap_or("exited".to_owned())),
+                        status = container.status.clone().unwrap_or("unknown".to_owned()),
+                        reset = style::Reset,
+                    );
+                },
+                None => {
+                    println!(
+                        "{indent}{name}: {padding}{color}Not found '{container_name}'{reset}",
+                        indent = " ".repeat(INDENT_WIDTH*2),
+                        container_name = container_name,
+                        name = name,
+                        padding = " ".repeat(longest_container_name - name.len()),
+                        color = color::Fg(color::Yellow),
+                        reset = style::Reset,
+                    );
+                }
             }
         }
 
+        Ok(())
+    }
+
+    async fn print_or_error_composes(docker: &DockerAPI, composes: HashMap<String, String>) -> Result<(), Box<dyn std::error::Error>> {
+        let longest_compose_name = composes.values()
+            .map(|n| n.len())
+            .max()
+            .unwrap_or(0);
+        
+        for (compose, name) in composes.iter(){ 
+            let compose_containers = docker.containers()
+                .list(&ContainerListOpts::builder()
+                    .all(true)
+                    .filter([ContainerFilter::Label("com.docker.compose.project".to_string(), compose.to_string())])
+                    .build())
+                .await?;
+
+            if compose_containers.is_empty() {
+                println!(
+                    "{indent}{name}: {padding}{color}Not found{reset}",
+                    indent = " ".repeat(INDENT_WIDTH*2),
+                    name = name,
+                    padding = " ".repeat(longest_compose_name - name.len()),
+                    color = color::Fg(color::Yellow),
+                    reset = style::Reset,
+                );
+                continue;
+            }
+
+            let status_grouped_containers = compose_containers.iter()
+                .map(|container| {
+                    (container.state.clone().unwrap_or("unknown".to_owned()), container)
+                })
+                .into_group_map();
+            
+            let mut message = format!(
+                "{indent}{name}: {padding}", 
+                indent = " ".repeat(INDENT_WIDTH*2),
+                 name = name, 
+                 padding = " ".repeat(longest_compose_name - name.len()));
+            
+            let running = status_grouped_containers
+                .get("running").map(|v| v.len()).unwrap_or(0);
+            if running > 0 {
+                message.push_str(&format!(
+                    "{color}Running({number}){reset} ", 
+                    color = status_to_color("running"),
+                    number = running,
+                    reset = style::Reset,
+                ));
+            }
+
+            let restarting = status_grouped_containers
+                .get("restarting").map(|v| v.len()).unwrap_or(0);
+            let created = status_grouped_containers
+                .get("created").map(|v| v.len()).unwrap_or(0);
+            let configured = status_grouped_containers
+                .get("configured").map(|v| v.len()).unwrap_or(0);
+            let starting = restarting + created + configured;
+            if starting > 0 {
+                message.push_str(&format!(
+                    "{color}Restarting({number}){reset} ", 
+                    color = status_to_color("restarting"),
+                    number = starting,
+                    reset = style::Reset,
+                ));
+            }
+
+            let exited = status_grouped_containers
+                .get("exited").map(|v| v.len()).unwrap_or(0);
+            let dead = status_grouped_containers
+                .get("dead").map(|v| v.len()).unwrap_or(0);
+            let paused = status_grouped_containers
+                .get("paused").map(|v| v.len()).unwrap_or(0);
+            let removing = status_grouped_containers
+                .get("removing").map(|v| v.len()).unwrap_or(0);
+            let stopped = exited + dead + paused + removing;
+            if stopped > 0 {
+                message.push_str(&format!(
+                    "{color}Stopped({number}){reset} ", 
+                    color = status_to_color("exited"),
+                    number = stopped,
+                    reset = style::Reset,
+                ));
+            }
+
+            println!("{}", message);
+        }
         Ok(())
     }
 }
