@@ -21,11 +21,12 @@
 # Accounts = "accounts-daemon"
 # Cron = "cron"
 
-# [docker]
-# Local containers MUST start with a slash
-# https://github.com/moby/moby/issues/6705
-# "/nextcloud-nextcloud-1" = "Nextcloud"
-# "/nextcloud-nextcloud-mariadb-1" = "Nextcloud Database"
+# [docker.containers]
+# "nextcloud-nextcloud-1" = "Nextcloud"
+# "nextcloud-mariadb-1" = "Nextcloud Database"
+
+# [docker.composes]
+# "nextcloud" = "Nextcloud"
 
 # [uptime]
 # prefix = "Up"
@@ -54,3 +55,4 @@
 # jimmy = 1
 
 # [last_run]
+
