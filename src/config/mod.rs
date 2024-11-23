@@ -10,6 +10,7 @@ use crate::components::fail_2_ban::Fail2Ban;
 use crate::components::filesystem::Filesystems;
 use crate::components::last_login::LastLogin;
 use crate::components::last_run::LastRun;
+use crate::components::loadavg::LoadAvg;
 use crate::components::memory::Memory;
 use crate::components::service_status::{ServiceStatus, UserServiceStatus};
 use crate::components::ssl_certs::SSLCerts;
@@ -30,6 +31,7 @@ enum Fields {
     Filesystems,
     LastLogin,
     LastRun,
+    LoadAvg,
     Memory,
     ServiceStatus,
     UserServiceStatus,
@@ -107,6 +109,11 @@ impl<'de> Deserialize<'de> for Config {
                             result
                                 .components
                                 .push(Box::new(map.next_value::<LastRun>()?));
+                        }
+                        Fields::LoadAvg => {
+                            result
+                                .components
+                                .push(Box::new(map.next_value::<LoadAvg>()?));
                         }
                         Fields::Memory => {
                             result

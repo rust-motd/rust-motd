@@ -32,5 +32,6 @@ tokio = { version = "1.14.0", features = ["full"] }
 async-trait = "0.1.57"
 clap ={ version = "4.2.7", features = ["unstable-doc"]}
 indexmap = { version = "2.7.0", features = ["serde"] }
+interpolator = "0.5.0"
 
 [package.metadata.bundle]
