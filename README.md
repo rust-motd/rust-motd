@@ -130,6 +130,15 @@ The key **must** start with a `/` for internal containers (please see [here](htt
 - `bad_threshold`: Optional threshold for for printing load values in
   red. Defaults to four times the number of CPUs in the system.
 
+### Cgroup Statistics
+
+Prints CPU usage by users and services since the last invocation. The
+numbers are based on statistics from systemd-managed cgroups.
+
+- `state_file`: File name where to store cgroup statistics for the next invocation.
+- `threshold`: Number in range [0.0, 1.0]. Output lines are generated
+  only for cgroups with CPU usage higher than this value.
+
 ### Global Config
 The global configuration is used for settings that may span multiple components, e.g. the time format string, and progress bar style.
 
