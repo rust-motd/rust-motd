@@ -1,4 +1,5 @@
 pub mod banner;
+pub mod cg_stats;
 pub mod docker;
 pub mod fail_2_ban;
 pub mod filesystem;

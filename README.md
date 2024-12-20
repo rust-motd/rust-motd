@@ -120,6 +120,15 @@ The key **must** start with a `/` for internal containers (please see [here](htt
 
 - If present, prints the time that the `rust-motd` was run (useful if updating the motd only periodically e.g. via Cron).
 
+### Cgroup Statistics
+
+Prints CPU usage by users and services since the last invocation. The
+numbers are based on statistics from systemd-managed cgroups.
+
+- `state_file`: File name where to store cgroup statistics for the next invocation.
+- `threshold`: Number in range [0.0, 1.0]. Output lines are generated
+  only for cgroups with CPU usage higher than this value.
+
 ### Global Config
 The global configuration is used for settings that may span multiple components, e.g. the time format string, and progress bar style.
 
