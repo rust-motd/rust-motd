@@ -1,6 +1,5 @@
 use async_trait::async_trait;
-use itertools::Itertools;
-use std::collections::HashMap;
+use indexmap::IndexMap;
 use termion::{color, style};
 use thiserror::Error;
 
@@ -11,11 +10,11 @@ use crate::constants::INDENT_WIDTH;
 use crate::default_prepare;
 
 pub struct ServiceStatus {
-    pub services: HashMap<String, String>,
+    pub services: IndexMap<String, String>,
 }
 
 pub struct UserServiceStatus {
-    pub services: HashMap<String, String>,
+    pub services: IndexMap<String, String>,
 }
 
 #[async_trait]
@@ -68,7 +67,7 @@ fn get_service_status(service: &str, user: bool) -> Result<String, ServiceStatus
 }
 
 pub fn print_or_error(
-    config: &HashMap<String, String>,
+    config: &IndexMap<String, String>,
     user: bool,
 ) -> Result<(), ServiceStatusError> {
     if config.is_empty() {
@@ -77,7 +76,7 @@ pub fn print_or_error(
 
     let padding = config.keys().map(|x| x.len()).max().unwrap();
 
-    for key in config.keys().sorted() {
+    for key in config.keys() {
         let status = get_service_status(config.get(key).unwrap(), user)?;
 
         let status_color = match status.as_ref() {
