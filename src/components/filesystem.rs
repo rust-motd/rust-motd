@@ -1,8 +1,8 @@
 use async_trait::async_trait;
 use bytesize::ByteSize;
+use indexmap::IndexMap;
 use itertools::Itertools;
 use std::cmp;
-use std::collections::HashMap;
 use std::iter;
 use systemstat::{Filesystem, Platform, System};
 use termion::{color, style};
@@ -18,7 +18,7 @@ const HEADER: [&str; 6] = ["Filesystems", "Device", "Mount", "Type", "Used", "To
 /// A container for the mount points specified in the configuration file
 #[derive(Clone)]
 pub struct Filesystems {
-    pub mounts: HashMap<String, String>,
+    pub mounts: IndexMap<String, String>,
 }
 
 #[async_trait]
@@ -114,7 +114,7 @@ fn print_row<'a>(items: [&str; 6], column_sizes: impl IntoIterator<Item = &'a us
 }
 
 impl Filesystems {
-    pub fn new(mounts: HashMap<String, String>) -> Self {
+    pub fn new(mounts: IndexMap<String, String>) -> Self {
         Self { mounts }
     }
 
@@ -129,7 +129,7 @@ impl Filesystems {
         }
 
         let mounts = sys.mounts()?;
-        let mounts: HashMap<String, &Filesystem> = mounts
+        let mounts: IndexMap<String, &Filesystem> = mounts
             .iter()
             .map(|fs| (fs.fs_mounted_on.clone(), fs))
             .collect();

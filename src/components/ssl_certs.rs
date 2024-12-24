@@ -1,8 +1,8 @@
 use async_trait::async_trait;
 use chrono::{Duration, TimeZone, Utc};
+use indexmap::IndexMap;
 use openssl::x509::X509;
 use serde::Deserialize;
-use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufReader, Read};
 use termion::{color, style};
@@ -28,7 +28,7 @@ enum SortMethod {
 pub struct SSLCerts {
     #[serde(default)]
     sort_method: SortMethod,
-    certs: HashMap<String, String>,
+    certs: IndexMap<String, String>,
 }
 
 #[async_trait]

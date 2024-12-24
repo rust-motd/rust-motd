@@ -3,6 +3,7 @@ use async_trait::async_trait;
 use docker_api::models::ContainerSummary;
 use docker_api::opts::ContainerListOpts;
 use docker_api::{Docker as DockerAPI, Result as DockerResult};
+use indexmap::IndexMap;
 use std::collections::HashMap;
 use termion::{color, style};
 
@@ -11,7 +12,7 @@ use crate::config::global_config::GlobalConfig;
 use crate::default_prepare;
 
 pub struct Docker {
-    pub containers: HashMap<String, String>,
+    pub containers: IndexMap<String, String>,
 }
 
 #[async_trait]
@@ -42,45 +43,48 @@ struct Container {
 }
 
 impl Docker {
-    pub async fn print_or_error(mut self) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn print_or_error(&self) -> Result<(), Box<dyn std::error::Error>> {
         let docker = new_docker()?;
 
-        // Get all containers from library and then filter them
-        // Not perfect, but I got strange issues when trying to use `.get(id)`
-        let containers: Vec<Container> = docker
+        // Get all containers from library
+        let container_summaries = docker
             .containers()
             .list(&ContainerListOpts::builder().all(true).build())
-            .await?
-            .into_iter()
-            .filter_map(|container| {
-                match container.names.as_ref() {
-                    Some(names) => names.iter().find_map(|name| {
-                        self.containers
-                            .remove_entry(name)
-                            .map(|(_docker_name, display_name)| Container {
-                                name: display_name,
-                                summary: container.clone(),
-                            })
-                    }),
-                    _ => None,
-                }
-                // container.names.as_ref().map(|names| {
-                //     names.iter().find_map(|name| {
-                //         self.containers.remove_entry(name).map(|(_docker_name, display_name)| (display_name, container))
-                //     })
-                // })
+            .await?;
+        // Since a container can have more than one name, make a hash indexed
+        // by name to look up based on the name in the config file
+        let summary_hash: HashMap<String, &ContainerSummary> = container_summaries
+            .iter()
+            .flat_map(|container_summary| {
+                container_summary.names.iter().flat_map(move |names| {
+                    names
+                        .iter()
+                        .map(move |name| (name.clone(), container_summary))
+                })
             })
             .collect();
-
-        for (docker_name, _display_name) in self.containers {
-            println!(
-                "{indent}{color}Warning: Could not find Docker container `{docker_name}'{reset}",
-                indent = " ".repeat(INDENT_WIDTH),
-                color = color::Fg(color::Yellow),
-                docker_name = docker_name,
-                reset = style::Reset
-            );
-        }
+        let containers: Vec<Container> = self
+            .containers
+            .iter()
+            .filter_map(
+                |(docker_name, display_name)| match summary_hash.get(docker_name) {
+                    Some(&summary) => Some(Container {
+                        name: display_name.clone(),
+                        summary: summary.clone(),
+                    }),
+                    None => {
+                        println!(
+                            "{indent}{color}Warning: Could not find Docker container `{docker_name}'{reset}",
+                            indent = " ".repeat(INDENT_WIDTH),
+                            color = color::Fg(color::Yellow),
+                            docker_name = docker_name,
+                            reset = style::Reset
+                        );
+                        None
+                    }
+                },
+            )
+            .collect();
 
         // Max length of all the container names (first column)
         // to determine the padding

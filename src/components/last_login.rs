@@ -1,8 +1,8 @@
 use async_trait::async_trait;
 use chrono::{Local, TimeZone};
 use humantime::format_duration;
+use indexmap::IndexMap;
 use last_rs::{get_logins, Enter, Exit, LastError};
-use std::collections::HashMap;
 use std::time::Duration;
 use termion::{color, style};
 use thiserror::Error;
@@ -17,7 +17,7 @@ use crate::constants::INDENT_WIDTH;
 use crate::default_prepare;
 
 pub struct LastLogin {
-    pub users: HashMap<String, usize>,
+    pub users: IndexMap<String, usize>,
 }
 
 #[async_trait]
