@@ -120,6 +120,16 @@ The key **must** start with a `/` for internal containers (please see [here](htt
 
 - If present, prints the time that the `rust-motd` was run (useful if updating the motd only periodically e.g. via Cron).
 
+### Load Average
+
+- `format`: Format of the printed message. Can contain specifiers for
+  parameters `one`, `five` and `fifteen` representing different load
+  average values.
+- `warn_threshold`: Optional threshold for printing load values in
+  yellow. Defaults to the number of CPUs in the system.
+- `bad_threshold`: Optional threshold for for printing load values in
+  red. Defaults to four times the number of CPUs in the system.
+
 ### Global Config
 The global configuration is used for settings that may span multiple components, e.g. the time format string, and progress bar style.
 
