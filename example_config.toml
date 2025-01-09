@@ -49,6 +49,10 @@
 # [memory]
 # swap_pos = "beside" # or "below" or "none"
 
+# [cg_stats]
+# state_file = "cg_stats.toml"
+# threshold = 0.01
+
 # [fail_2_ban]
 # jails = ["sshd", "anotherjail"]
 

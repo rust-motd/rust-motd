@@ -5,6 +5,7 @@ pub mod global_config;
 
 use crate::component::BoxedComponent;
 use crate::components::banner::Banner;
+use crate::components::cg_stats::CgStats;
 use crate::components::docker::Docker;
 use crate::components::fail_2_ban::Fail2Ban;
 use crate::components::filesystem::Filesystems;
@@ -25,6 +26,7 @@ use global_config::GlobalConfig;
 enum Fields {
     Global,
     Banner,
+    CgStats,
     Docker,
     #[serde(rename = "fail_2_ban")]
     Fail2Ban,
@@ -84,6 +86,11 @@ impl<'de> Deserialize<'de> for Config {
                             result
                                 .components
                                 .push(Box::new(map.next_value::<Banner>()?));
+                        }
+                        Fields::CgStats => {
+                            result
+                                .components
+                                .push(Box::new(map.next_value::<CgStats>()?));
                         }
                         Fields::Docker => {
                             result.components.push(Box::new(Docker {
