@@ -65,7 +65,7 @@ impl Component for CgStats {
             }
             Err(e) => {
                 eprintln!("Cgroup Statistics error: {e}");
-                (self, None)
+                return (self, None);
             }
         }
     }
