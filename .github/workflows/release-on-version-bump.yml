@@ -1,0 +1,91 @@
+name: Create Release on Version Bump
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get previous commit
+        id: prev
+        run: |
+          echo "sha=$(git rev-parse HEAD^)" >> $GITHUB_OUTPUT
+
+      - name: Extract versions from Cargo.toml
+        id: version
+        run: |
+          OLD_VERSION=$(git show ${{ steps.prev.outputs.sha }}:Cargo.toml | grep '^version' | head -n1 | cut -d '"' -f2)
+          NEW_VERSION=$(grep '^version' Cargo.toml | head -n1 | cut -d '"' -f2)
+          echo "Old version: $OLD_VERSION"
+          echo "New version: $NEW_VERSION"
+          echo "old=$OLD_VERSION" >> $GITHUB_OUTPUT
+          echo "new=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Check if version changed
+        if: steps.version.outputs.old != steps.version.outputs.new
+        run: echo "Version changed from ${{ steps.version.outputs.old }} to ${{ steps.version.outputs.new }}"
+
+      - name: Extract release notes
+        if: steps.version.outputs.old != steps.version.outputs.new
+        id: changelog
+        run: |
+          VERSION="${{ steps.version.outputs.new }}"
+          awk "/^## \\[${VERSION//./\\.}\\]/ {flag=1; next} /^## / {flag=0} flag" CHANGELOG.md > notes.txt
+          echo "RELEASE_NOTES<<EOF" >> $GITHUB_ENV
+          cat notes.txt >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Install cargo-deb and cargo-aur
+        run: |
+          cargo install cargo-deb
+          cargo install cargo-aur
+
+      - name: Build .deb package
+        run: cargo deb
+
+      - name: Build Arch Linux package
+        run: |
+          cargo aur build
+          mv target/cargo-aur/rust-motd-${{ steps.version.outputs.new }}-{,archlinux-}x86_64.tar.gz
+          sed -i 's/x86_64.tar.gz/archlinux-x86_64.tar.gz/' target/cargo-aur/PKGBUILD
+          sha256sum target/cargo-aur/rust-motd-${{ steps.version.outputs.new }}-archlinux-x86_64.tar.gz > target/cargo-aur/rust-motd-${{ steps.version.outputs.new }}-archlinux-x86_64.tar.gz.sha256
+
+      - name: List generated packages
+        run: ls -lha target/{debian,cargo-aur}
+
+      - name: Create tag and release
+        if: steps.version.outputs.old != steps.version.outputs.new
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.version.outputs.new }}
+          name: Release v${{ steps.version.outputs.new }}
+          body: ${{ env.RELEASE_NOTES }}
+          files: |
+            target/debian/*.deb
+            target/cargo-aur/*.tar.*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish AUR package
+        if: steps.version.outputs.old != steps.version.outputs.new
+        uses: KSXGitHub/github-actions-deploy-aur@v4.1.1
+        with:
+          pkgname: rust-motd-bin-test
+          pkgbuild: ./target/cargo-aur/PKGBUILD
+          commit_username: ${{ secrets.GIT_USERNAME }}
+          commit_email: ${{ secrets.GIT_EMAIL }}
+          ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+          commit_message: Update AUR package
