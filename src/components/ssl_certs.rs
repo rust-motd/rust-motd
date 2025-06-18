@@ -1,6 +1,7 @@
 use async_trait::async_trait;
-use chrono::{Duration, TimeZone, Utc};
+use chrono::{DateTime, Duration, Utc};
 use indexmap::IndexMap;
+use openssl::asn1::Asn1Time;
 use openssl::x509::X509;
 use serde::Deserialize;
 use std::fs::File;
@@ -12,6 +13,8 @@ use crate::component::Component;
 use crate::config::global_config::GlobalConfig;
 use crate::constants::INDENT_WIDTH;
 use crate::default_prepare;
+
+const SECS_PER_DAY: i64 = 24 * 60 * 60;
 
 #[derive(Debug, Deserialize, Default)]
 enum SortMethod {
@@ -43,9 +46,6 @@ impl Component for SSLCerts {
 
 #[derive(Error, Debug)]
 pub enum SSLCertsError {
-    #[error("Failed to parse timestamp")]
-    ChronoParse(#[from] chrono::ParseError),
-
     #[error(transparent)]
     IO(#[from] std::io::Error),
 
@@ -56,7 +56,7 @@ pub enum SSLCertsError {
 struct CertInfo {
     name: String,
     status: String,
-    expiration: systemstat::DateTime<systemstat::Utc>,
+    expiration: DateTime<Utc>,
 }
 
 impl SSLCerts {
@@ -70,8 +70,9 @@ impl SSLCerts {
             let cert: Vec<u8> = cert.bytes().collect::<Result<_, _>>()?;
             let cert = X509::from_pem(&cert)?;
 
-            let expiration =
-                Utc.datetime_from_str(&format!("{}", cert.not_after()), "%B %_d %T %Y %Z")?;
+            let expiration = Asn1Time::from_unix(0)?.diff(cert.not_after())?;
+            let seconds = (expiration.days as i64) * SECS_PER_DAY + (expiration.secs as i64);
+            let expiration = DateTime::from_timestamp(seconds, 0).unwrap();
 
             let now = Utc::now();
             let status = if expiration < now {

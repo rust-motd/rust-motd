@@ -56,16 +56,16 @@ impl Component for CgStats {
                 let min_width =
                     INDENT_WIDTH + prepared.max_name_width + "100%".len() + "[=========]".len() + 2 /* spaces */;
                 self.prepared = Some(prepared);
-                return (
+                (
                     self,
                     Some(Constraints {
                         min_width: Some(min_width),
                     }),
-                );
+                )
             }
             Err(e) => {
                 eprintln!("Cgroup Statistics error: {e}");
-                return (self, None);
+                (self, None)
             }
         }
     }
@@ -268,14 +268,13 @@ fn read_cg_stat(cg_path: &Path) -> Result<CgStat, CgStatsError> {
             .split_whitespace()
             .next_tuple()
             .ok_or_else(|| CgStatsError::ParseError(path.clone()))?;
-        match (
+        if let ("usage_usec", val) = (
             key,
             value
                 .parse::<u64>()
                 .map_err(|e| CgStatsError::ParseIntError(path.clone(), e))?,
         ) {
-            ("usage_usec", val) => return Ok(CgStat { usage_usec: val }),
-            _ => (),
+            return Ok(CgStat { usage_usec: val });
         }
     }
     Err(CgStatsError::MissingField(

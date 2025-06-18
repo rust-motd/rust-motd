@@ -87,7 +87,8 @@ fn format_entry(
         // There has to be a better way to go from a time OffsetDateTime to a
         // chrono DateTime
         login_time = Local
-            .timestamp(login_time.unix_timestamp(), 0)
+            .timestamp_opt(login_time.unix_timestamp(), 0)
+            .unwrap()
             .format(time_format),
         exit = exit,
         indent = " ".repeat(2 * INDENT_WIDTH),

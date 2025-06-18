@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.1.1] 2025-06-18
+
+- Update dependencies
+
 ## [1.1.0] 2025-03-12
 
 - Add timeout for weather

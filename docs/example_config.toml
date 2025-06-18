@@ -1,6 +1,11 @@
 [banner]
 color = "red"
-command = "figlet nas -f slant"
+command = """
+echo '                    __                        __      __  ' &&
+echo '   _______  _______/ /_      ____ ___  ____  / /_____/ /  ' &&
+echo '  / ___/ / / / ___/ __/_____/ __ `__ \\/ __ \\/ __/ __  / ' &&
+echo ' / /  / /_/ (__  ) /_/_____/ / / / / / /_/ / /_/ /_/ /    ' &&
+echo '/_/   \\__,_/____/\\__/     /_/ /_/ /_/\\____/\\__/\\__,_/'"""
 
 [weather]
 loc = "New York, New York"
@@ -16,7 +21,7 @@ prefix = "Up"
 sort_method = "alphabetical"
 
     [ssl_certificates.certs]
-    "example.com" = "./example-selfsigned.crt"
+    "example.com" = "./cert.pem"
 
 [filesystems]
 root = "/"

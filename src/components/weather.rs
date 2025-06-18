@@ -1,9 +1,9 @@
 use async_trait::async_trait;
 use serde::Deserialize;
 use std::io::Write;
+use std::time::Duration;
 use thiserror::Error;
 use ureq;
-use std::time::Duration;
 
 use crate::component::Component;
 use crate::config::global_config::GlobalConfig;
@@ -82,13 +82,14 @@ impl Weather {
             }
         };
 
-        let mut agent = ureq::AgentBuilder::new().
-            timeout(Duration::from_secs(self.timeout.0));
-        if let Some(proxy) = self.proxy {
-            let proxy = ureq::Proxy::new(proxy)?;
-            agent = agent.proxy(proxy);
-        }
-        let agent = agent.build();
+        let proxy = self
+            .proxy
+            .map_or(Ok(None), |proxy| ureq::Proxy::new(&proxy).map(Some))?;
+        let config = ureq::Agent::config_builder()
+            .timeout_global(Some(Duration::from_secs(self.timeout.0)))
+            .proxy(proxy)
+            .build();
+        let agent = ureq::Agent::new_with_config(config);
 
         let user_agent = match self.user_agent {
             Some(user_agent) => user_agent,
@@ -97,9 +98,10 @@ impl Weather {
 
         let body = agent
             .get(&url)
-            .set("User-Agent", &user_agent)
+            .header("User-Agent", &user_agent)
             .call()?
-            .into_string()?;
+            .body_mut()
+            .read_to_string()?;
 
         let mut body = body.lines();
         let first_line = body

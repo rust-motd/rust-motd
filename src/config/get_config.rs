@@ -37,8 +37,8 @@ pub fn get_config(config_path: Option<String>) -> Result<Config, ConfigError> {
             }
         }
     };
-    match config_path {
-        Some(path) => Ok(toml::from_str(&fs::read_to_string(path)?)?),
-        None => Err(ConfigError::ConfigNotFound),
-    }
+
+    let config_path = config_path.ok_or(ConfigError::ConfigNotFound)?;
+    let toml_str = fs::read_to_string(config_path)?;
+    Ok(toml::from_str(&toml_str)?)
 }
