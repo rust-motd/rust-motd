@@ -1,3 +1,10 @@
+[global]
+progress_full_character = "="
+progress_empty_character = "="
+progress_prefix = "["
+progress_suffix = "]"
+time_format = "%Y-%m-%d %H:%M:%S"
+
 [banner]
 color = "red"
 command = """
@@ -39,3 +46,10 @@ marcel = 2
 format = "Load (1, 5, 15 min.): {one:.02}, {five:.02}, {fifteen:.02}"
 
 [last_run]
+
+[cg_stats]
+state_file = "cg_stats.toml"
+threshold = 0.01
+
+[docker]
+"nginx-nginx-1" = "Nginx"

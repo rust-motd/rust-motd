@@ -1,0 +1,61 @@
+global {
+  version "1.0"
+  // progress-full-character "="
+  // progress-empty-character "="
+  // progress-prefix "["
+  // progress-suffix "]"
+  // time-format "%Y-%m-%d %H:%M:%S"
+}
+components {
+  // command "
+  // echo '                    __                        __      __  ' &&
+  // echo '   _______  _______/ /_      ____ ___  ____  / /_____/ /  ' &&
+  // echo '  / ___/ / / / ___/ __/_____/ __ `__ \\/ __ \\/ __/ __  / ' &&
+  // echo ' / /  / /_/ (__  ) /_/_____/ / / / / / /_/ / /_/ /_/ /    ' &&
+  // echo '/_/   \\__,_/____/\\__/     /_/ /_/ /_/\\____/\\__/\\__,_/'
+  // "
+
+  // If you have figlet installed
+  // command "hostname | figlet -f slant"
+
+  // weather loc="New York, New York"
+
+  // service-status {
+  //   service display-name="Accounts" id="accounts-daemon"
+  //   service display-name="Cron" id="cronie"
+  // }
+
+  // uptime prefix="Uptime"
+
+  // ssl-certs sort-method="alphabetical" {
+  //   cert name="example.com"  path="./cert.pem"
+  //   cert name="example2.com" path="./cert.pem"
+  // }
+
+  // filesystems {
+  //   filesystem filesystem-name="root" mount-point="/"
+  // }
+
+  // memory swap-pos="beside"
+
+  // fail2ban {
+  //   jail "sshd"
+  // }
+
+  // last-login {
+  //   user username="marcel" num-logins=2
+  // }
+
+  // load-avg format="Load (1, 5, 15 min.): {one:.02}, {five:.02}, {fifteen:.02}"
+
+  // last-run
+
+  // cg-stats state-file="cg_stats.toml" threshold=0.01
+
+  // docker {
+  //   container display-name="Nginx" docker-name="nginx-nginx-1"
+  // }
+
+  // command "echo You can specify every component as many times as you want"
+  // command "echo The order in the configuration file controls the order they are printed"
+}
