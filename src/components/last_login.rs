@@ -1,7 +1,6 @@
 use async_trait::async_trait;
 use chrono::{Local, TimeZone};
 use humantime::format_duration;
-use indexmap::IndexMap;
 use last_rs::{get_logins, Enter, Exit, LastError};
 use std::time::Duration;
 use termion::{color, style};
@@ -16,8 +15,18 @@ use crate::config::global_config::GlobalConfig;
 use crate::constants::INDENT_WIDTH;
 use crate::default_prepare;
 
+#[derive(knuffel::Decode, Debug)]
+pub struct User {
+    #[knuffel(property)]
+    pub username: String,
+    #[knuffel(property)]
+    pub num_logins: usize,
+}
+
+#[derive(knuffel::Decode, Debug)]
 pub struct LastLogin {
-    pub users: IndexMap<String, usize>,
+    #[knuffel(children(name = "user"))]
+    pub users: Vec<User>,
 }
 
 #[async_trait]
@@ -99,7 +108,11 @@ impl LastLogin {
     pub fn print_or_error(self, global_config: &GlobalConfig) -> Result<(), LastLoginError> {
         println!("Last Login:");
 
-        for (username, num_logins) in self.users {
+        for User {
+            username,
+            num_logins,
+        } in self.users
+        {
             println!("{}{}:", " ".repeat(INDENT_WIDTH), username);
             let entries = get_logins("/var/log/wtmp")?
                 .into_iter()

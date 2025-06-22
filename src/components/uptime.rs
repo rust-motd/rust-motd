@@ -7,8 +7,9 @@ use crate::component::Component;
 use crate::config::global_config::GlobalConfig;
 use crate::default_prepare;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, knuffel::Decode)]
 pub struct Uptime {
+    #[knuffel(property, default="Up".into())]
     prefix: String,
 }
 

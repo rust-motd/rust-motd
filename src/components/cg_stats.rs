@@ -24,7 +24,7 @@ use crate::constants::INDENT_WIDTH;
 
 /// A container for component configuration from the configuration
 /// file as well as data prepared for printing.
-#[derive(Deserialize)]
+#[derive(knuffel::Decode, Deserialize, Debug)]
 pub struct CgStats {
     /// File where to store Cgroup statistic needed by the next run
     state_file: String,
@@ -35,12 +35,13 @@ pub struct CgStats {
     prepared: Option<PreparedCgStats>,
 }
 
+#[derive(Debug)]
 struct PreparedStat {
     name: String,
     load: f64, // CPU load [0, 1]
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct PreparedCgStats {
     time_span: Duration,
     max_name_width: usize,
