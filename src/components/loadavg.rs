@@ -13,13 +13,13 @@ use crate::component::Component;
 use crate::config::global_config::GlobalConfig;
 use crate::default_prepare;
 
-#[derive(knuffel::Decode, Debug, Deserialize)]
+#[derive(knus::Decode, Debug, Deserialize)]
 pub struct LoadAvg {
-    #[knuffel(property)]
+    #[knus(property)]
     format: String,
-    #[knuffel(property)]
+    #[knus(property)]
     warn_threshold: Option<f32>,
-    #[knuffel(property)]
+    #[knus(property)]
     bad_threshold: Option<f32>,
 }
 

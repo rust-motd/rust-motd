@@ -9,23 +9,23 @@ use crate::component::Component;
 use crate::config::global_config::GlobalConfig;
 use crate::default_prepare;
 
-#[derive(Debug, Deserialize, knuffel::Decode)]
+#[derive(Debug, Deserialize, knus::Decode)]
 pub struct Weather {
-    #[knuffel(property)]
+    #[knus(property)]
     url: Option<String>,
-    #[knuffel(property)]
+    #[knus(property)]
     user_agent: Option<String>,
-    #[knuffel(property)]
+    #[knus(property)]
     proxy: Option<String>,
 
-    #[knuffel(property, default="".into())]
+    #[knus(property, default="".into())]
     #[serde(default = "String::new")]
     loc: String,
 
-    #[knuffel(property)]
+    #[knus(property)]
     style: Option<WeatherStyle>,
 
-    #[knuffel(property, default = 5)]
+    #[knus(property, default = 5)]
     #[serde(default = "default_timeout")]
     timeout: u64,
 }
@@ -44,7 +44,7 @@ impl Component for Weather {
     default_prepare!();
 }
 
-#[derive(Debug, Deserialize, knuffel::DecodeScalar)]
+#[derive(Debug, Deserialize, knus::DecodeScalar)]
 enum WeatherStyle {
     #[serde(alias = "oneline")]
     Oneline,

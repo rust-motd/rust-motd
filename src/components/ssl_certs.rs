@@ -15,7 +15,7 @@ use crate::default_prepare;
 
 const SECS_PER_DAY: i64 = 24 * 60 * 60;
 
-#[derive(knuffel::DecodeScalar, Debug, Deserialize, Default)]
+#[derive(knus::DecodeScalar, Debug, Deserialize, Default)]
 enum SortMethod {
     #[serde(alias = "alphabetical")] // Alias used to match lowercase spelling as well
     Alphabetical,
@@ -26,20 +26,20 @@ enum SortMethod {
     Manual,
 }
 
-#[derive(knuffel::Decode, Debug, Deserialize)]
+#[derive(knus::Decode, Debug, Deserialize)]
 pub struct Cert {
-    #[knuffel(property)]
+    #[knus(property)]
     pub name: String,
-    #[knuffel(property)]
+    #[knus(property)]
     pub path: String,
 }
 
-#[derive(knuffel::Decode, Debug, Deserialize)]
+#[derive(knus::Decode, Debug, Deserialize)]
 pub struct SSLCerts {
     #[serde(default)]
-    #[knuffel(property, default)]
+    #[knus(property, default)]
     sort_method: SortMethod,
-    #[knuffel(children(name = "cert"))]
+    #[knus(children(name = "cert"))]
     #[serde(deserialize_with = "crate::config::toml_config::deserialize_certs")]
     certs: Vec<Cert>,
 }

@@ -10,9 +10,9 @@ use crate::component::Component;
 use crate::config::global_config::GlobalConfig;
 use crate::default_prepare;
 
-#[derive(knuffel::Decode, Debug, Deserialize)]
+#[derive(knus::Decode, Debug, Deserialize)]
 pub struct Fail2Ban {
-    #[knuffel(children(name = "jail"), unwrap(argument))]
+    #[knus(children(name = "jail"), unwrap(argument))]
     jails: Vec<String>,
 }
 

@@ -1,4 +1,3 @@
-use knuffel;
 use std::path::Path;
 use thiserror::Error;
 
@@ -21,7 +20,7 @@ use crate::config::Config;
 
 const EXPECTED_VERSION: &str = "1.0";
 
-#[derive(knuffel::Decode, Debug)]
+#[derive(knus::Decode, Debug)]
 pub enum ComponentNode {
     Command(Command),
     CgStats(CgStats),
@@ -39,11 +38,11 @@ pub enum ComponentNode {
     Weather(Weather),
 }
 
-#[derive(knuffel::Decode, Debug)]
+#[derive(knus::Decode, Debug)]
 pub struct KdlConfig {
-    #[knuffel(child)]
+    #[knus(child)]
     pub global: GlobalConfig,
-    #[knuffel(child, unwrap(children))]
+    #[knus(child, unwrap(children))]
     pub components: Vec<ComponentNode>,
 }
 
@@ -51,7 +50,7 @@ pub struct KdlConfig {
 pub enum KdlConfigError {
     #[error(transparent)]
     #[diagnostic(transparent)]
-    KnuffelError(#[from] knuffel::Error),
+    KnusError(#[from] knus::Error),
 
     #[error("Mandatory field `global {{ version \"{0}\" }}` is missing in the configuration.")]
     NoVersion(&'static str),
@@ -61,7 +60,7 @@ pub enum KdlConfigError {
 }
 
 pub fn parse_kdl(config_path: &Path, config_str: &str) -> Result<Config, KdlConfigError> {
-    let result = knuffel::parse::<KdlConfig>(config_path.to_str().unwrap(), config_str)?;
+    let result = knus::parse::<KdlConfig>(config_path.to_str().unwrap(), config_str)?;
 
     let version = result
         .global

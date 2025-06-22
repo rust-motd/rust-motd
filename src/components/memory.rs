@@ -9,9 +9,9 @@ use crate::config::global_config::GlobalConfig;
 use crate::constants::INDENT_WIDTH;
 use crate::default_prepare;
 
-#[derive(knuffel::Decode, Debug, Deserialize)]
+#[derive(knus::Decode, Debug, Deserialize)]
 pub struct Memory {
-    #[knuffel(property)]
+    #[knus(property)]
     swap_pos: SwapPosition,
 }
 
@@ -38,7 +38,7 @@ pub enum MemoryError {
     IO(#[from] std::io::Error),
 }
 
-#[derive(knuffel::DecodeScalar, Debug, Deserialize, PartialEq, Default)]
+#[derive(knus::DecodeScalar, Debug, Deserialize, PartialEq, Default)]
 enum SwapPosition {
     #[default]
     #[serde(alias = "beside")]

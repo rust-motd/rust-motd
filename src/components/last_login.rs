@@ -15,17 +15,17 @@ use crate::config::global_config::GlobalConfig;
 use crate::constants::INDENT_WIDTH;
 use crate::default_prepare;
 
-#[derive(knuffel::Decode, Debug)]
+#[derive(knus::Decode, Debug)]
 pub struct User {
-    #[knuffel(property)]
+    #[knus(property)]
     pub username: String,
-    #[knuffel(property)]
+    #[knus(property)]
     pub num_logins: usize,
 }
 
-#[derive(knuffel::Decode, Debug)]
+#[derive(knus::Decode, Debug)]
 pub struct LastLogin {
-    #[knuffel(children(name = "user"))]
+    #[knus(children(name = "user"))]
     pub users: Vec<User>,
 }
 

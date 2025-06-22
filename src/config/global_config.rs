@@ -1,32 +1,32 @@
-use knuffel;
+use knus;
 use serde::Deserialize;
 
-#[derive(Debug, Deserialize, knuffel::Decode)]
+#[derive(Debug, Deserialize, knus::Decode)]
 pub struct GlobalConfig {
-    #[knuffel(child, unwrap(argument))]
+    #[knus(child, unwrap(argument))]
     pub version: Option<String>,
 
-    #[knuffel(child, unwrap(argument), default=default_progress_character())]
+    #[knus(child, unwrap(argument), default=default_progress_character())]
     #[serde(default = "default_progress_character")]
     pub progress_full_character: String,
 
-    #[knuffel(child, unwrap(argument), default=default_progress_character())]
+    #[knus(child, unwrap(argument), default=default_progress_character())]
     #[serde(default = "default_progress_character")]
     pub progress_empty_character: String,
 
-    #[knuffel(child, unwrap(argument), default=default_progress_prefix())]
+    #[knus(child, unwrap(argument), default=default_progress_prefix())]
     #[serde(default = "default_progress_prefix")]
     pub progress_prefix: String,
 
-    #[knuffel(child, unwrap(argument), default=default_progress_suffix())]
+    #[knus(child, unwrap(argument), default=default_progress_suffix())]
     #[serde(default = "default_progress_suffix")]
     pub progress_suffix: String,
 
-    #[knuffel(child, unwrap(argument), default=default_progress_width())]
+    #[knus(child, unwrap(argument), default=default_progress_width())]
     #[serde(default = "default_progress_width")]
     pub progress_width: usize,
 
-    #[knuffel(child, unwrap(argument), default=default_time_format())]
+    #[knus(child, unwrap(argument), default=default_time_format())]
     #[serde(default = "default_time_format")]
     pub time_format: String,
 

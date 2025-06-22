@@ -7,7 +7,7 @@ use crate::component::Component;
 use crate::config::global_config::GlobalConfig;
 use crate::default_prepare;
 
-#[derive(knuffel::Decode, Debug, Deserialize)]
+#[derive(knus::Decode, Debug, Deserialize)]
 pub struct LastRun {}
 
 #[async_trait]

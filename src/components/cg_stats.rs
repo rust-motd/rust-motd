@@ -24,11 +24,13 @@ use crate::constants::INDENT_WIDTH;
 
 /// A container for component configuration from the configuration
 /// file as well as data prepared for printing.
-#[derive(knuffel::Decode, Deserialize, Debug)]
+#[derive(knus::Decode, Deserialize, Debug)]
 pub struct CgStats {
     /// File where to store Cgroup statistic needed by the next run
+    #[knus(property)]
     state_file: String,
     /// List only Cgroups with higher CPU usage (0.01 ~ 1%)
+    #[knus(property)]
     threshold: f64,
 
     #[serde(skip)]

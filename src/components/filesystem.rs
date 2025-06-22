@@ -16,18 +16,18 @@ use crate::default_prepare;
 
 const HEADER: [&str; 6] = ["Filesystems", "Device", "Mount", "Type", "Used", "Total"];
 
-#[derive(Clone, knuffel::Decode, Debug)]
+#[derive(Clone, knus::Decode, Debug)]
 pub struct Mount {
-    #[knuffel(property)]
+    #[knus(property)]
     pub filesystem_name: String,
-    #[knuffel(property)]
+    #[knus(property)]
     pub mount_point: String,
 }
 
 /// A container for the mount points specified in the configuration file
-#[derive(Clone, knuffel::Decode, Debug)]
+#[derive(Clone, knus::Decode, Debug)]
 pub struct Filesystems {
-    #[knuffel(children(name = "mount"))]
+    #[knus(children(name = "filesystem"))]
     pub mounts: Vec<Mount>,
 }
 

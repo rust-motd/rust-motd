@@ -8,23 +8,23 @@ use crate::config::global_config::GlobalConfig;
 use crate::constants::INDENT_WIDTH;
 use crate::default_prepare;
 
-#[derive(knuffel::Decode, Debug)]
+#[derive(knus::Decode, Debug)]
 pub struct Service {
-    #[knuffel(property)]
+    #[knus(property)]
     pub display_name: String,
-    #[knuffel(property)]
+    #[knus(property)]
     pub id: String,
 }
 
-#[derive(knuffel::Decode, Debug)]
+#[derive(knus::Decode, Debug)]
 pub struct ServiceStatus {
-    #[knuffel(children(name = "service"))]
+    #[knus(children(name = "service"))]
     pub services: Vec<Service>,
 }
 
-#[derive(knuffel::Decode, Debug)]
+#[derive(knus::Decode, Debug)]
 pub struct UserServiceStatus {
-    #[knuffel(children(name = "service"))]
+    #[knus(children(name = "service"))]
     pub services: Vec<Service>,
 }
 

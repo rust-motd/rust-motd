@@ -10,17 +10,17 @@ use crate::component::Component;
 use crate::config::global_config::GlobalConfig;
 use crate::default_prepare;
 
-#[derive(knuffel::Decode, Debug)]
+#[derive(knus::Decode, Debug)]
 pub struct DockerContainer {
-    #[knuffel(property)]
+    #[knus(property)]
     pub docker_name: String,
-    #[knuffel(property)]
+    #[knus(property)]
     pub display_name: String,
 }
 
-#[derive(knuffel::Decode, Debug)]
+#[derive(knus::Decode, Debug)]
 pub struct Docker {
-    #[knuffel(children(name = "container"))]
+    #[knus(children(name = "container"))]
     pub containers: Vec<DockerContainer>,
 }
 

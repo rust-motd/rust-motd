@@ -8,11 +8,11 @@ use crate::component::Component;
 use crate::config::global_config::GlobalConfig;
 use crate::default_prepare;
 
-#[derive(knuffel::Decode, Debug, Deserialize)]
+#[derive(knus::Decode, Debug, Deserialize)]
 pub struct Command {
-    #[knuffel(property, default=Color::White)]
+    #[knus(property, default=Color::White)]
     color: Color,
-    #[knuffel(argument)]
+    #[knus(argument)]
     command: String,
 }
 
@@ -26,7 +26,7 @@ impl Component for Command {
     default_prepare!();
 }
 
-#[derive(knuffel::DecodeScalar, Debug, Deserialize)]
+#[derive(knus::DecodeScalar, Debug, Deserialize)]
 #[serde(rename_all = "snake_case")]
 enum Color {
     Black,
