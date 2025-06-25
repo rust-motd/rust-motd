@@ -1,5 +1,10 @@
 # Changelog
 
+## [unreleased] 2025-06-25
+
+- Add support for KDL configuration (legacy TOML support is maintained) (#37)
+- Rename "banner" component to "command"
+
 ## [1.1.1] 2025-06-18
 
 - Update dependencies
