@@ -37,21 +37,25 @@ pub enum ConfigError {
     TomlError(#[from] TomlConfigError),
 }
 
-pub fn get_config(config_path: Option<String>) -> Result<Config, ConfigError> {
-    let config_path = match config_path {
-        Some(file_path) => Some(PathBuf::from(file_path)),
-        None => {
-            let config_base = env::var("XDG_CONFIG_HOME").unwrap_or(env::var("HOME")? + "/.config");
-            let config_base = Path::new(&config_base).join(Path::new("rust-motd/config.toml"));
-            if config_base.exists() {
-                Some(config_base)
-            } else {
-                None
-            }
-        }
-    };
+fn get_config_path(config_path: Option<String>) -> Result<PathBuf, ConfigError> {
+    if let Some(file_path) = config_path {
+        return Ok(PathBuf::from(file_path));
+    }
 
-    let config_path = config_path.ok_or(ConfigError::ConfigNotFound)?;
+    let config_base = env::var("XDG_CONFIG_HOME").unwrap_or(env::var("HOME")? + "/.config");
+
+    for basename in ["rust-motd/config.kdl", "rust-motd/config.toml"] {
+        let config_base = Path::new(&config_base).join(Path::new(basename));
+        if config_base.exists() {
+            return Ok(config_base)
+        }
+    }
+
+    return Err(ConfigError::ConfigNotFound);
+}
+
+pub fn get_config(config_path: Option<String>) -> Result<Config, ConfigError> {
+    let config_path = get_config_path(config_path)?;
     let config_str = fs::read_to_string(&config_path)?;
 
     let extension = config_path
