@@ -112,10 +112,7 @@ impl<'de> Deserialize<'de> for Config {
                             result.components.push(Box::new(Filesystems::new(
                                 map.next_value::<IndexMap<String, String>>()?
                                     .into_iter()
-                                    .map(|(name, mount_point)| Mount {
-                                        name,
-                                        mount_point,
-                                    })
+                                    .map(|(name, mount_point)| Mount { name, mount_point })
                                     .collect(),
                             )));
                         }

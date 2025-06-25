@@ -47,7 +47,7 @@ fn get_config_path(config_path: Option<String>) -> Result<PathBuf, ConfigError> 
     for basename in ["rust-motd/config.kdl", "rust-motd/config.toml"] {
         let config_base = Path::new(&config_base).join(Path::new(basename));
         if config_base.exists() {
-            return Ok(config_base)
+            return Ok(config_base);
         }
     }
 

@@ -148,10 +148,7 @@ impl Filesystems {
             .mounts
             .into_iter()
             .map(
-                |Mount {
-                     name,
-                     mount_point,
-                 }| match mounts.get(&mount_point) {
+                |Mount { name, mount_point }| match mounts.get(&mount_point) {
                     Some(mount) => Ok(parse_into_entry(name, mount)),
                     _ => Err(FilesystemsError::MountNotFound { mount_point }),
                 },
