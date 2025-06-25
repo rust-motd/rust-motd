@@ -112,8 +112,8 @@ impl<'de> Deserialize<'de> for Config {
                             result.components.push(Box::new(Filesystems::new(
                                 map.next_value::<IndexMap<String, String>>()?
                                     .into_iter()
-                                    .map(|(filesystem_name, mount_point)| Mount {
-                                        filesystem_name,
+                                    .map(|(name, mount_point)| Mount {
+                                        name,
                                         mount_point,
                                     })
                                     .collect(),
@@ -151,7 +151,7 @@ impl<'de> Deserialize<'de> for Config {
                                 services: map
                                     .next_value::<IndexMap<String, String>>()?
                                     .into_iter()
-                                    .map(|(display_name, id)| Service { display_name, id })
+                                    .map(|(display_name, unit)| Service { display_name, unit })
                                     .collect(),
                             }));
                         }
@@ -160,7 +160,7 @@ impl<'de> Deserialize<'de> for Config {
                                 services: map
                                     .next_value::<IndexMap<String, String>>()?
                                     .into_iter()
-                                    .map(|(display_name, id)| Service { display_name, id })
+                                    .map(|(display_name, unit)| Service { display_name, unit })
                                     .collect(),
                             }));
                         }

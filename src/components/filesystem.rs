@@ -19,7 +19,7 @@ const HEADER: [&str; 6] = ["Filesystems", "Device", "Mount", "Type", "Used", "To
 #[derive(Clone, knus::Decode, Debug)]
 pub struct Mount {
     #[knus(property)]
-    pub filesystem_name: String,
+    pub name: String,
     #[knus(property)]
     pub mount_point: String,
 }
@@ -149,10 +149,10 @@ impl Filesystems {
             .into_iter()
             .map(
                 |Mount {
-                     filesystem_name,
+                     name,
                      mount_point,
                  }| match mounts.get(&mount_point) {
-                    Some(mount) => Ok(parse_into_entry(filesystem_name, mount)),
+                    Some(mount) => Ok(parse_into_entry(name, mount)),
                     _ => Err(FilesystemsError::MountNotFound { mount_point }),
                 },
             )

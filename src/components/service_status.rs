@@ -13,7 +13,7 @@ pub struct Service {
     #[knus(property)]
     pub display_name: String,
     #[knus(property)]
-    pub id: String,
+    pub unit: String,
 }
 
 #[derive(knus::Decode, Debug)]
@@ -88,8 +88,8 @@ pub fn print_or_error(config: &[Service], user: bool) -> Result<(), ServiceStatu
         .max()
         .unwrap();
 
-    for Service { display_name, id } in config.iter() {
-        let status = get_service_status(id, user)?;
+    for Service { display_name, unit } in config.iter() {
+        let status = get_service_status(unit, user)?;
 
         let status_color = match status.as_ref() {
             "active" => color::Fg(color::Green).to_string(),
