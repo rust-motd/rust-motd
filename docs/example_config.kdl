@@ -4,10 +4,10 @@ global {
   progress-empty-character "="
   progress-prefix "["
   progress-suffix "]"
-  time-format "%Y-%m-%d %H:%M:%S"
+  time-format "%Y-%m-%d %H:%M:%S %Z"
 }
 components {
-  command "
+  command color="red" "
   echo '                    __                        __      __  ' &&
   echo '   _______  _______/ /_      ____ ___  ____  / /_____/ /  ' &&
   echo '  / ___/ / / / ___/ __/_____/ __ `__ \\/ __ \\/ __/ __  / ' &&
@@ -15,22 +15,26 @@ components {
   echo '/_/   \\__,_/____/\\__/     /_/ /_/ /_/\\____/\\__/\\__,_/'
   "
 
-  weather loc="New York, New York"
+  weather loc="Toronto,Canada" style="oneline" timeout=10
 
   service-status {
-    service display-name="Accounts" id="accounts-daemon"
-    service display-name="Cron" id="cronie"
+    service display-name="Accounts" unit="accounts-daemon"
+    service display-name="Cron" unit="cronie"
+  }
+
+  user-service-status {
+    service display-name="gpg-agent" unit="gpg-agent"
   }
 
   uptime prefix="Uptime"
 
   ssl-certs sort-method="alphabetical" {
     cert name="example.com"  path="./cert.pem"
-    cert name="example2.com" path="./cert.pem"
   }
 
   filesystems {
-    filesystem filesystem-name="root" mount-point="/"
+    filesystem name="root" mount-point="/"
+    filesystem name="home" mount-point="/home"
   }
 
   memory swap-pos="beside"
@@ -50,6 +54,6 @@ components {
   cg-stats state-file="cg_stats.toml" threshold=0.01
 
   docker {
-    container display-name="Nginx" docker-name="nginx-nginx-1"
+    container display-name="Nginx" docker-name="/nginx-nginx-1"
   }
 }

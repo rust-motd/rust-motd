@@ -3,7 +3,7 @@
 # progress_empty_character = "="
 # progress_prefix = "["
 # progress_suffix = "]"
-# time_format = "%Y-%m-%d %H:%M:%S"
+# time_format = "%Y-%m-%d %H:%M:%S %Z"
 
 [banner]
 color = "red"

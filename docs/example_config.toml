@@ -3,7 +3,7 @@ progress_full_character = "="
 progress_empty_character = "="
 progress_prefix = "["
 progress_suffix = "]"
-time_format = "%Y-%m-%d %H:%M:%S"
+time_format = "%Y-%m-%d %H:%M:%S %Z"
 
 [banner]
 color = "red"
@@ -15,7 +15,7 @@ echo ' / /  / /_/ (__  ) /_/_____/ / / / / / /_/ / /_/ /_/ /    ' &&
 echo '/_/   \\__,_/____/\\__/     /_/ /_/ /_/\\____/\\__/\\__,_/'"""
 
 [weather]
-loc = "New York, New York"
+loc = "Toronto,Canada"
 
 [service_status]
 Accounts = "accounts-daemon"
@@ -52,4 +52,4 @@ state_file = "cg_stats.toml"
 threshold = 0.01
 
 [docker]
-"nginx-nginx-1" = "Nginx"
+"/nginx-nginx-1" = "Nginx"

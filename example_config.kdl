@@ -4,7 +4,7 @@ global {
   // progress-empty-character "="
   // progress-prefix "["
   // progress-suffix "]"
-  // time-format "%Y-%m-%d %H:%M:%S"
+  // time-format "%Y-%m-%d %H:%M:%S %Z"
 }
 components {
   // command "
@@ -18,11 +18,15 @@ components {
   // If you have figlet installed
   // command "hostname | figlet -f slant"
 
-  // weather loc="New York, New York"
+  // weather loc="Toronto,Canada" style="oneline" timeout=10
 
   // service-status {
-  //   service display-name="Accounts" id="accounts-daemon"
-  //   service display-name="Cron" id="cronie"
+  //   service display-name="Accounts" unit="accounts-daemon"
+  //   service display-name="Cron" unit="cronie"
+  // }
+
+  // user-service-status {
+  //   service display-name="gpg-agent" unit="gpg-agent"
   // }
 
   // uptime prefix="Uptime"
@@ -33,7 +37,8 @@ components {
   // }
 
   // filesystems {
-  //   filesystem filesystem-name="root" mount-point="/"
+  //   filesystem name="root" mount-point="/"
+  //   filesystem name="home" mount-point="/home"
   // }
 
   // memory swap-pos="beside"
@@ -53,7 +58,7 @@ components {
   // cg-stats state-file="cg_stats.toml" threshold=0.01
 
   // docker {
-  //   container display-name="Nginx" docker-name="nginx-nginx-1"
+  //   container display-name="Nginx" docker-name="/nginx-nginx-1"
   // }
 
   // command "echo You can specify every component as many times as you want"
