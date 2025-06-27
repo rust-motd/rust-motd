@@ -51,7 +51,7 @@ fn get_config_path(config_path: Option<String>) -> Result<PathBuf, ConfigError> 
         }
     }
 
-    return Err(ConfigError::ConfigNotFound);
+    Err(ConfigError::ConfigNotFound)
 }
 
 pub fn get_config(config_path: Option<String>) -> Result<Config, ConfigError> {
