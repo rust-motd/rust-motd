@@ -37,7 +37,7 @@ Note: To cross compile, you may need to install additional packages. For example
 
 ### NixOS
 
-`rust-motd` is available in the [`nix`](https://nixos.org/) package manager under the name [`rust-motd`](https://search.nixos.org/packages?channel=22.11&show=rust-motd&from=0&size=50&sort=relevance&type=packages&query=rust-motd). Unlike the other formats, this is not packaged by the authors of `rust-motd`.
+`rust-motd` is available in the [`nix`](https://nixos.org/) package manager under the name [`rust-motd`](https://search.nixos.org/packages?show=rust-motd&from=0&size=50&sort=relevance&type=packages&query=rust-motd). Unlike the other formats, this is not packaged by the authors of `rust-motd`.
 
 ## Configuration
 
@@ -151,7 +151,11 @@ The global configuration is used for settings that may span multiple components,
 
 ## Setup
 
-### Displaying MOTD on login (server setup)
+### Updating periodically with chron
+
+This is the recommended setup for the fastest performance opening a new shell.
+
+#### Displaying MOTD on login (server setup)
 
 The canonical MOTD is a message printed on login.
 To achieve this, the file `/etc/motd` must be kept up to date with the output of `rust-motd`.
@@ -164,7 +168,7 @@ in order to write to the protected file `/etc/motd`.
 */5 * * * * rust-motd > /etc/motd
 ```
 
-### Displaying MOTD on every new terminal (personal computer setup)
+#### Displaying MOTD on every new terminal (personal computer setup)
 
 It can also be nice to show the MOTD locally every time you launch a new terminal emulator
 (or on every new pane if you use `tmux`).
@@ -196,6 +200,50 @@ and add the following line at the very bottom
 cat $HOME/.local/etc/motd
 ```
 
+### Updating on every new shell
+
+This setup prioritizes up-to-date data above shell performance.
+It should only be used if `rust-motd` is very fast with your configuration.
+Some components can take considerable time (weather has to hit the internet).
+You will experience this delay on every new shell.
+
+#### With shellrc
+
+The simplest way to show `rust-motd` with fresh data on every new shell
+is simply to add the command `rust-motd` to your shell configuration file (`~/.bashrc`, `~/.zshrc`, ...).
+
+#### With update-motd (Ubuntu only)
+
+`update-motd` is Ubuntu's standard method for dynamically updating a MOTD (see [update-motd(5)](https://manpages.ubuntu.com/manpages/jammy/man5/update-motd.5.html)).
+
+You can create a script like this (`/etc/update-motd.d/99-rust-motd`) :
+
+```bash
+#!/usr/bin/env bash
+rust-motd /etc/rust-motd.toml
+```
+
+Don't forget to make the script executable.
+
+> [!IMPORTANT]
+> `$HOME` is not defined when this script is executed, so you need to pass the config as a parameter to avoid the error: `Config Error: environment variable not found.`
+
+#### With PAM
+
+This is the most "Linux standard" solution.
+
+Place the execution of an optional script (not affecting authentication in case of failure) before the execution of the pam module `pam_motd.so`.
+```pam
+session optional pam_exec.so /usr/local/bin/update-motd
+```
+And in the script `/usr/local/bin/update-motd`, put:
+```bash
+#!/usr/bin/env bash
+rust-motd /etc/rust-motd.toml > /etc/motd
+```
+
+> [!IMPORTANT]
+> `$HOME` is not defined when this script is executed, so you need to pass the config as a parameter to avoid the error: `Config Error: environment variable not found.`
 
 ## Alternatives
 
