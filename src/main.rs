@@ -40,7 +40,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 component.print(&config.global, width).await;
             }
         }
-        Err(e) => println!("Config Error: {e}"),
+        Err(e) => println!("Config Error: {:?}", miette::Report::new(e)),
     }
     Ok(())
 }

@@ -41,93 +41,254 @@ Note: To cross compile, you may need to install additional packages. For example
 
 ## Configuration
 
-`rust-motd` uses a `TOML` configuration file to determine which components to run, and any parameters for those components. Components can be enabled or disabled by including or removing/commenting-out the relevant section of configuration. The enabled components will be printed in the order they appear in the configuration file. In other words, you can customize the printing order by rearranging the sections of the configuration file. An example configuration file is included in [example_config.toml](example_config.toml).
+`rust-motd` is configured using a [KDL](https://kdl.dev/) file.
+Support for the legacy TOML configuration is maintained for backwards compatibility,
+but it may be removed during a future major release.
+The rest of this section will assume the new KDL format.
+See [the migration guide](./docs/migration.md) for details.
 
-A configuration file can either be specified as the first argument to `rust-motd` via the command line or placed in one of two default locations. If a config file is not specified as an argument, `rust-motd` will check `$XDG_CONFIG_HOME/rust-motd/config.toml` and `$HOME/.config/rust-motd/config.toml` in that order.
+The most basic configuration is given below. `global.version` must be specified and the value must be `1.0`. The components (described in the next sections) will be displayed in the order they appear inside of `components {}`. Each component can occur as many times as you'd like, with different parameters each time. An example configuration file [example_config.kdl](example_config.kdl).
+```kdl
+global {
+  version "1.0"
+}
+components {
+}
+```
 
-The options for each component are listed below:
-### Banner
+A configuration file can either be specified as the first argument to `rust-motd` via the command line or placed in one of two default locations. If a config file is not specified as an argument, `rust-motd` will check `$XDG_CONFIG_HOME/rust-motd/config.kdl` and `$HOME/.config/rust-motd/config.kdl` in that order.
 
-- `color`: The color of the banner text. Options are black, red, green, yellow, blue, magenta, cyan, white, and light variants of each.
-- `command`: A command executed via `sh` which generates the banner. For example, you could pipe the output of `hostname` to `figlet` to generate a block letter banner.
+The options for each component are listed below.
+Each section lists children, properties, and attributes.
+Components that take children show multiple pieces of information:
+```kdl
+components {
+  component-with-children {
+    child
+    child
+  }
+}
+```
+
+If a component (or a child of a component) takes properties, put the name of the property, an equals sign (`=`), and the value.
+```kdl
+components {
+  component property-name="value"
+}
+```
+
+If a component (or a child of a component) takes arguments, do not put the argument name or equals sign, just place the value.
+```kdl
+components {
+  command "echo this is the command to run"
+}
+```
+
+### Command (formerly Banner)
+
+Display the output of a command (executed via `sh`).
+
+Example:
+```kdl
+command color="red" "hostname | figlet -f slant"
+```
+
+Arguments:
+- Command: The command to run. Essentially the argument to `sh -c`.
+
+Properties:
+- `color`: The color of the banner text. Options are black, red, green, yellow, blue, magenta, cyan, white, and light variants of each. The default is white.
 
 ### Weather
 
 The weather component allows you to either specify a [wttr.in](https://wttr.in) URL, or a location and display style which will be used to build the URL.
 
-Either:
+Example:
+```kdl
+weather loc="Toronto,Canada" style="oneline" timeout=10
+```
 
-- `url`: a [wttr.in](https://wttr.in) query URL for the relevant location. E.g. `https://wttr.in` or `https://wttr.in/New+York,New+York?0`. For more detail about the options available via the request URL, see the [wttr.in documentation](https://github.com/chubin/wttr.in). The response of an http request to the specified URL is output directly to the console, so in theory you could use a service other than [wttr.in](wttr.in).
-
-or:
-
-- `loc`: The location to retrieve the weather for, e.g. "New York,New York".
-- `style`: One of either "oneline", "day", or "full".
-
-In the case both are specified, the `url` parameter is given priority.
-
-User-Agent can also be specified when connecting to the `url`.
-
-- `user_agent`: A string to be supplied. If not specified, it will be "curl".
-
-If you need a proxy to access the internet, specify it in below item:
-
+Properties:
+- `url`: a [wttr.in](https://wttr.in) query URL for the relevant location. E.g. `https://wttr.in` or `https://wttr.in/New+York,New+York?0`. For more detail about the options available via the request URL, see the [wttr.in documentation](https://github.com/chubin/wttr.in). The response of an http request to the specified URL is output directly to the console, so in theory you could use a service other than [wttr.in](wttr.in). If unspecified, the URL is automatically built from the following properties.
+- `loc`: The location to retrieve the weather for, e.g. "New York,New York". If `url` is specified, this has no effect. If unspecified, [wttr.in](https://wttr.in) will try to determine your location automatically.
+- `style`: One of either "oneline", "day", or "full". If `url` is specified, this has no effect. The default is "day".
+- `user-agent`: User-Agent to use when connecting. The default is `curl`.
 - `proxy`: The http proxy server which used to access internet.
-
-You may also specify a timeout for the network request. The default is `5`.
-
-- `timeout`: Timeout, seconds
+- `timeout`: Timeout in seconds for the network request. The default is `5`.
 
 ### Service Status
 
-- List of `systemd` services to display the status of. Keys are used as the service display name, while the value is the name of the service itself.
+Displays the status of `systemd` services.
+
+Example:
+```kdl
+service-status {
+  service display-name="Accounts" unit="accounts-daemon"
+  service display-name="Cron" unit="cronie"
+}
+```
+
+Children:
+- `service`: Specify once for each service
+
+Properties of `service`:
+- `unit`: The name of the unit. Basically corresponds to the argument to `systemctl` commands.
+- `display-name`: The display name. Can be anything. For example, unit is called `accounts-daemon`, you may want to display `Accounts`.
+
+### User Service Status
+
+Displays the status of `systemd` services.
+
+Example:
+```kdl
+user-service-status {
+  service display-name="gpg-agent" unit="gpg-agent"
+}
+```
 
 ### Docker Status
 
-- List of containers to show the status of.
-Keys are used as the internal docker names
-(`NAMES` column of `docker ps`)
-(containers can have multiple names, and the container is selected if any of the names match).
-Values are the display name shown in the output.
+Displays the status of docker containers.
+
+Example:
+```kdl
+docker {
+  container display-name="Nginx" docker-name="/nginx-nginx-1"
+  container display-name="MariaDB" docker-name="/mariadb-mariadb-1"
+}
+```
+
+Children:
+- `container`: Specify once for each service.
+
+Properties of `container`:
+- `display-name`: The pretty name of the container.
+- `docker-name`: The internal docker name (`NAMES` column of `docker ps`). Containers can have multiple names, and the container is selected if any of the names match.
 The key **must** start with a `/` for internal containers (please see [here](https://github.com/moby/moby/issues/6705)).
 
 ### Uptime
 
-- `prefix`: Text to print before the formatted uptime.
+Displays the uptime.
+
+Example:
+```kdl
+uptime prefix="Uptime"
+```
+
+- `prefix`: Text to print before the formatted uptime. The default is `Up`.
 
 ### SSL Certificates
 
-- `sort_method`: The order to sort the displayed SSL certificates. Options are "alphabetical", "expiration", or "manual", in which case the certs will be displayed in the same order that they appear in the config file.
-- `[ssl_certificates.certs]`: A subsection that is a list pairs of of certificate display names (keys) and certificate paths (values). If using LetsEncrypt, this should be `cert.pem`, not `privkey.pem`.
+Shows the expiration of SSL certificates.
+
+Example:
+```kdl
+ssl-certs sort-method="alphabetical" {
+  cert name="example.com"  path="./cert.pem"
+}
+```
+
+Properties:
+- `sort-method`: The order to sort the displayed SSL certificates. Options are "alphabetical", "expiration", or "manual", in which case the certs will be displayed in the same order that they appear in the config file.
+
+Children:
+- `cert`: Specify once for each certificate.
+
+Properties of `cert`:
+- `name`: The pretty name to display.
+- `path`: Path to the certificate file. If using LetsEncrypt, this should be `cert.pem`, not `privkey.pem`.
 
 ### Filesystems
 
- - List of filesystems to print the information of, in the form of pairs of names (used for display) and mount points.
+Displays information about filesystems and a bar showing the used space.
 
- ### Memory
+Example:
+```kdl
+filesystems {
+  filesystem filesystem-name="root" mount-point="/"
+  filesystem filesystem-name="home" mount-point="/home"
+}
+```
 
- - `swap_pos`: Either `beside`, `below` or `none` to indicate the location to display the swap memory usage, if any.
+Children:
+- `filesystem`: Specify once for each filesystem.
+
+Properties of `filesystem`:
+- `name`: Display name for the filesystem.
+- `mount-point`: The directory where the filesystem is mounted, used to identify it.
+
+### Memory
+
+Displays information about used memory.
+
+Example:
+```kdl
+memory swap-pos="beside"
+```
+
+Properties:
+ - `swap-pos`: Either `beside`, `below` or `none` to indicate the location to display the swap memory usage, if any.
 
 ### Fail2Ban
 
-- `jails`: A list of Fail2Ban jails to print the ban amounts of.
+Shows information about Fail2Ban jails.
+
+Example:
+```kdl
+fail2ban {
+  jail "sshd"
+}
+```
+
+Children:
+- `jail`: Specify once for each jail.
+
+Arguments of `jail`:
+- `name`: The name of the jail.
 
 ### Last Login
 
-- List of users (keys) and number n (values) of that user's n most recent logins to display.
+Displays the last logins to the machine.
+
+Example:
+```kdl
+last-login {
+  user username="marcel" num-logins=2
+}
+```
+
+Children:
+- `user`: Specify once for each user.
+
+Properties of `user`:
+- `username`: Username of the user.
+- `num-logins`: The number of logins to display.
 
 ### Last Run
 
-- If present, prints the time that the `rust-motd` was run (useful if updating the motd only periodically e.g. via Cron).
+Displays the timestamp of the last time `rust-motd` was run. This is useful if updating the motd only periodically e.g. via Cron.
+
+Example:
+```kdl
+last-run
+```
 
 ### Load Average
 
+Displays information about the current system load.
+
+Example:
+```kdl
+load-avg format="Load (1, 5, 15 min.): {one:.02}, {five:.02}, {fifteen:.02}"
+```
+
+Properties:
 - `format`: Format of the printed message. Can contain specifiers for
   parameters `one`, `five` and `fifteen` representing different load
   average values.
-- `warn_threshold`: Optional threshold for printing load values in
+- `warn-threshold`: Optional threshold for printing load values in
   yellow. Defaults to the number of CPUs in the system.
-- `bad_threshold`: Optional threshold for for printing load values in
+- `bad-threshold`: Optional threshold for for printing load values in
   red. Defaults to four times the number of CPUs in the system.
 
 ### Cgroup Statistics
@@ -135,19 +296,26 @@ The key **must** start with a `/` for internal containers (please see [here](htt
 Prints CPU usage by users and services since the last invocation. The
 numbers are based on statistics from systemd-managed cgroups.
 
-- `state_file`: File name where to store cgroup statistics for the next invocation.
+Example:
+```kdl
+cg-stats state-file="cg_stats.toml" threshold=0.01
+```
+
+Properties:
+- `state-file`: File name where to store cgroup statistics for the next invocation.
 - `threshold`: Number in range [0.0, 1.0]. Output lines are generated
   only for cgroups with CPU usage higher than this value.
 
 ### Global Config
 The global configuration is used for settings that may span multiple components, e.g. the time format string, and progress bar style.
 
-- `progress_full_character` (Default `'='`): The character to use for the line segment of the progress bar indicating the "active" portion of the quantity represented
-- `progress_empty_character` (Default `'='`): The character to use for the line segment of the progress bar indicating the "inactive" portion of the quantity represented
-- `progress_prefix` (Default `"["`): The character to used to cap the left side of the progress bar
-- `progress_suffix` (Default `"]"`): The character to used to cap the right side of the progress bar
-- `progress_width` (Default `80`): The default width of the progress bar, used only if no other "size hint" is available. More specifically, the `filesystem` component will automatically determine its width. If the `filesystem` component is present, then the `memory` component will use the width of the filesystem as its size hint. Otherwise it will use the configured value.
-- `time_format` (Default `"%Y-%m-%d %H:%M:%S %Z"`): time format string
+- `version`: Must be specified and must be `1.0`.
+- `progress-full-character` (Default `"="`): The character to use for the line segment of the progress bar indicating the "active" portion of the quantity represented
+- `progress-empty-character` (Default `"="`): The character to use for the line segment of the progress bar indicating the "inactive" portion of the quantity represented
+- `progress-prefix` (Default `"["`): The character to used to cap the left side of the progress bar
+- `progress-suffix` (Default `"]"`): The character to used to cap the right side of the progress bar
+- `progress-width` (Default `80`): The default width of the progress bar, used only if no other "size hint" is available. More specifically, the `filesystem` component will automatically determine its width. If the `filesystem` component is present, then the `memory` component will use the width of the filesystem as its size hint. Otherwise it will use the configured value.
+- `time-format` (Default `"%Y-%m-%d %H:%M:%S %Z"`): time format string
 
 ## Setup
 

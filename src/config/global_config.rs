@@ -1,23 +1,41 @@
+use knus;
 use serde::Deserialize;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, knus::Decode)]
 pub struct GlobalConfig {
+    #[knus(child, unwrap(argument))]
+    pub version: Option<String>,
+
+    #[knus(child, unwrap(argument), default=default_progress_character())]
     #[serde(default = "default_progress_character")]
-    pub progress_full_character: char,
+    pub progress_full_character: String,
+
+    #[knus(child, unwrap(argument), default=default_progress_character())]
     #[serde(default = "default_progress_character")]
-    pub progress_empty_character: char,
+    pub progress_empty_character: String,
+
+    #[knus(child, unwrap(argument), default=default_progress_prefix())]
     #[serde(default = "default_progress_prefix")]
     pub progress_prefix: String,
+
+    #[knus(child, unwrap(argument), default=default_progress_suffix())]
     #[serde(default = "default_progress_suffix")]
     pub progress_suffix: String,
+
+    #[knus(child, unwrap(argument), default=default_progress_width())]
     #[serde(default = "default_progress_width")]
     pub progress_width: usize,
+
+    #[knus(child, unwrap(argument), default=default_time_format())]
     #[serde(default = "default_time_format")]
     pub time_format: String,
+
+    #[serde(default = "default_show_legacy_warning")]
+    pub show_legacy_warning: bool,
 }
 
-fn default_progress_character() -> char {
-    '='
+fn default_progress_character() -> String {
+    "=".to_string()
 }
 
 fn default_progress_prefix() -> String {
@@ -36,16 +54,22 @@ fn default_time_format() -> String {
     "%Y-%m-%d %H:%M:%S %Z".to_string()
 }
 
+fn default_show_legacy_warning() -> bool {
+    true
+}
+
 // TODO: See if we can use this: https://github.com/serde-rs/serde/issues/1416
 impl Default for GlobalConfig {
     fn default() -> Self {
         GlobalConfig {
+            version: None,
             progress_full_character: default_progress_character(),
             progress_empty_character: default_progress_character(),
             progress_prefix: default_progress_prefix(),
             progress_suffix: default_progress_suffix(),
             progress_width: default_progress_width(),
             time_format: default_time_format(),
+            show_legacy_warning: default_show_legacy_warning(),
         }
     }
 }

@@ -1,5 +1,4 @@
 use async_trait::async_trait;
-use indexmap::IndexMap;
 use termion::{color, style};
 use thiserror::Error;
 
@@ -9,12 +8,24 @@ use crate::config::global_config::GlobalConfig;
 use crate::constants::INDENT_WIDTH;
 use crate::default_prepare;
 
-pub struct ServiceStatus {
-    pub services: IndexMap<String, String>,
+#[derive(knus::Decode, Debug)]
+pub struct Service {
+    #[knus(property)]
+    pub display_name: String,
+    #[knus(property)]
+    pub unit: String,
 }
 
+#[derive(knus::Decode, Debug)]
+pub struct ServiceStatus {
+    #[knus(children(name = "service"))]
+    pub services: Vec<Service>,
+}
+
+#[derive(knus::Decode, Debug)]
 pub struct UserServiceStatus {
-    pub services: IndexMap<String, String>,
+    #[knus(children(name = "service"))]
+    pub services: Vec<Service>,
 }
 
 #[async_trait]
@@ -66,18 +77,19 @@ fn get_service_status(service: &str, user: bool) -> Result<String, ServiceStatus
     Ok(output.split_whitespace().collect())
 }
 
-pub fn print_or_error(
-    config: &IndexMap<String, String>,
-    user: bool,
-) -> Result<(), ServiceStatusError> {
+pub fn print_or_error(config: &[Service], user: bool) -> Result<(), ServiceStatusError> {
     if config.is_empty() {
         return Err(ServiceStatusError::ConfigEmpty);
     }
 
-    let padding = config.keys().map(|x| x.len()).max().unwrap();
+    let padding = config
+        .iter()
+        .map(|service| service.display_name.len())
+        .max()
+        .unwrap();
 
-    for key in config.keys() {
-        let status = get_service_status(config.get(key).unwrap(), user)?;
+    for Service { display_name, unit } in config.iter() {
+        let status = get_service_status(unit, user)?;
 
         let status_color = match status.as_ref() {
             "active" => color::Fg(color::Green).to_string(),
@@ -89,8 +101,8 @@ pub fn print_or_error(
         println!(
             "{}{}: {}{}{}{}",
             " ".repeat(INDENT_WIDTH),
-            key,
-            " ".repeat(padding - key.len()),
+            display_name,
+            " ".repeat(padding - display_name.len()),
             status_color,
             status,
             style::Reset,

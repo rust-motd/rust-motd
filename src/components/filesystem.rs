@@ -7,6 +7,7 @@ use std::iter;
 use systemstat::{Filesystem, Platform, System};
 use termion::{color, style};
 use thiserror::Error;
+use unicode_ellipsis::truncate_str;
 
 use crate::component::{Component, Constraints, PrepareReturn};
 use crate::config::global_config::GlobalConfig;
@@ -15,10 +16,19 @@ use crate::default_prepare;
 
 const HEADER: [&str; 6] = ["Filesystems", "Device", "Mount", "Type", "Used", "Total"];
 
+#[derive(Clone, knus::Decode, Debug)]
+pub struct Mount {
+    #[knus(property)]
+    pub name: String,
+    #[knus(property)]
+    pub mount_point: String,
+}
+
 /// A container for the mount points specified in the configuration file
-#[derive(Clone)]
+#[derive(Clone, knus::Decode, Debug)]
 pub struct Filesystems {
-    pub mounts: IndexMap<String, String>,
+    #[knus(children(name = "filesystem"))]
+    pub mounts: Vec<Mount>,
 }
 
 #[async_trait]
@@ -91,7 +101,7 @@ fn parse_into_entry(filesystem_name: String, mount: &Filesystem) -> Entry {
     Entry {
         filesystem_name,
         mount_point: mount.fs_mounted_on.to_string(),
-        dev: mount.fs_mounted_from.to_string(),
+        dev: truncate_str(&mount.fs_mounted_from, 26).to_string(),
         fs_type: mount.fs_type.to_string(),
         used: ByteSize::b(used).to_string(),
         total: ByteSize::b(total).to_string(),
@@ -114,7 +124,7 @@ fn print_row<'a>(items: [&str; 6], column_sizes: impl IntoIterator<Item = &'a us
 }
 
 impl Filesystems {
-    pub fn new(mounts: IndexMap<String, String>) -> Self {
+    pub fn new(mounts: Vec<Mount>) -> Self {
         Self { mounts }
     }
 
@@ -138,8 +148,8 @@ impl Filesystems {
             .mounts
             .into_iter()
             .map(
-                |(filesystem_name, mount_point)| match mounts.get(&mount_point) {
-                    Some(mount) => Ok(parse_into_entry(filesystem_name, mount)),
+                |Mount { name, mount_point }| match mounts.get(&mount_point) {
+                    Some(mount) => Ok(parse_into_entry(name, mount)),
                     _ => Err(FilesystemsError::MountNotFound { mount_point }),
                 },
             )
