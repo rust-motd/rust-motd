@@ -18,7 +18,7 @@ pub struct Memory {
 impl Component for Memory {
     async fn print(self: Box<Self>, global_config: &GlobalConfig, width: Option<usize>) {
         self.print_or_error(global_config, width)
-            .unwrap_or_else(|err| println!("Memory error: {}", err));
+            .unwrap_or_else(|err| println!("Memory error: {err}"));
         println!();
     }
     default_prepare!();

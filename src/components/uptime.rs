@@ -16,7 +16,7 @@ pub struct Uptime {
 impl Component for Uptime {
     async fn print(self: Box<Self>, _global_config: &GlobalConfig, _width: Option<usize>) {
         self.print_or_error()
-            .unwrap_or_else(|err| println!("Uptime error: {}", err));
+            .unwrap_or_else(|err| println!("Uptime error: {err}"));
         println!();
     }
     default_prepare!();

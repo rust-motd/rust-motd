@@ -14,7 +14,7 @@ pub struct LastRun {}
 impl Component for LastRun {
     async fn print(self: Box<Self>, global_config: &GlobalConfig, _width: Option<usize>) {
         self.print_or_error(global_config)
-            .unwrap_or_else(|err| println!("Last run error: {}", err));
+            .unwrap_or_else(|err| println!("Last run error: {err}"));
     }
     default_prepare!();
 }

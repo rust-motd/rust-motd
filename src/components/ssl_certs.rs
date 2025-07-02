@@ -38,7 +38,7 @@ pub struct SSLCerts {
 impl Component for SSLCerts {
     async fn print(self: Box<Self>, global_config: &GlobalConfig, _width: Option<usize>) {
         self.print_or_error(global_config)
-            .unwrap_or_else(|err| println!("SSL Certificate error: {}", err));
+            .unwrap_or_else(|err| println!("SSL Certificate error: {err}"));
         println!();
     }
     default_prepare!();

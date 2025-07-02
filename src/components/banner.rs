@@ -18,7 +18,7 @@ pub struct Banner {
 impl Component for Banner {
     async fn print(self: Box<Self>, _global_config: &GlobalConfig, _width: Option<usize>) {
         self.print_or_error()
-            .unwrap_or_else(|err| println!("Banner error: {}", err));
+            .unwrap_or_else(|err| println!("Banner error: {err}"));
         println!();
     }
     default_prepare!();

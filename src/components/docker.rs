@@ -21,7 +21,7 @@ impl Component for Docker {
         println!("Docker:");
         self.print_or_error()
             .await
-            .unwrap_or_else(|err| println!("Docker status error: {}", err));
+            .unwrap_or_else(|err| println!("Docker status error: {err}"));
         println!();
     }
     default_prepare!();
