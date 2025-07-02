@@ -51,7 +51,7 @@ struct PreparedFilesystems {
 impl Component for PreparedFilesystems {
     async fn print(self: Box<Self>, global_config: &GlobalConfig, _width: Option<usize>) {
         self.print_or_error(global_config).unwrap_or_else(|err| {
-            println!("Filesystem error: {}", err);
+            println!("Filesystem error: {err}");
         });
         println!();
     }
@@ -106,7 +106,7 @@ fn print_row<'a>(items: [&str; 6], column_sizes: impl IntoIterator<Item = &'a us
             items
                 .iter()
                 .zip(column_sizes.into_iter())
-                .map(|(name, size)| format!("{: <size$}", name, size = size)),
+                .map(|(name, size)| format!("{name: <size$}")),
             " ".repeat(INDENT_WIDTH)
         )
         .collect::<String>()

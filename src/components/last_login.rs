@@ -24,7 +24,7 @@ pub struct LastLogin {
 impl Component for LastLogin {
     async fn print(self: Box<Self>, global_config: &GlobalConfig, _width: Option<usize>) {
         self.print_or_error(global_config)
-            .unwrap_or_else(|err| println!("Last login error: {}", err));
+            .unwrap_or_else(|err| println!("Last login error: {err}"));
         println!();
     }
     default_prepare!();
@@ -115,8 +115,8 @@ impl LastLogin {
                     });
                     for entry in formatted_entries {
                         match entry {
-                            Ok(x) => println!("{}", x),
-                            Err(err) => println!("{}", err),
+                            Ok(x) => println!("{x}"),
+                            Err(err) => println!("{err}"),
                         }
                     }
                 }

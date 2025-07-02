@@ -22,7 +22,7 @@ impl Component for ServiceStatus {
     async fn print(self: Box<Self>, _global_config: &GlobalConfig, _width: Option<usize>) {
         println!("System Services:");
         print_or_error(&self.services, false)
-            .unwrap_or_else(|err| println!("Service status error: {}", err));
+            .unwrap_or_else(|err| println!("Service status error: {err}"));
         println!();
     }
     default_prepare!();
@@ -33,7 +33,7 @@ impl Component for UserServiceStatus {
     async fn print(self: Box<Self>, _global_config: &GlobalConfig, _width: Option<usize>) {
         println!("User Services:");
         print_or_error(&self.services, true)
-            .unwrap_or_else(|err| println!("User service status error: {}", err));
+            .unwrap_or_else(|err| println!("User service status error: {err}"));
         println!();
     }
     default_prepare!();

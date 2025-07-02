@@ -19,7 +19,7 @@ pub struct Fail2Ban {
 impl Component for Fail2Ban {
     async fn print(self: Box<Self>, _global_config: &GlobalConfig, _width: Option<usize>) {
         self.print_or_error()
-            .unwrap_or_else(|err| println!("Fail2Ban error: {}", err));
+            .unwrap_or_else(|err| println!("Fail2Ban error: {err}"));
         println!();
     }
     default_prepare!();

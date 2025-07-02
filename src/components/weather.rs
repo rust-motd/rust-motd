@@ -36,7 +36,7 @@ impl Default for Timeout {
 impl Component for Weather {
     async fn print(self: Box<Self>, _global_config: &GlobalConfig, _width: Option<usize>) {
         self.print_or_error()
-            .unwrap_or_else(|err| println!("Weather error: {}", err));
+            .unwrap_or_else(|err| println!("Weather error: {err}"));
         println!();
     }
     default_prepare!();

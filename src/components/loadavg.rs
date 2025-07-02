@@ -24,7 +24,7 @@ pub struct LoadAvg {
 impl Component for LoadAvg {
     async fn print(self: Box<Self>, _global_config: &GlobalConfig, _width: Option<usize>) {
         self.print_or_error()
-            .unwrap_or_else(|err| println!("LoadAvg error: {}", err));
+            .unwrap_or_else(|err| println!("LoadAvg error: {err}"));
         println!();
     }
     default_prepare!();
@@ -45,7 +45,7 @@ impl Display for LoadValue {
         } else {
             color::Fg(color::Green).to_string()
         };
-        write!(f, "{}", color)?;
+        write!(f, "{color}")?;
         self.load.fmt(f)?;
         write!(f, "{}", style::Reset)?;
         Ok(())
