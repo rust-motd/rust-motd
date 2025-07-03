@@ -61,6 +61,11 @@ components {
   //   container display-name="Nginx" docker-name="/nginx-nginx-1"
   // }
 
+  // docker-compose {
+  //   // Supports ~ expansion and normalization
+  //   stack path="~/code/rust_motd/../rust_motd" display-name="Rust Motd"
+  // }
+
   // command "echo You can specify every component as many times as you want"
   // command "echo The order in the configuration file controls the order they are printed"
 }
