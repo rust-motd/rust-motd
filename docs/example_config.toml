@@ -53,3 +53,7 @@ threshold = 0.01
 
 [docker]
 "/nginx-nginx-1" = "Nginx"
+
+[docker_compose]
+# Supports ~ expansion and normalization
+"~/code/rust_motd/../rust_motd" = "Rust Motd"

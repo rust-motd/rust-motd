@@ -6,6 +6,7 @@ use thiserror::Error;
 use crate::components::cg_stats::CgStats;
 use crate::components::command::Command;
 use crate::components::docker::{Docker, DockerContainer};
+use crate::components::docker_compose::{ComposeStack, DockerCompose};
 use crate::components::fail_2_ban::Fail2Ban;
 use crate::components::filesystem::{Filesystems, Mount};
 use crate::components::last_login::{LastLogin, User};
@@ -30,6 +31,7 @@ enum Fields {
     Command,
     CgStats,
     Docker,
+    DockerCompose,
     #[serde(rename = "fail_2_ban")]
     Fail2Ban,
     Filesystems,
@@ -100,6 +102,15 @@ impl<'de> Deserialize<'de> for Config {
                                         docker_name,
                                         display_name,
                                     })
+                                    .collect(),
+                            }));
+                        }
+                        Fields::DockerCompose => {
+                            result.components.push(Box::new(DockerCompose {
+                                stacks: map
+                                    .next_value::<IndexMap<String, String>>()?
+                                    .into_iter()
+                                    .map(|(path, display_name)| ComposeStack { path, display_name })
                                     .collect(),
                             }));
                         }

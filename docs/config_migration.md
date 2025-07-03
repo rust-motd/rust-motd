@@ -204,3 +204,16 @@ docker {
   container display-name="Nginx" docker-name="/nginx-nginx-1"
 }
 ```
+
+## Docker Compose
+
+```toml
+[docker_compose]
+"~/code/rust_motd/../rust_motd" = "Rust Motd"
+```
+
+```kdl
+docker-compose {
+  stack path="~/code/rust_motd/../rust_motd" display-name="Rust Motd"
+}
+```

@@ -46,9 +46,39 @@ pub fn new_docker() -> DockerResult<DockerAPI> {
     DockerAPI::new("tcp://127.0.0.1:8080")
 }
 
-struct Container {
-    summary: ContainerSummary,
-    name: String,
+pub struct Container {
+    pub summary: ContainerSummary,
+    pub name: String,
+}
+
+pub fn print_containers(containers: Vec<Container>, indent_width: usize) {
+    // Max length of all the container names (first column)
+    // to determine the padding
+    let max_len = containers
+        .iter()
+        .map(|container| container.name.len())
+        .max()
+        .unwrap_or(0);
+
+    for container in containers {
+        let status_color = match container.summary.state.map(|s| s.to_lowercase()).as_deref() {
+            Some("created") | Some("restarting") | Some("paused") | Some("removing")
+            | Some("configured") => color::Fg(color::Yellow).to_string(),
+            Some("running") => color::Fg(color::Green).to_string(),
+            Some("exited") => color::Fg(color::LightBlack).to_string(),
+            Some("dead") => color::Fg(color::Red).to_string(),
+            _ => color::Fg(color::White).to_string(),
+        };
+        println!(
+            "{indent}{name}: {padding}{color}{status}{reset}",
+            indent = " ".repeat(indent_width),
+            name = container.name,
+            padding = " ".repeat(max_len - container.name.len()),
+            color = status_color,
+            status = container.summary.status.unwrap_or(String::from("?")),
+            reset = style::Reset,
+        );
+    }
 }
 
 impl Docker {
@@ -95,33 +125,7 @@ impl Docker {
             )
             .collect();
 
-        // Max length of all the container names (first column)
-        // to determine the padding
-        if let Some(max_len) = containers
-            .iter()
-            .map(|container| container.name.len())
-            .max()
-        {
-            for container in containers {
-                let status_color = match container.summary.state.as_deref() {
-                    Some("Created") | Some("Restarting") | Some("Paused") | Some("Removing")
-                    | Some("Configured") => color::Fg(color::Yellow).to_string(),
-                    Some("Running") => color::Fg(color::Green).to_string(),
-                    Some("Exited") => color::Fg(color::LightBlack).to_string(),
-                    Some("Dead") => color::Fg(color::Red).to_string(),
-                    _ => color::Fg(color::White).to_string(),
-                };
-                println!(
-                    "{indent}{name}: {padding}{color}{status}{reset}",
-                    indent = " ".repeat(INDENT_WIDTH),
-                    name = container.name,
-                    padding = " ".repeat(max_len - container.name.len()),
-                    color = status_color,
-                    status = container.summary.status.unwrap_or(String::from("?")),
-                    reset = style::Reset,
-                );
-            }
-        }
+        print_containers(containers, INDENT_WIDTH);
 
         Ok(())
     }

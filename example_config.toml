@@ -24,6 +24,9 @@ command = "echo This is the legacy configuration format. See https://github.com/
 # "/nextcloud-nextcloud-1" = "Nextcloud"
 # "/nextcloud-nextcloud-mariadb-1" = "Nextcloud Database"
 
+# [docker_compose]
+# "~/code/rust_motd/../rust_motd" = "Rust Motd"
+
 # [uptime]
 # prefix = "Up"
 

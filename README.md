@@ -166,6 +166,24 @@ Properties of `container`:
 - `docker-name`: The internal docker name (`NAMES` column of `docker ps`). Containers can have multiple names, and the container is selected if any of the names match.
 The key **must** start with a `/` for internal containers (please see [here](https://github.com/moby/moby/issues/6705)).
 
+### Docker Compose Status
+
+Displays the status of all docker containers in a compose stack.
+
+Example:
+```kdl
+docker-compose {
+  stack display-name="Nginx" path="~/docker/nginx"
+}
+```
+
+Children:
+- `stack`: Specify once for each stack.
+
+Properties of `stack`:
+- `display-name`: The pretty name of the stack.
+- `path`: The path to the parent directory of the `docker-compose.yml` file. Supports `~` expansion.
+
 ### Uptime
 
 Displays the uptime.
