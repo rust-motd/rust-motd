@@ -5,6 +5,7 @@ use crate::component::BoxedComponent;
 use crate::components::cg_stats::CgStats;
 use crate::components::command::Command;
 use crate::components::docker::Docker;
+use crate::components::docker_compose::DockerCompose;
 use crate::components::fail_2_ban::Fail2Ban;
 use crate::components::filesystem::Filesystems;
 use crate::components::last_login::LastLogin;
@@ -25,6 +26,7 @@ pub enum ComponentNode {
     Command(Command),
     CgStats(CgStats),
     Docker(Docker),
+    DockerCompose(DockerCompose),
     Fail2ban(Fail2Ban),
     Filesystems(Filesystems),
     LastLogin(LastLogin),
@@ -81,6 +83,7 @@ pub fn parse_kdl(config_path: &Path, config_str: &str) -> Result<Config, KdlConf
                 ComponentNode::Command(command) => Box::new(command) as BoxedComponent,
                 ComponentNode::CgStats(stats) => Box::new(stats) as BoxedComponent,
                 ComponentNode::Docker(docker) => Box::new(docker) as BoxedComponent,
+                ComponentNode::DockerCompose(compose) => Box::new(compose) as BoxedComponent,
                 ComponentNode::Fail2ban(fail2ban) => Box::new(fail2ban) as BoxedComponent,
                 ComponentNode::Filesystems(filesystems) => Box::new(filesystems) as BoxedComponent,
                 ComponentNode::LastLogin(last_login) => Box::new(last_login) as BoxedComponent,

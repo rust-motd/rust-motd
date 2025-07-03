@@ -1,6 +1,7 @@
 pub mod cg_stats;
 pub mod command;
 pub mod docker;
+pub mod docker_compose;
 pub mod fail_2_ban;
 pub mod filesystem;
 pub mod last_login;
