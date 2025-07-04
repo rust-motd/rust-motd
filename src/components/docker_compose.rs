@@ -6,7 +6,7 @@ use std::fs;
 use termion::{color, style};
 
 use crate::component::Component;
-use crate::components::docker::{new_docker, print_containers, Container};
+use crate::components::docker::{init_api, print_containers, Container, DEFAULT_SOCKET};
 use crate::config::global_config::GlobalConfig;
 use crate::default_prepare;
 
@@ -38,14 +38,14 @@ impl Component for DockerCompose {
 
 impl DockerCompose {
     pub async fn print_or_error(&self) -> Result<(), Box<dyn std::error::Error>> {
-        let docker = new_docker()?;
+        let api = init_api(DEFAULT_SOCKET)?;
 
         for ComposeStack { path, display_name } in self.stacks.iter() {
             let path = fs::canonicalize(&*shellexpand::tilde(path))?
                 .to_string_lossy()
                 .to_string();
 
-            let containers = docker
+            let containers = api
                 .containers()
                 .list(
                     &ContainerListOpts::builder()
