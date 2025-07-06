@@ -5,6 +5,7 @@
 - Add support for KDL configuration (legacy TOML support is maintained) (#37)
 - Rename "banner" component to "command"
 - Add support for docker compose component (#30)
+- Add support for using a different Docker API socket (#34)
 
 ## [1.1.1] 2025-06-18
 

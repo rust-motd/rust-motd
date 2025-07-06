@@ -6,9 +6,11 @@ use std::fs;
 use termion::{color, style};
 
 use crate::component::Component;
-use crate::components::docker::{new_docker, print_containers, Container};
+use crate::components::docker::{init_api, print_containers, Container, DEFAULT_SOCKET};
 use crate::config::global_config::GlobalConfig;
 use crate::default_prepare;
+
+const DEFAULT_TITLE: &str = "Docker Compose";
 
 #[derive(knus::Decode, Debug)]
 pub struct ComposeStack {
@@ -22,30 +24,44 @@ pub struct ComposeStack {
 pub struct DockerCompose {
     #[knus(children(name = "stack"))]
     pub stacks: Vec<ComposeStack>,
+
+    #[knus(property, default=DEFAULT_TITLE.into())]
+    pub title: String,
+
+    #[knus(property, default=DEFAULT_SOCKET.into())]
+    pub socket: String,
 }
 
 #[async_trait]
 impl Component for DockerCompose {
     async fn print(self: Box<Self>, _global_config: &GlobalConfig, _width: Option<usize>) {
-        println!("Docker Compose:");
+        println!("{}:", self.title);
         self.print_or_error()
             .await
-            .unwrap_or_else(|err| println!("Docker Compose status error: {err}"));
+            .unwrap_or_else(|err| println!("{} status error: {}", self.title, err));
         println!();
     }
     default_prepare!();
 }
 
 impl DockerCompose {
+    pub fn new(stacks: Vec<ComposeStack>) -> Self {
+        DockerCompose {
+            title: DEFAULT_TITLE.into(),
+            socket: DEFAULT_SOCKET.to_string(),
+            stacks,
+        }
+    }
+
     pub async fn print_or_error(&self) -> Result<(), Box<dyn std::error::Error>> {
-        let docker = new_docker()?;
+        let api = init_api(&self.socket)?;
 
         for ComposeStack { path, display_name } in self.stacks.iter() {
             let path = fs::canonicalize(&*shellexpand::tilde(path))?
                 .to_string_lossy()
                 .to_string();
 
-            let containers = docker
+            let containers = api
                 .containers()
                 .list(
                     &ContainerListOpts::builder()
