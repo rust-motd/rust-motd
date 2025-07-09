@@ -18,7 +18,7 @@ pub struct Constraints {
 }
 
 /// This trait should be implemented for all components
-/// (component being all the things the motd can print like banner, memory, etc.).
+/// (component being all the things the motd can print like command, memory, etc.).
 #[async_trait]
 pub trait Component {
     /// Prepare the component and return its sizing constraints

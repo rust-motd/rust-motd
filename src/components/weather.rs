@@ -9,27 +9,29 @@ use crate::component::Component;
 use crate::config::global_config::GlobalConfig;
 use crate::default_prepare;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, knus::Decode)]
 pub struct Weather {
+    #[knus(property)]
     url: Option<String>,
+    #[knus(property)]
     user_agent: Option<String>,
+    #[knus(property)]
     proxy: Option<String>,
 
+    #[knus(property, default="".into())]
     #[serde(default = "String::new")]
     loc: String,
 
+    #[knus(property)]
     style: Option<WeatherStyle>,
 
-    #[serde(default)]
-    timeout: Timeout,
+    #[knus(property, default = 5)]
+    #[serde(default = "default_timeout")]
+    timeout: u64,
 }
 
-#[derive(Deserialize, Debug)]
-struct Timeout(u64);
-impl Default for Timeout {
-    fn default() -> Self {
-        Timeout(5)
-    }
+fn default_timeout() -> u64 {
+    5
 }
 
 #[async_trait]
@@ -42,7 +44,7 @@ impl Component for Weather {
     default_prepare!();
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, knus::DecodeScalar)]
 enum WeatherStyle {
     #[serde(alias = "oneline")]
     Oneline,
@@ -86,7 +88,7 @@ impl Weather {
             .proxy
             .map_or(Ok(None), |proxy| ureq::Proxy::new(&proxy).map(Some))?;
         let config = ureq::Agent::config_builder()
-            .timeout_global(Some(Duration::from_secs(self.timeout.0)))
+            .timeout_global(Some(Duration::from_secs(self.timeout)))
             .proxy(proxy)
             .build();
         let agent = ureq::Agent::new_with_config(config);

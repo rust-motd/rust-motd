@@ -1,6 +1,5 @@
 use async_trait::async_trait;
 use chrono::{DateTime, Duration, Utc};
-use indexmap::IndexMap;
 use openssl::asn1::Asn1Time;
 use openssl::x509::X509;
 use serde::Deserialize;
@@ -16,7 +15,7 @@ use crate::default_prepare;
 
 const SECS_PER_DAY: i64 = 24 * 60 * 60;
 
-#[derive(Debug, Deserialize, Default)]
+#[derive(knus::DecodeScalar, Debug, Deserialize, Default)]
 enum SortMethod {
     #[serde(alias = "alphabetical")] // Alias used to match lowercase spelling as well
     Alphabetical,
@@ -27,11 +26,22 @@ enum SortMethod {
     Manual,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(knus::Decode, Debug, Deserialize)]
+pub struct Cert {
+    #[knus(property)]
+    pub name: String,
+    #[knus(property)]
+    pub path: String,
+}
+
+#[derive(knus::Decode, Debug, Deserialize)]
 pub struct SSLCerts {
     #[serde(default)]
+    #[knus(property, default)]
     sort_method: SortMethod,
-    certs: IndexMap<String, String>,
+    #[knus(children(name = "cert"))]
+    #[serde(deserialize_with = "crate::config::toml_config::deserialize_certs")]
+    certs: Vec<Cert>,
 }
 
 #[async_trait]
@@ -64,7 +74,7 @@ impl SSLCerts {
         let mut cert_infos: Vec<CertInfo> = Vec::new();
 
         println!("SSL Certificates:");
-        for (name, path) in self.certs {
+        for Cert { name, path } in self.certs {
             let cert = File::open(&path)?;
             let cert = BufReader::new(cert);
             let cert: Vec<u8> = cert.bytes().collect::<Result<_, _>>()?;

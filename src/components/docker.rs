@@ -3,7 +3,6 @@ use async_trait::async_trait;
 use docker_api::models::ContainerSummary;
 use docker_api::opts::ContainerListOpts;
 use docker_api::{Docker as DockerAPI, Result as DockerResult};
-use indexmap::IndexMap;
 use std::collections::HashMap;
 use termion::{color, style};
 
@@ -11,8 +10,18 @@ use crate::component::Component;
 use crate::config::global_config::GlobalConfig;
 use crate::default_prepare;
 
+#[derive(knus::Decode, Debug)]
+pub struct DockerContainer {
+    #[knus(property)]
+    pub docker_name: String,
+    #[knus(property)]
+    pub display_name: String,
+}
+
+#[derive(knus::Decode, Debug)]
 pub struct Docker {
-    pub containers: IndexMap<String, String>,
+    #[knus(children(name = "container"))]
+    pub containers: Vec<DockerContainer>,
 }
 
 #[async_trait]
@@ -67,7 +76,7 @@ impl Docker {
             .containers
             .iter()
             .filter_map(
-                |(docker_name, display_name)| match summary_hash.get(docker_name) {
+                |DockerContainer { docker_name, display_name }| match summary_hash.get(docker_name) {
                     Some(&summary) => Some(Container {
                         name: display_name.clone(),
                         summary: summary.clone(),

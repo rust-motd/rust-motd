@@ -7,8 +7,9 @@ use crate::component::Component;
 use crate::config::global_config::GlobalConfig;
 use crate::default_prepare;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, knus::Decode)]
 pub struct Uptime {
+    #[knus(property, default="Up".into())]
     prefix: String,
 }
 
