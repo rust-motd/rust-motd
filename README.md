@@ -158,6 +158,10 @@ docker {
 }
 ```
 
+Properties:
+- `socket`: The socket to use. Allows connecting to the Podman daemon instead of Docker, for example, by setting `socket="unix:///run/user/1000/podman/podman.sock"`. The default is the docker socket.
+- `title`: Allows changing the title of the component. For example, you may want to change it to `Podman` if you use the Podman socket. The default is `Docker`.
+
 Children:
 - `container`: Specify once for each service.
 
@@ -176,6 +180,10 @@ docker-compose {
   stack display-name="Nginx" path="~/docker/nginx"
 }
 ```
+
+Properties:
+- `socket`: The socket to use. Allows connecting to the Podman daemon instead of Docker, for example, by setting `socket="unix:///run/user/1000/podman/podman.sock"`. The default is the docker socket.
+- `title`: Allows changing the title of the component. For example, you may want to change it to `Podman` if you use the Podman socket. The default is `Docker`.
 
 Children:
 - `stack`: Specify once for each stack.

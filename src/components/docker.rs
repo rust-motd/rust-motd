@@ -10,6 +10,14 @@ use crate::component::Component;
 use crate::config::global_config::GlobalConfig;
 use crate::default_prepare;
 
+#[cfg(unix)]
+pub const DEFAULT_SOCKET: &str = "unix:///var/run/docker.sock";
+
+#[cfg(not(unix))]
+pub const DEFAULT_SOCKET: &str = "tcp://127.0.0.1:8080";
+
+const DEFAULT_TITLE: &str = "Docker";
+
 #[derive(knus::Decode, Debug)]
 pub struct DockerContainer {
     #[knus(property)]
@@ -22,12 +30,18 @@ pub struct DockerContainer {
 pub struct Docker {
     #[knus(children(name = "container"))]
     pub containers: Vec<DockerContainer>,
+
+    #[knus(property, default=DEFAULT_TITLE.into())]
+    pub title: String,
+
+    #[knus(property, default=DEFAULT_SOCKET.into())]
+    pub socket: String,
 }
 
 #[async_trait]
 impl Component for Docker {
     async fn print(self: Box<Self>, _global_config: &GlobalConfig, _width: Option<usize>) {
-        println!("Docker:");
+        println!("{}:", self.title);
         self.print_or_error()
             .await
             .unwrap_or_else(|err| println!("Docker status error: {err}"));
@@ -36,19 +50,13 @@ impl Component for Docker {
     default_prepare!();
 }
 
-#[cfg(unix)]
-pub fn new_docker() -> DockerResult<DockerAPI> {
-    Ok(DockerAPI::unix("/var/run/docker.sock"))
-}
-
-#[cfg(not(unix))]
-pub fn new_docker() -> DockerResult<DockerAPI> {
-    DockerAPI::new("tcp://127.0.0.1:8080")
-}
-
 pub struct Container {
     pub summary: ContainerSummary,
     pub name: String,
+}
+
+pub fn init_api(socket: &str) -> DockerResult<DockerAPI> {
+    DockerAPI::new(socket)
 }
 
 pub fn print_containers(containers: Vec<Container>, indent_width: usize) {
@@ -82,11 +90,19 @@ pub fn print_containers(containers: Vec<Container>, indent_width: usize) {
 }
 
 impl Docker {
+    pub fn new(containers: Vec<DockerContainer>) -> Self {
+        Docker {
+            title: DEFAULT_TITLE.into(),
+            socket: DEFAULT_SOCKET.to_string(),
+            containers,
+        }
+    }
+
     pub async fn print_or_error(&self) -> Result<(), Box<dyn std::error::Error>> {
-        let docker = new_docker()?;
+        let api = init_api(&self.socket)?;
 
         // Get all containers from library
-        let container_summaries = docker
+        let container_summaries = api
             .containers()
             .list(&ContainerListOpts::builder().all(true).build())
             .await?;
@@ -113,7 +129,7 @@ impl Docker {
                     }),
                     None => {
                         println!(
-                            "{indent}{color}Warning: Could not find Docker container `{docker_name}'{reset}",
+                            "{indent}{color}Warning: Could not find container `{docker_name}'{reset}",
                             indent = " ".repeat(INDENT_WIDTH),
                             color = color::Fg(color::Yellow),
                             docker_name = docker_name,

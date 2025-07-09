@@ -29,10 +29,6 @@ jobs:
           echo "old=$OLD_VERSION" >> $GITHUB_OUTPUT
           echo "new=$NEW_VERSION" >> $GITHUB_OUTPUT
 
-      - name: Check if version changed
-        if: steps.version.outputs.old != steps.version.outputs.new
-        run: echo "Version changed from ${{ steps.version.outputs.old }} to ${{ steps.version.outputs.new }}"
-
       - name: Extract release notes
         if: steps.version.outputs.old != steps.version.outputs.new
         id: changelog

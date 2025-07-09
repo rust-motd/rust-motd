@@ -94,25 +94,23 @@ impl<'de> Deserialize<'de> for Config {
                                 .push(Box::new(map.next_value::<CgStats>()?));
                         }
                         Fields::Docker => {
-                            result.components.push(Box::new(Docker {
-                                containers: map
-                                    .next_value::<IndexMap<String, String>>()?
+                            result.components.push(Box::new(Docker::new(
+                                map.next_value::<IndexMap<String, String>>()?
                                     .into_iter()
                                     .map(|(docker_name, display_name)| DockerContainer {
                                         docker_name,
                                         display_name,
                                     })
                                     .collect(),
-                            }));
+                            )));
                         }
                         Fields::DockerCompose => {
-                            result.components.push(Box::new(DockerCompose {
-                                stacks: map
-                                    .next_value::<IndexMap<String, String>>()?
+                            result.components.push(Box::new(DockerCompose::new(
+                                map.next_value::<IndexMap<String, String>>()?
                                     .into_iter()
                                     .map(|(path, display_name)| ComposeStack { path, display_name })
                                     .collect(),
-                            }));
+                            )));
                         }
                         Fields::Fail2Ban => {
                             result
