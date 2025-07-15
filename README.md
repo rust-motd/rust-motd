@@ -231,8 +231,8 @@ Displays information about filesystems and a bar showing the used space.
 Example:
 ```kdl
 filesystems {
-  filesystem filesystem-name="root" mount-point="/"
-  filesystem filesystem-name="home" mount-point="/home"
+  filesystem name="root" mount-point="/"
+  filesystem name="home" mount-point="/home"
 }
 ```
 
@@ -414,7 +414,7 @@ You can create a script like this (`/etc/update-motd.d/99-rust-motd`) :
 
 ```bash
 #!/usr/bin/env bash
-rust-motd /etc/rust-motd.toml
+rust-motd /etc/rust-motd.kdl
 ```
 
 Don't forget to make the script executable.
@@ -433,7 +433,7 @@ session optional pam_exec.so /usr/local/bin/update-motd
 And in the script `/usr/local/bin/update-motd`, put:
 ```bash
 #!/usr/bin/env bash
-rust-motd /etc/rust-motd.toml > /etc/motd
+rust-motd /etc/rust-motd.kdl > /etc/motd
 ```
 
 > [!IMPORTANT]
