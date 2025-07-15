@@ -1,4 +1,3 @@
-use crate::constants::INDENT_WIDTH;
 use async_trait::async_trait;
 use docker_api::opts::{ContainerFilter, ContainerListOpts};
 use shellexpand;
@@ -8,6 +7,7 @@ use termion::{color, style};
 use crate::component::Component;
 use crate::components::docker::{init_api, print_containers, Container, DEFAULT_SOCKET};
 use crate::config::global_config::GlobalConfig;
+use crate::constants::INDENT_WIDTH;
 use crate::default_prepare;
 
 const DEFAULT_TITLE: &str = "Docker Compose";
@@ -30,6 +30,14 @@ pub struct DockerCompose {
 
     #[knus(property, default=DEFAULT_SOCKET.into())]
     pub socket: String,
+}
+
+struct PreparedStack {
+    display_name: String,
+
+    max_container_name: usize,
+
+    containers: Vec<Container>,
 }
 
 #[async_trait]
@@ -56,6 +64,8 @@ impl DockerCompose {
     pub async fn print_or_error(&self) -> Result<(), Box<dyn std::error::Error>> {
         let api = init_api(&self.socket)?;
 
+        let mut prepared_stacks: Vec<PreparedStack> = vec![];
+
         for ComposeStack { path, display_name } in self.stacks.iter() {
             let path = fs::canonicalize(&*shellexpand::tilde(path))?
                 .to_string_lossy()
@@ -78,13 +88,14 @@ impl DockerCompose {
                 println!(
                     "{indent}{display_name}: {color}Not found{reset}",
                     indent = " ".repeat(INDENT_WIDTH * 2),
+                    display_name = display_name.clone(),
                     color = color::Fg(color::Yellow),
                     reset = style::Reset,
                 );
                 continue;
             }
 
-            let containers = containers
+            let containers: Vec<Container> = containers
                 .into_iter()
                 .map(|container| {
                     let name = container
@@ -109,8 +120,36 @@ impl DockerCompose {
                 })
                 .collect();
 
-            println!("{indent}{display_name}:", indent = " ".repeat(INDENT_WIDTH));
-            print_containers(containers, 2 * INDENT_WIDTH);
+            let max_container_name = containers
+                .iter()
+                .map(|container| container.name.len())
+                .max()
+                .unwrap_or(0);
+
+            prepared_stacks.push(PreparedStack {
+                display_name: display_name.clone(),
+                max_container_name,
+                containers,
+            });
+        }
+
+        let max_container_name = prepared_stacks
+            .iter()
+            .map(|stack| stack.max_container_name)
+            .max()
+            .unwrap_or(0);
+
+        for prepared_stack in prepared_stacks.into_iter() {
+            println!(
+                "{indent}{}:",
+                prepared_stack.display_name,
+                indent = " ".repeat(INDENT_WIDTH)
+            );
+            print_containers(
+                prepared_stack.containers,
+                2 * INDENT_WIDTH,
+                max_container_name,
+            );
         }
 
         Ok(())
