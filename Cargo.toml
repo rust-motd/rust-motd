@@ -29,14 +29,14 @@ openssl = { version = "0.10.73", features = ["vendored"] }
 regex = "1.11.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_plain = "1.0.2"
+shellexpand = "3.1.1"
 systemstat = "0.2.4"
 termion = "4.0.5"
 thiserror = "2.0.12"
 time = "0.3.41"
 tokio = { version = "1.45.1", features = ["full"] }
 toml = "0.8"
-ureq = "3.0.12"
 unicode-ellipsis = "0.3.0"
-shellexpand = "3.1.1"
+ureq = "3.0.12"
 
 [package.metadata.bundle]

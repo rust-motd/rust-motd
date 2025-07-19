@@ -1,5 +1,9 @@
 # Changelog
 
+## [Unreleased]
+
+- Fix alignment of statuses in docker compose output
+
 ## [2.0.0] 2025-07-09
 
 - Add support for KDL configuration (legacy TOML support is maintained) (#37)

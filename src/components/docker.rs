@@ -59,15 +59,7 @@ pub fn init_api(socket: &str) -> DockerResult<DockerAPI> {
     DockerAPI::new(socket)
 }
 
-pub fn print_containers(containers: Vec<Container>, indent_width: usize) {
-    // Max length of all the container names (first column)
-    // to determine the padding
-    let max_len = containers
-        .iter()
-        .map(|container| container.name.len())
-        .max()
-        .unwrap_or(0);
-
+pub fn print_containers(containers: Vec<Container>, indent_width: usize, padding: usize) {
     for container in containers {
         let status_color = match container.summary.state.map(|s| s.to_lowercase()).as_deref() {
             Some("created") | Some("restarting") | Some("paused") | Some("removing")
@@ -81,7 +73,7 @@ pub fn print_containers(containers: Vec<Container>, indent_width: usize) {
             "{indent}{name}: {padding}{color}{status}{reset}",
             indent = " ".repeat(indent_width),
             name = container.name,
-            padding = " ".repeat(max_len - container.name.len()),
+            padding = " ".repeat(padding - container.name.len()),
             color = status_color,
             status = container.summary.status.unwrap_or(String::from("?")),
             reset = style::Reset,
@@ -141,7 +133,15 @@ impl Docker {
             )
             .collect();
 
-        print_containers(containers, INDENT_WIDTH);
+        // Max length of all the container names (first column)
+        // to determine the padding
+        let max_container_name = containers
+            .iter()
+            .map(|container| container.name.len())
+            .max()
+            .unwrap_or(0);
+
+        print_containers(containers, INDENT_WIDTH, max_container_name);
 
         Ok(())
     }
