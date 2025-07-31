@@ -50,6 +50,7 @@ impl Component for Docker {
     default_prepare!();
 }
 
+#[derive(Debug)]
 pub struct Container {
     pub summary: ContainerSummary,
     pub name: String,
@@ -59,16 +60,28 @@ pub fn init_api(socket: &str) -> DockerResult<DockerAPI> {
     DockerAPI::new(socket)
 }
 
+pub fn state_to_color(state: &str) -> String {
+    match state {
+        "created" | "restarting" | "paused" | "removing" | "configured" => {
+            color::Fg(color::Yellow).to_string()
+        }
+        "running" => color::Fg(color::Green).to_string(),
+        "exited" => color::Fg(color::LightBlack).to_string(),
+        "dead" => color::Fg(color::Red).to_string(),
+        _ => color::Fg(color::White).to_string(),
+    }
+}
+
 pub fn print_containers(containers: Vec<Container>, indent_width: usize, padding: usize) {
     for container in containers {
-        let status_color = match container.summary.state.map(|s| s.to_lowercase()).as_deref() {
-            Some("created") | Some("restarting") | Some("paused") | Some("removing")
-            | Some("configured") => color::Fg(color::Yellow).to_string(),
-            Some("running") => color::Fg(color::Green).to_string(),
-            Some("exited") => color::Fg(color::LightBlack).to_string(),
-            Some("dead") => color::Fg(color::Red).to_string(),
-            _ => color::Fg(color::White).to_string(),
-        };
+        let status_color = state_to_color(
+            container
+                .summary
+                .state
+                .map(|s| s.to_lowercase())
+                .as_deref()
+                .unwrap_or(""),
+        );
         println!(
             "{indent}{name}: {padding}{color}{status}{reset}",
             indent = " ".repeat(indent_width),
