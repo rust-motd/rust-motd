@@ -30,7 +30,6 @@ jobs:
           echo "new=$NEW_VERSION" >> $GITHUB_OUTPUT
 
       - name: Extract release notes
-        if: steps.version.outputs.old != steps.version.outputs.new
         id: changelog
         run: |
           VERSION="${{ steps.version.outputs.new }}"
@@ -66,7 +65,6 @@ jobs:
         run: ls -lha target/{debian,cargo-aur}
 
       - name: Create tag and release
-        if: steps.version.outputs.old != steps.version.outputs.new
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ steps.version.outputs.new }}
@@ -79,7 +77,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish AUR package
-        if: steps.version.outputs.old != steps.version.outputs.new
         uses: KSXGitHub/github-actions-deploy-aur@v4.1.1
         with:
           pkgname: rust-motd-bin
@@ -90,7 +87,6 @@ jobs:
           commit_message: Increase version to v${{ steps.version.outputs.new }}
 
       - name: Publish AUR package
-        if: steps.version.outputs.old != steps.version.outputs.new
         uses: KSXGitHub/github-actions-deploy-aur@v4.1.1
         with:
           pkgname: rust-motd

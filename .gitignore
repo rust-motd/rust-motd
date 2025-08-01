@@ -4,3 +4,4 @@
 *.crt
 cg_stats.toml
 .direnv
+PKGBUILD
