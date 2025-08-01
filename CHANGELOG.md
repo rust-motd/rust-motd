@@ -1,8 +1,9 @@
 # Changelog
 
-## [Unreleased]
+## [2.1.0] 2025-07-31
 
 - Fix alignment of statuses in docker compose output
+- Add "count" docker compose style
 
 ## [2.0.0] 2025-07-09
 

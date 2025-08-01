@@ -59,6 +59,8 @@ jobs:
           mv target/cargo-aur/rust-motd-${{ steps.version.outputs.new }}-{,archlinux-}x86_64.tar.gz
           sed -i 's/x86_64.tar.gz/archlinux-x86_64.tar.gz/' target/cargo-aur/PKGBUILD
           sha256sum target/cargo-aur/rust-motd-${{ steps.version.outputs.new }}-archlinux-x86_64.tar.gz > target/cargo-aur/rust-motd-${{ steps.version.outputs.new }}-archlinux-x86_64.tar.gz.sha256
+          # Update built from source package build
+          VERSION=${{ steps.version.outputs.new }} envsubst '${VERSION}' < PKGBUILD.template > PKGBUILD
 
       - name: List generated packages
         run: ls -lha target/{debian,cargo-aur}
@@ -85,4 +87,16 @@ jobs:
           commit_username: ${{ secrets.GIT_USERNAME }}
           commit_email: ${{ secrets.GIT_EMAIL }}
           ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
-          commit_message: Update AUR package
+          commit_message: Increase version to v${{ steps.version.outputs.new }}
+
+      - name: Publish AUR package
+        if: steps.version.outputs.old != steps.version.outputs.new
+        uses: KSXGitHub/github-actions-deploy-aur@v4.1.1
+        with:
+          pkgname: rust-motd
+          pkgbuild: ./PKGBUILD
+          commit_username: ${{ secrets.GIT_USERNAME }}
+          commit_email: ${{ secrets.GIT_EMAIL }}
+          ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+          commit_message: Increase version to v${{ steps.version.outputs.new }}
+          updpkgsums: true

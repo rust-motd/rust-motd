@@ -1,16 +1,26 @@
 use async_trait::async_trait;
 use docker_api::opts::{ContainerFilter, ContainerListOpts};
+use itertools::Itertools;
 use shellexpand;
 use std::fs;
 use termion::{color, style};
 
 use crate::component::Component;
-use crate::components::docker::{init_api, print_containers, Container, DEFAULT_SOCKET};
+use crate::components::docker::{
+    init_api, print_containers, state_to_color, Container, DEFAULT_SOCKET,
+};
 use crate::config::global_config::GlobalConfig;
 use crate::constants::INDENT_WIDTH;
 use crate::default_prepare;
 
 const DEFAULT_TITLE: &str = "Docker Compose";
+
+#[derive(knus::DecodeScalar, Debug, Default)]
+pub enum DockerComposeStyle {
+    #[default]
+    Count,
+    Full,
+}
 
 #[derive(knus::Decode, Debug)]
 pub struct ComposeStack {
@@ -30,8 +40,12 @@ pub struct DockerCompose {
 
     #[knus(property, default=DEFAULT_SOCKET.into())]
     pub socket: String,
+
+    #[knus(property, default=DockerComposeStyle::default())]
+    pub style: DockerComposeStyle,
 }
 
+#[derive(Debug)]
 struct PreparedStack {
     display_name: String,
 
@@ -39,6 +53,27 @@ struct PreparedStack {
 
     containers: Vec<Container>,
 }
+
+// Information for grouping similar states together (like created / restarting / paused ...)
+struct SimilarStates {
+    title: &'static str,
+    states: &'static [&'static str],
+}
+
+static SIMILAR_STATES: &[SimilarStates] = &[
+    SimilarStates {
+        title: "Running",
+        states: &["running"],
+    },
+    SimilarStates {
+        title: "Restarting",
+        states: &["restarting", "configured", "created"],
+    },
+    SimilarStates {
+        title: "Stopped",
+        states: &["exited", "dead", "paused", "removing"],
+    },
+];
 
 #[async_trait]
 impl Component for DockerCompose {
@@ -57,6 +92,7 @@ impl DockerCompose {
         DockerCompose {
             title: DEFAULT_TITLE.into(),
             socket: DEFAULT_SOCKET.to_string(),
+            style: DockerComposeStyle::default(),
             stacks,
         }
     }
@@ -139,6 +175,15 @@ impl DockerCompose {
             .max()
             .unwrap_or(0);
 
+        match self.style {
+            DockerComposeStyle::Full => self.print_full(prepared_stacks, max_container_name),
+            DockerComposeStyle::Count => self.print_count(prepared_stacks),
+        };
+
+        Ok(())
+    }
+
+    fn print_full(&self, prepared_stacks: Vec<PreparedStack>, max_container_name: usize) {
         for prepared_stack in prepared_stacks.into_iter() {
             println!(
                 "{indent}{}:",
@@ -151,7 +196,62 @@ impl DockerCompose {
                 max_container_name,
             );
         }
+    }
 
-        Ok(())
+    fn print_count(&self, prepared_stacks: Vec<PreparedStack>) {
+        let longest_display_name = prepared_stacks
+            .iter()
+            .map(|stack| stack.display_name.len())
+            .max()
+            .unwrap_or(0);
+
+        for prepared_stack in prepared_stacks.into_iter() {
+            let grouped = prepared_stack
+                .containers
+                .iter()
+                .map(|container| {
+                    (
+                        container
+                            .summary
+                            .state
+                            .clone()
+                            .unwrap_or("unknown".to_owned()),
+                        container,
+                    )
+                })
+                .into_group_map()
+                .into_iter()
+                .map(|(k, v)| (k, v.len()))
+                .collect::<std::collections::HashMap<String, usize>>();
+
+            let states = SIMILAR_STATES
+                .iter()
+                .flat_map(|similar_states| {
+                    let count = similar_states
+                        .states
+                        .iter()
+                        .map(|state| grouped.get(&**state).unwrap_or(&0))
+                        .sum::<usize>();
+                    if count == 0 {
+                        return None;
+                    }
+                    Some(format!(
+                        "{color}{count} {title}{reset}",
+                        color = state_to_color(similar_states.states[0]),
+                        title = similar_states.title,
+                        count = count,
+                        reset = style::Reset,
+                    ))
+                })
+                .join(" ");
+
+            println!(
+                "{indent}{name}:{padding} {states}",
+                indent = " ".repeat(INDENT_WIDTH),
+                name = prepared_stack.display_name,
+                padding = " ".repeat(longest_display_name - prepared_stack.display_name.len()),
+                states = states,
+            );
+        }
     }
 }
