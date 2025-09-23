@@ -45,7 +45,7 @@ Note: To cross compile, you may need to install additional packages. For example
 Support for the legacy TOML configuration is maintained for backwards compatibility,
 but it may be removed during a future major release.
 The rest of this section will assume the new KDL format.
-See [the migration guide](./docs/migration.md) for details.
+See [the migration guide](./docs/config_migration.md) for details.
 
 The most basic configuration is given below. `global.version` must be specified and the value must be `1.0`. The components (described in the next sections) will be displayed in the order they appear inside of `components {}`. Each component can occur as many times as you'd like, with different parameters each time. An example configuration file [example_config.kdl](example_config.kdl).
 ```kdl
