@@ -59,16 +59,16 @@ impl Component for CgStats {
                 let min_width =
                     INDENT_WIDTH + prepared.max_name_width + "100%".len() + "[=========]".len() + 2 /* spaces */;
                 self.prepared = Some(prepared);
-                (
+                Some((
                     self,
                     Some(Constraints {
                         min_width: Some(min_width),
                     }),
-                )
+                ))
             }
             Err(e) => {
                 eprintln!("Cgroup Statistics error: {e}");
-                (self, None)
+                None
             }
         }
     }

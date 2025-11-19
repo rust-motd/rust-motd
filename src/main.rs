@@ -24,7 +24,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             let (components, constraints): (Vec<BoxedComponent>, Vec<Option<Constraints>>) = config
                 .components
                 .into_iter()
-                .map(|component| component.prepare(&config.global))
+                .flat_map(|component| component.prepare(&config.global))
                 .unzip();
 
             // The width to use is the maximum of all the component's minimum widths

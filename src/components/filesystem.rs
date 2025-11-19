@@ -34,16 +34,17 @@ pub struct Filesystems {
 #[async_trait]
 impl Component for Filesystems {
     fn prepare(self: Box<Self>, global_config: &GlobalConfig) -> PrepareReturn {
-        self.clone()
-            .prepare_or_error(global_config)
-            .unwrap_or((self, Some(Constraints { min_width: None })))
+        match self.clone().prepare_or_error(global_config) {
+            Ok(prepared_component) => prepared_component,
+            Err(err) => {
+                eprintln!("Filesystems error: {err}");
+                None
+            }
+        }
     }
 
-    // Print should never be called on a raw `Filesystems`
-    // Prepare should be called, returning a `PreparedFilesystems`
-    async fn print(self: Box<Self>, global_config: &GlobalConfig, width: Option<usize>) {
-        let (prepared_filesystems, _) = self.prepare(global_config);
-        prepared_filesystems.print(global_config, width).await;
+    async fn print(self: Box<Self>, _global_config: &GlobalConfig, _width: Option<usize>) {
+        unreachable!("Print should never be called on a raw `Filesystems`. Prepare should be called, returning a `PreparedFilesystems`.");
     }
 }
 
@@ -71,9 +72,6 @@ impl Component for PreparedFilesystems {
 
 #[derive(Error, Debug)]
 pub enum FilesystemsError {
-    #[error("Empty configuration for filesystems. Please remove the entire block to disable this component.")]
-    ConfigEmtpy,
-
     #[error("Could not find mount {mount_point:?}")]
     MountNotFound { mount_point: String },
 
@@ -135,7 +133,7 @@ impl Filesystems {
         let sys = System::new();
 
         if self.mounts.is_empty() {
-            return Err(FilesystemsError::ConfigEmtpy);
+            return Ok(None);
         }
 
         let mounts = sys.mounts()?;
@@ -192,7 +190,7 @@ impl Filesystems {
             min_width: Some(fs_display_width),
         };
 
-        Ok((Box::new(prepared_filesystems), Some(constraints)))
+        Ok(Some((Box::new(prepared_filesystems), Some(constraints))))
     }
 }
 
