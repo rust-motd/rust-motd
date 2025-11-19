@@ -1404,7 +1404,7 @@ dependencies = [
 
 [[package]]
 name = "rust-motd"
-version = "2.1.0"
+version = "2.1.1"
 dependencies = [
  "async-trait",
  "bytesize 2.0.1",

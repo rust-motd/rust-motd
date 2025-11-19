@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.1.1] 2025-07-31
+
+- Fix stack overflow if filesystem component empty (#54)
+
 ## [2.1.0] 2025-07-31
 
 - Fix alignment of statuses in docker compose output

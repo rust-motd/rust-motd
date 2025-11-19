@@ -6,7 +6,7 @@ use async_trait::async_trait;
 pub type BoxedComponent = Box<dyn Component + Send>;
 
 /// Return type for the prepare phase
-pub type PrepareReturn = (BoxedComponent, Option<Constraints>);
+pub type PrepareReturn = Option<(BoxedComponent, Option<Constraints>)>;
 
 /// Constraints are optionally returned by the prepare phase
 /// and allow a component to specify its sizing constraints
@@ -57,7 +57,7 @@ macro_rules! default_prepare {
             self: Box<Self>,
             _global_config: &$crate::config::global_config::GlobalConfig,
         ) -> $crate::component::PrepareReturn {
-            (self, None)
+            Some((self, None))
         }
     };
 }
