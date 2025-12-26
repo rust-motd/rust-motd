@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.1.2] 2025-12-26
+
+- Fix indent of docker compose not found error
+
 ## [2.1.1] 2025-07-31
 
 - Fix stack overflow if filesystem component empty (#54)
