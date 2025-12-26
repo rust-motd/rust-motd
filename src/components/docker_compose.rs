@@ -123,7 +123,7 @@ impl DockerCompose {
             if containers.is_empty() {
                 println!(
                     "{indent}{display_name}: {color}Not found{reset}",
-                    indent = " ".repeat(INDENT_WIDTH * 2),
+                    indent = " ".repeat(INDENT_WIDTH),
                     display_name = display_name.clone(),
                     color = color::Fg(color::Yellow),
                     reset = style::Reset,
