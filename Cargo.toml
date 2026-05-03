@@ -30,7 +30,7 @@ regex = "1.13.1"
 serde = { version = "1.0.229", features = ["derive"] }
 serde_plain = "1.0.2"
 shellexpand = "3.1.2"
-systemstat = "0.2.7"
+systemstat = "0.2.8"
 termion = "4.0.6"
 thiserror = "2.0.21"
 time = "0.3.55"
