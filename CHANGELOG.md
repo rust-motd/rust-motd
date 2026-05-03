@@ -13,6 +13,11 @@
 - Report an error instead of panicking when a command is killed by a signal
 - Fix crash with a small `progress-width`
 - Fix progress bar alignment with multibyte prefix and suffix characters
+- Support mount points with spaces and other characters escaped in
+  `/proc/mounts`
+- Report a missing filesystem on its own line instead of hiding the whole
+  component
+- Only query the configured filesystems
 - Report `systemctl` failures instead of showing an empty service status
 - Fix the message for an empty `user-service-status` referring to system
   services
