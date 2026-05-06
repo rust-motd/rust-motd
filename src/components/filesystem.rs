@@ -149,16 +149,16 @@ struct Entry {
 fn parse_into_entry(filesystem_name: String, mount: &Filesystem) -> Entry {
     let total = mount.total.as_u64();
     let avail = mount.avail.as_u64();
-    let used = total - avail;
+    let used = total.saturating_sub(mount.free.as_u64());
 
     Entry {
         filesystem_name,
         mount_point: mount.fs_mounted_on.to_string(),
         dev: truncate_str(&mount.fs_mounted_from, 26).to_string(),
         fs_type: mount.fs_type.to_string(),
-        used: ByteSize::b(used).to_string(),
-        total: ByteSize::b(total).to_string(),
-        used_ratio: (used as f64) / (total as f64),
+        used: ByteSize::b(used).display().si().to_string(),
+        total: ByteSize::b(total).display().si().to_string(),
+        used_ratio: (used as f64) / ((used + avail) as f64),
     }
 }
 
