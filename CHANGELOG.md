@@ -18,6 +18,8 @@
 - Report a missing filesystem on its own line instead of hiding the whole
   component
 - Only query the configured filesystems
+- Exclude blocks reserved for the superuser from filesystem usage
+- Show filesystem sizes in decimal units, matching the memory component
 - Report `systemctl` failures instead of showing an empty service status
 - Fix the message for an empty `user-service-status` referring to system
   services
