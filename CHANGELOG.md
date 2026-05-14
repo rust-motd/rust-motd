@@ -4,6 +4,8 @@
 - Fix configuration file lookup in `$XDG_CONFIG_HOME` and `$HOME/.config`
 - Reject an invalid `time-format` when loading the configuration instead of
   panicking
+- Track cgroups by their full name in cg_stats
+- Fix panic when shortening cgroup names with multibyte characters
 - Report an error instead of panicking when a command is killed by a signal
 - Fix crash with a small `progress-width`
 - Fix progress bar alignment with multibyte prefix and suffix characters
