@@ -6,6 +6,8 @@
   panicking
 - Track cgroups by their full name in cg_stats
 - Fix panic when shortening cgroup names with multibyte characters
+- Fix cg_stats being disabled permanently by a saved timestamp in the future
+- Fix cg_stats reporting "almost idle" before a baseline exists
 - Report an error instead of panicking when a command is killed by a signal
 - Fix crash with a small `progress-width`
 - Fix progress bar alignment with multibyte prefix and suffix characters

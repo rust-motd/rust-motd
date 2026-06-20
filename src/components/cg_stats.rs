@@ -55,7 +55,7 @@ pub struct PreparedCgStats {
 impl Component for CgStats {
     fn prepare(mut self: Box<Self>, global_config: &GlobalConfig) -> PrepareReturn {
         match self.prepare_or_error(global_config) {
-            Ok(prepared) => {
+            Ok(Some(prepared)) => {
                 let min_width =
                     INDENT_WIDTH + prepared.max_name_width + "100%".len() + "[=========]".len() + 2 /* spaces */;
                 self.prepared = Some(prepared);
@@ -66,6 +66,7 @@ impl Component for CgStats {
                     }),
                 ))
             }
+            Ok(None) => None,
             Err(e) => {
                 eprintln!("Cgroup Statistics error: {e}");
                 None
@@ -143,46 +144,49 @@ impl CgStats {
     pub fn prepare_or_error(
         &self,
         _global_config: &GlobalConfig,
-    ) -> Result<PreparedCgStats, CgStatsError> {
+    ) -> Result<Option<PreparedCgStats>, CgStatsError> {
         let num_cpus = available_parallelism()?.get();
         let now = read_cg_state()?;
 
-        let mut prepared_cg_stats = PreparedCgStats::default();
-
-        if let Ok(before) = fs::read_to_string(&self.state_file)
+        let before = fs::read_to_string(&self.state_file)
             .inspect_err(|e| eprintln!("Reading {} failed: {e}", self.state_file))
             .and_then(|s| {
                 toml::from_str::<State>(&s).map_err(|e| {
                     eprintln!("Parsing TOML from {} failed: {e}", self.state_file);
                     io::Error::other(e)
                 })
-            })
-        {
-            // Calculate the statistics
-            let time_span = now
-                .time
-                .duration_since(before.time)
-                .map_err(|e| CgStatsError::TimeSpan((&self.state_file).into(), e))?;
-            let treshold = self.threshold;
-            prepared_cg_stats.time_span = time_span;
-            prepared_cg_stats.users =
-                get_prepared_stats(&now.user, &before.user, time_span, num_cpus, treshold);
-            prepared_cg_stats.services =
-                get_prepared_stats(&now.system, &before.system, time_span, num_cpus, treshold);
-            for service in &mut prepared_cg_stats.services {
-                service.name = shorten_name(&service.name);
-            }
-            prepared_cg_stats.max_name_width = prepared_cg_stats
-                .users
-                .iter()
-                .chain(prepared_cg_stats.services.iter())
-                .map(|s| s.name.chars().count())
-                .max()
-                .unwrap_or(0);
-        }
+            });
         fs::write(&self.state_file, toml::to_string(&now)?)
             .map_err(|e| CgStatsError::FileError(PathBuf::from(&self.state_file), e))?;
-        Ok(prepared_cg_stats)
+
+        let Ok(before) = before else {
+            return Ok(None);
+        };
+
+        let mut prepared_cg_stats = PreparedCgStats::default();
+
+        // Calculate the statistics
+        let time_span = now
+            .time
+            .duration_since(before.time)
+            .map_err(|e| CgStatsError::TimeSpan((&self.state_file).into(), e))?;
+        let treshold = self.threshold;
+        prepared_cg_stats.time_span = time_span;
+        prepared_cg_stats.users =
+            get_prepared_stats(&now.user, &before.user, time_span, num_cpus, treshold);
+        prepared_cg_stats.services =
+            get_prepared_stats(&now.system, &before.system, time_span, num_cpus, treshold);
+        for service in &mut prepared_cg_stats.services {
+            service.name = shorten_name(&service.name);
+        }
+        prepared_cg_stats.max_name_width = prepared_cg_stats
+            .users
+            .iter()
+            .chain(prepared_cg_stats.services.iter())
+            .map(|s| s.name.chars().count())
+            .max()
+            .unwrap_or(0);
+        Ok(Some(prepared_cg_stats))
     }
 }
 
