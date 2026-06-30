@@ -18,7 +18,7 @@ use serde::{Deserialize, Serialize};
 use termion::{color, style};
 use thiserror::Error;
 
-use crate::component::{Component, Constraints, PrepareReturn};
+use crate::component::{Component, Constraints, PrepareError, PrepareReturn};
 use crate::config::global_config::GlobalConfig;
 use crate::constants::INDENT_WIDTH;
 
@@ -67,10 +67,10 @@ impl Component for CgStats {
                 ))
             }
             Ok(None) => None,
-            Err(e) => {
-                eprintln!("Cgroup Statistics error: {e}");
-                None
-            }
+            Err(e) => Some((
+                Box::new(PrepareError(format!("Cgroup Statistics error: {e}"))),
+                None,
+            )),
         }
     }
 

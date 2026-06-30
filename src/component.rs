@@ -61,3 +61,14 @@ macro_rules! default_prepare {
         }
     };
 }
+
+pub struct PrepareError(pub String);
+
+#[async_trait]
+impl Component for PrepareError {
+    async fn print(self: Box<Self>, _global_config: &GlobalConfig, _width: Option<usize>) {
+        println!("{}", self.0);
+        println!();
+    }
+    default_prepare!();
+}
