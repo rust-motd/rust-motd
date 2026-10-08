@@ -62,7 +62,7 @@ pub enum KdlConfigError {
 }
 
 pub fn parse_kdl(config_path: &Path, config_str: &str) -> Result<Config, KdlConfigError> {
-    let result = knus::parse::<KdlConfig>(config_path.to_str().unwrap(), config_str)?;
+    let result = knus::parse::<KdlConfig>(config_path.to_string_lossy(), config_str)?;
 
     let version = result
         .global

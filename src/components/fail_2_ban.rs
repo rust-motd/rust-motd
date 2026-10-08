@@ -36,6 +36,9 @@ pub enum Fail2BanError {
     #[error(transparent)]
     BetterCommand(#[from] BetterCommandError),
 
+    #[error("Failed to find {0:?} in output")]
+    MissingField(&'static str),
+
     #[error("Failed to parse int in output")]
     ParseInt(#[from] std::num::ParseIntError),
 
@@ -55,8 +58,14 @@ fn get_jail_status(jail: &str) -> Result<Entry, Fail2BanError> {
         .arg(jail)
         .check_status_and_get_output_string()?;
 
-    let total = TOTAL_REGEX.captures_iter(&output).next().unwrap()[1].parse::<u32>()?;
-    let current = CURRENT_REGEX.captures_iter(&output).next().unwrap()[1].parse::<u32>()?;
+    let total = TOTAL_REGEX
+        .captures(&output)
+        .ok_or(Fail2BanError::MissingField("Total banned"))?[1]
+        .parse::<u32>()?;
+    let current = CURRENT_REGEX
+        .captures(&output)
+        .ok_or(Fail2BanError::MissingField("Currently banned"))?[1]
+        .parse::<u32>()?;
 
     Ok(Entry { total, current })
 }

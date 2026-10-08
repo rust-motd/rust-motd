@@ -11,32 +11,33 @@ license = "MIT"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-async-trait = "0.1.88"
-bytesize = "2.0.1"
-chrono = "0.4.41"
-clap = { version = "4.5.40", features = ["unstable-doc"]}
+async-trait = "0.1.92"
+bytesize = "2.7.0"
+chrono = "0.4.45"
+clap = { version = "4.6.7", features = ["unstable-doc"]}
 docker-api = { version = "0.14.0" }
-humantime = "2.2.0"
-indexmap = { version = "2.9.0", features = ["serde"] }
+humantime = "2.4.0"
+indexmap = { version = "2.14.2", features = ["serde"] }
 interpolator = "0.5.0"
-itertools = "0.14.0"
-knus = "3.3.1"
+itertools = "0.15.0"
+knus = "3.4.0"
 last-rs = "0.2.2"
-lazy_static = "1.5.0"
-libc = "0.2.174"
-miette = { version="7.2.0", features=["fancy"] }
-openssl = { version = "0.10.73", features = ["vendored"] }
-regex = "1.11.0"
-serde = { version = "1.0", features = ["derive"] }
+lazy_static = "1.5.1"
+libc = "0.2.190"
+miette = { version="7.6.0", features=["fancy"] }
+openssl = { version = "0.10.81", features = ["vendored"] }
+regex = "1.13.1"
+serde = { version = "1.0.229", features = ["derive"] }
 serde_plain = "1.0.2"
-shellexpand = "3.1.1"
-systemstat = "0.2.4"
-termion = "4.0.5"
-thiserror = "2.0.12"
-time = "0.3.41"
-tokio = { version = "1.45.1", features = ["full"] }
-toml = "0.8"
-unicode-ellipsis = "0.3.0"
-ureq = "3.0.12"
+shellexpand = "3.1.2"
+systemstat = "0.2.7"
+termion = "4.0.6"
+thiserror = "2.0.21"
+time = "0.3.55"
+tokio = { version = "1.53.2", features = ["full"] }
+toml = { version = "1.1.6", features = ["preserve_order"] }
+unicode-ellipsis = "0.6.0"
+unicode-width = "0.2.2"
+ureq = "3.4.2"
 
 [package.metadata.bundle]

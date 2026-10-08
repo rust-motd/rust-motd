@@ -1,3 +1,4 @@
+use chrono::format::StrftimeItems;
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -18,10 +19,10 @@ pub enum ConfigError {
     ConfigNotFound,
 
     #[error("The configuration file must be .kdl or .toml. Found {0}.")]
-    ConfigFormatError(String),
+    ConfigFormatError(PathBuf),
 
-    #[error(transparent)]
-    ConfigHomeError(#[from] std::env::VarError),
+    #[error("Invalid time format {0:?}.")]
+    TimeFormatError(String),
 
     #[error(transparent)]
     IOError(#[from] std::io::Error),
@@ -37,37 +38,49 @@ pub enum ConfigError {
     TomlError(#[from] TomlConfigError),
 }
 
-fn get_config_path(config_path: Option<String>) -> Result<PathBuf, ConfigError> {
+fn get_config_path(config_path: Option<PathBuf>) -> Result<PathBuf, ConfigError> {
     if let Some(file_path) = config_path {
-        return Ok(PathBuf::from(file_path));
+        return Ok(file_path);
     }
 
-    let config_base = env::var("XDG_CONFIG_HOME").unwrap_or(env::var("HOME")? + "/.config");
+    let config_bases = [
+        env::var_os("XDG_CONFIG_HOME").map(PathBuf::from),
+        env::var_os("HOME").map(|home| Path::new(&home).join(".config")),
+    ];
 
-    for basename in ["rust-motd/config.kdl", "rust-motd/config.toml"] {
-        let config_base = Path::new(&config_base).join(Path::new(basename));
-        if config_base.exists() {
-            return Ok(config_base);
+    for config_base in config_bases.into_iter().flatten() {
+        if !config_base.is_absolute() {
+            continue;
+        }
+        for basename in ["rust-motd/config.kdl", "rust-motd/config.toml"] {
+            let path = config_base.join(basename);
+            if path.exists() {
+                return Ok(path);
+            }
         }
     }
 
     Err(ConfigError::ConfigNotFound)
 }
 
-pub fn get_config(config_path: Option<String>) -> Result<Config, ConfigError> {
+pub fn get_config(config_path: Option<PathBuf>) -> Result<Config, ConfigError> {
     let config_path = get_config_path(config_path)?;
     let config_str = fs::read_to_string(&config_path)?;
 
     let extension = config_path
         .extension()
-        .expect("Could not determine extension for config file.");
-    let extension = extension
-        .to_str()
-        .expect("Could not determine extension for config file.");
+        .and_then(|extension| extension.to_str());
 
-    match extension {
-        "toml" => Ok(parse_toml(&config_str)?),
-        "kdl" => Ok(parse_kdl(&config_path, &config_str)?),
-        other => Err(ConfigError::ConfigFormatError(other.to_string())),
+    let config = match extension {
+        Some("toml") => parse_toml(&config_str)?,
+        Some("kdl") => parse_kdl(&config_path, &config_str)?,
+        _ => return Err(ConfigError::ConfigFormatError(config_path)),
+    };
+
+    let time_format = &config.global.time_format;
+    if StrftimeItems::new(time_format).parse().is_err() {
+        return Err(ConfigError::TimeFormatError(time_format.to_string()));
     }
+
+    Ok(config)
 }

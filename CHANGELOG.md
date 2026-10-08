@@ -1,5 +1,40 @@
 # Changelog
 
+- Exit with a nonzero status on configuration errors
+- Fix configuration file lookup in `$XDG_CONFIG_HOME` and `$HOME/.config`
+- Fix missing defaults for `swap-pos` in `memory`, and for `prefix` in
+  `[uptime]` and `color` in `[banner]` in TOML configurations
+- Reject an invalid `time-format` when loading the configuration instead of
+  panicking
+- Report an error instead of panicking when a command is killed by a signal
+- Fix crash with a small `progress-width`
+- Fix progress bar alignment with multibyte or wide prefix and suffix
+  characters
+- Support mount points with spaces and other characters escaped in
+  `/proc/mounts`
+- Report a missing filesystem, Docker Compose stack, or SSL certificate on its
+  own line instead of hiding the whole component
+- Only query the configured filesystems
+- Exclude blocks reserved for the superuser from filesystem usage
+- Show filesystem sizes in decimal units, matching the memory component
+- Fix cg_stats being disabled permanently by a saved timestamp in the future
+- Fix cg_stats reporting "almost idle" before a baseline exists
+- Track cgroups by their full name in cg_stats, so services whose shortened
+  names collide are kept separate
+- Fix panic when shortening cgroup names with multibyte characters
+- Print cg_stats errors on standard output so they appear in a generated MOTD
+  file
+- Keep warnings for missing Docker containers and Docker Compose stacks in
+  configuration order
+- Report `systemctl` failures instead of showing an empty service status
+- Fix the message for an empty `user-service-status` referring to system
+  services
+- Only reformat the location in weather output, keeping plus signs in
+  temperatures and leaving responses from a custom `url` unchanged
+- Align columns by display width so CJK and other non-ASCII names line up
+- Support configuration paths, `HOME`, and `XDG_CONFIG_HOME` that are not
+  valid UTF-8
+
 ## [2.1.2] 2025-12-26
 
 - Fix indent of docker compose not found error

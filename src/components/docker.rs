@@ -5,6 +5,7 @@ use docker_api::opts::ContainerListOpts;
 use docker_api::{Docker as DockerAPI, Result as DockerResult};
 use std::collections::HashMap;
 use termion::{color, style};
+use unicode_width::UnicodeWidthStr;
 
 use crate::component::Component;
 use crate::config::global_config::GlobalConfig;
@@ -72,26 +73,24 @@ pub fn state_to_color(state: &str) -> String {
     }
 }
 
-pub fn print_containers(containers: Vec<Container>, indent_width: usize, padding: usize) {
-    for container in containers {
-        let status_color = state_to_color(
-            container
-                .summary
-                .state
-                .map(|s| s.to_lowercase())
-                .as_deref()
-                .unwrap_or(""),
-        );
-        println!(
-            "{indent}{name}: {padding}{color}{status}{reset}",
-            indent = " ".repeat(indent_width),
-            name = container.name,
-            padding = " ".repeat(padding - container.name.len()),
-            color = status_color,
-            status = container.summary.status.unwrap_or(String::from("?")),
-            reset = style::Reset,
-        );
-    }
+pub fn print_container(container: Container, indent_width: usize, padding: usize) {
+    let status_color = state_to_color(
+        container
+            .summary
+            .state
+            .map(|s| s.to_lowercase())
+            .as_deref()
+            .unwrap_or(""),
+    );
+    println!(
+        "{indent}{name}: {padding}{color}{status}{reset}",
+        indent = " ".repeat(indent_width),
+        name = container.name,
+        padding = " ".repeat(padding - container.name.width()),
+        color = status_color,
+        status = container.summary.status.unwrap_or(String::from("?")),
+        reset = style::Reset,
+    );
 }
 
 impl Docker {
@@ -123,38 +122,39 @@ impl Docker {
                 })
             })
             .collect();
-        let containers: Vec<Container> = self
+        let containers: Vec<Result<Container, &String>> = self
             .containers
             .iter()
-            .filter_map(
-                |DockerContainer { docker_name, display_name }| match summary_hash.get(docker_name) {
-                    Some(&summary) => Some(Container {
-                        name: display_name.clone(),
-                        summary: summary.clone(),
-                    }),
-                    None => {
-                        println!(
-                            "{indent}{color}Warning: Could not find container `{docker_name}'{reset}",
-                            indent = " ".repeat(INDENT_WIDTH),
-                            color = color::Fg(color::Yellow),
-                            docker_name = docker_name,
-                            reset = style::Reset
-                        );
-                        None
-                    }
-                },
-            )
+            .map(|container| match summary_hash.get(&container.docker_name) {
+                Some(&summary) => Ok(Container {
+                    name: container.display_name.clone(),
+                    summary: summary.clone(),
+                }),
+                None => Err(&container.docker_name),
+            })
             .collect();
 
         // Max length of all the container names (first column)
         // to determine the padding
         let max_container_name = containers
             .iter()
-            .map(|container| container.name.len())
+            .flatten()
+            .map(|container| container.name.width())
             .max()
             .unwrap_or(0);
 
-        print_containers(containers, INDENT_WIDTH, max_container_name);
+        for container in containers {
+            match container {
+                Ok(container) => print_container(container, INDENT_WIDTH, max_container_name),
+                Err(docker_name) => println!(
+                    "{indent}{color}Warning: Could not find container `{docker_name}'{reset}",
+                    indent = " ".repeat(INDENT_WIDTH),
+                    color = color::Fg(color::Yellow),
+                    docker_name = docker_name,
+                    reset = style::Reset
+                ),
+            }
+        }
 
         Ok(())
     }

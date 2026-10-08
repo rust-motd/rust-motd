@@ -1,6 +1,7 @@
 use async_trait::async_trait;
 use termion::{color, style};
 use thiserror::Error;
+use unicode_width::UnicodeWidthStr;
 
 use crate::command::{BetterCommand, BetterCommandError};
 use crate::component::Component;
@@ -52,7 +53,7 @@ impl Component for UserServiceStatus {
 
 #[derive(Error, Debug)]
 pub enum ServiceStatusError {
-    #[error("Empty configuration for system services. Please remove the entire block to disable this component.")]
+    #[error("Empty configuration for services. Please remove the entire block to disable this component.")]
     ConfigEmpty,
 
     #[error(transparent)]
@@ -70,11 +71,21 @@ fn get_service_status(service: &str, user: bool) -> Result<String, ServiceStatus
         args.insert(0, "--user");
     }
 
-    let output = BetterCommand::new(executable)
-        .args(args)
-        .get_output_string()?;
+    let output = BetterCommand::new(executable).args(args).output()?;
+    let status: String = String::from_utf8_lossy(&output.stdout)
+        .split_whitespace()
+        .collect();
 
-    Ok(output.split_whitespace().collect())
+    if status.is_empty() {
+        return Err(BetterCommandError::ExitStatusError {
+            executable: executable.to_string(),
+            status: output.status,
+            error: String::from_utf8_lossy(&output.stderr).to_string(),
+        }
+        .into());
+    }
+
+    Ok(status)
 }
 
 pub fn print_or_error(config: &[Service], user: bool) -> Result<(), ServiceStatusError> {
@@ -84,7 +95,7 @@ pub fn print_or_error(config: &[Service], user: bool) -> Result<(), ServiceStatu
 
     let padding = config
         .iter()
-        .map(|service| service.display_name.len())
+        .map(|service| service.display_name.width())
         .max()
         .unwrap();
 
@@ -102,7 +113,7 @@ pub fn print_or_error(config: &[Service], user: bool) -> Result<(), ServiceStatu
             "{}{}: {}{}{}{}",
             " ".repeat(INDENT_WIDTH),
             display_name,
-            " ".repeat(padding - display_name.len()),
+            " ".repeat(padding - display_name.width()),
             status_color,
             status,
             style::Reset,

@@ -65,8 +65,18 @@ pub enum SSLCertsError {
 
 struct CertInfo {
     name: String,
-    status: String,
-    expiration: DateTime<Utc>,
+    expiration: Result<DateTime<Utc>, String>,
+}
+
+fn get_expiration(path: &str) -> Result<DateTime<Utc>, SSLCertsError> {
+    let cert = File::open(path)?;
+    let cert = BufReader::new(cert);
+    let cert: Vec<u8> = cert.bytes().collect::<Result<_, _>>()?;
+    let cert = X509::from_pem(&cert)?;
+
+    let expiration = Asn1Time::from_unix(0)?.diff(cert.not_after())?;
+    let seconds = (expiration.days as i64) * SECS_PER_DAY + (expiration.secs as i64);
+    Ok(DateTime::from_timestamp(seconds, 0).unwrap())
 }
 
 impl SSLCerts {
@@ -75,28 +85,8 @@ impl SSLCerts {
 
         println!("SSL Certificates:");
         for Cert { name, path } in self.certs {
-            let cert = File::open(&path)?;
-            let cert = BufReader::new(cert);
-            let cert: Vec<u8> = cert.bytes().collect::<Result<_, _>>()?;
-            let cert = X509::from_pem(&cert)?;
-
-            let expiration = Asn1Time::from_unix(0)?.diff(cert.not_after())?;
-            let seconds = (expiration.days as i64) * SECS_PER_DAY + (expiration.secs as i64);
-            let expiration = DateTime::from_timestamp(seconds, 0).unwrap();
-
-            let now = Utc::now();
-            let status = if expiration < now {
-                format!("{}expired on{}", color::Fg(color::Red), style::Reset)
-            } else if expiration < now + Duration::days(30) {
-                format!("{}expiring on{}", color::Fg(color::Yellow), style::Reset)
-            } else {
-                format!("{}valid until{}", color::Fg(color::Green), style::Reset)
-            };
-            cert_infos.push(CertInfo {
-                name,
-                status,
-                expiration,
-            });
+            let expiration = get_expiration(&path).map_err(|err| format!("{path}: {err}"));
+            cert_infos.push(CertInfo { name, expiration });
         }
 
         match self.sort_method {
@@ -104,18 +94,40 @@ impl SSLCerts {
                 cert_infos.sort_by(|a, b| a.name.cmp(&b.name));
             }
             SortMethod::Expiration => {
-                cert_infos.sort_by(|a, b| a.expiration.cmp(&b.expiration));
+                cert_infos.sort_by_key(|cert_info| cert_info.expiration.as_ref().ok().copied());
             }
             SortMethod::Manual => {}
         }
 
+        let now = Utc::now();
         for cert_info in cert_infos.into_iter() {
+            let expiration = match cert_info.expiration {
+                Ok(expiration) => expiration,
+                Err(err) => {
+                    println!(
+                        "{}{} {}{}{}",
+                        " ".repeat(INDENT_WIDTH),
+                        cert_info.name,
+                        color::Fg(color::Red),
+                        err,
+                        style::Reset
+                    );
+                    continue;
+                }
+            };
+            let status = if expiration < now {
+                format!("{}expired on{}", color::Fg(color::Red), style::Reset)
+            } else if expiration < now + Duration::days(30) {
+                format!("{}expiring on{}", color::Fg(color::Yellow), style::Reset)
+            } else {
+                format!("{}valid until{}", color::Fg(color::Green), style::Reset)
+            };
             println!(
                 "{}{} {} {}",
                 " ".repeat(INDENT_WIDTH),
                 cert_info.name,
-                cert_info.status,
-                cert_info.expiration.format(&global_config.time_format)
+                status,
+                expiration.format(&global_config.time_format)
             );
         }
 

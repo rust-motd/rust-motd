@@ -183,7 +183,7 @@ docker-compose {
 
 Properties:
 - `socket`: The socket to use. Allows connecting to the Podman daemon instead of Docker, for example, by setting `socket="unix:///run/user/1000/podman/podman.sock"`. The default is the docker socket.
-- `title`: Allows changing the title of the component. For example, you may want to change it to `Podman` if you use the Podman socket. The default is `Docker`.
+- `title`: Allows changing the title of the component. For example, you may want to change it to `Podman` if you use the Podman socket. The default is `Docker Compose`.
 - `style`:
     - `count`: On one line, show only the number of containers in each state (default).
     - `full`: Show each container from each compose stack on its own line with its status.
@@ -256,7 +256,7 @@ memory swap-pos="beside"
 ```
 
 Properties:
- - `swap-pos`: Either `beside`, `below` or `none` to indicate the location to display the swap memory usage, if any.
+ - `swap-pos`: Either `beside`, `below` or `none` to indicate the location to display the swap memory usage, if any. The default is `beside`.
 
 ### Fail2Ban
 

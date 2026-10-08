@@ -114,6 +114,8 @@ impl LastLogin {
         } in self.users
         {
             println!("{}{}:", " ".repeat(INDENT_WIDTH), username);
+            // Limitation: utmp-rs (used by last-rs) rejects the entire wtmp file if any
+            // record has a user name or host that is not valid UTF-8, so no logins are listed.
             let entries = get_logins("/var/log/wtmp")?
                 .into_iter()
                 .filter(|entry| entry.user == username)

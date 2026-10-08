@@ -4,10 +4,11 @@ use itertools::Itertools;
 use shellexpand;
 use std::fs;
 use termion::{color, style};
+use unicode_width::UnicodeWidthStr;
 
 use crate::component::Component;
 use crate::components::docker::{
-    init_api, print_containers, state_to_color, Container, DEFAULT_SOCKET,
+    init_api, print_container, state_to_color, Container, DEFAULT_SOCKET,
 };
 use crate::config::global_config::GlobalConfig;
 use crate::constants::INDENT_WIDTH;
@@ -51,7 +52,7 @@ struct PreparedStack {
 
     max_container_name: usize,
 
-    containers: Vec<Container>,
+    containers: Result<Vec<Container>, String>,
 }
 
 // Information for grouping similar states together (like created / restarting / paused ...)
@@ -103,9 +104,17 @@ impl DockerCompose {
         let mut prepared_stacks: Vec<PreparedStack> = vec![];
 
         for ComposeStack { path, display_name } in self.stacks.iter() {
-            let path = fs::canonicalize(&*shellexpand::tilde(path))?
-                .to_string_lossy()
-                .to_string();
+            let path = match fs::canonicalize(&*shellexpand::tilde(path)) {
+                Ok(path) => path.to_string_lossy().to_string(),
+                Err(err) => {
+                    prepared_stacks.push(PreparedStack {
+                        display_name: display_name.clone(),
+                        max_container_name: 0,
+                        containers: Err(format!("{path}: {err}")),
+                    });
+                    continue;
+                }
+            };
 
             let containers = api
                 .containers()
@@ -121,13 +130,11 @@ impl DockerCompose {
                 .await?;
 
             if containers.is_empty() {
-                println!(
-                    "{indent}{display_name}: {color}Not found{reset}",
-                    indent = " ".repeat(INDENT_WIDTH),
-                    display_name = display_name.clone(),
-                    color = color::Fg(color::Yellow),
-                    reset = style::Reset,
-                );
+                prepared_stacks.push(PreparedStack {
+                    display_name: display_name.clone(),
+                    max_container_name: 0,
+                    containers: Err("Not found".to_string()),
+                });
                 continue;
             }
 
@@ -158,14 +165,14 @@ impl DockerCompose {
 
             let max_container_name = containers
                 .iter()
-                .map(|container| container.name.len())
+                .map(|container| container.name.width())
                 .max()
                 .unwrap_or(0);
 
             prepared_stacks.push(PreparedStack {
                 display_name: display_name.clone(),
                 max_container_name,
-                containers,
+                containers: Ok(containers),
             });
         }
 
@@ -185,29 +192,53 @@ impl DockerCompose {
 
     fn print_full(&self, prepared_stacks: Vec<PreparedStack>, max_container_name: usize) {
         for prepared_stack in prepared_stacks.into_iter() {
+            let containers = match prepared_stack.containers {
+                Ok(containers) => containers,
+                Err(message) => {
+                    println!(
+                        "{indent}{display_name}: {color}{message}{reset}",
+                        indent = " ".repeat(INDENT_WIDTH),
+                        display_name = prepared_stack.display_name,
+                        color = color::Fg(color::Yellow),
+                        reset = style::Reset,
+                    );
+                    continue;
+                }
+            };
             println!(
                 "{indent}{}:",
                 prepared_stack.display_name,
                 indent = " ".repeat(INDENT_WIDTH)
             );
-            print_containers(
-                prepared_stack.containers,
-                2 * INDENT_WIDTH,
-                max_container_name,
-            );
+            for container in containers {
+                print_container(container, 2 * INDENT_WIDTH, max_container_name);
+            }
         }
     }
 
     fn print_count(&self, prepared_stacks: Vec<PreparedStack>) {
         let longest_display_name = prepared_stacks
             .iter()
-            .map(|stack| stack.display_name.len())
+            .map(|stack| stack.display_name.width())
             .max()
             .unwrap_or(0);
 
         for prepared_stack in prepared_stacks.into_iter() {
-            let grouped = prepared_stack
-                .containers
+            let padding = " ".repeat(longest_display_name - prepared_stack.display_name.width());
+            let containers = match prepared_stack.containers {
+                Ok(containers) => containers,
+                Err(message) => {
+                    println!(
+                        "{indent}{name}:{padding} {color}{message}{reset}",
+                        indent = " ".repeat(INDENT_WIDTH),
+                        name = prepared_stack.display_name,
+                        color = color::Fg(color::Yellow),
+                        reset = style::Reset,
+                    );
+                    continue;
+                }
+            };
+            let grouped = containers
                 .iter()
                 .map(|container| {
                     (
@@ -249,7 +280,6 @@ impl DockerCompose {
                 "{indent}{name}:{padding} {states}",
                 indent = " ".repeat(INDENT_WIDTH),
                 name = prepared_stack.display_name,
-                padding = " ".repeat(longest_display_name - prepared_stack.display_name.len()),
                 states = states,
             );
         }

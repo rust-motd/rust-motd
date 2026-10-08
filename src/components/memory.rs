@@ -3,6 +3,7 @@ use serde::Deserialize;
 use systemstat::{saturating_sub_bytes, Platform, System};
 use termion::{color, style};
 use thiserror::Error;
+use unicode_width::UnicodeWidthStr;
 
 use crate::component::Component;
 use crate::config::global_config::GlobalConfig;
@@ -11,7 +12,8 @@ use crate::default_prepare;
 
 #[derive(knus::Decode, Debug, Deserialize)]
 pub struct Memory {
-    #[knus(property)]
+    #[knus(property, default)]
+    #[serde(default)]
     swap_pos: SwapPosition,
 }
 
@@ -108,8 +110,9 @@ fn format_bar(
     full_ratio: f64,
     full_color: String,
 ) -> String {
-    let without_ends_width =
-        width - global_config.progress_suffix.len() - global_config.progress_prefix.len();
+    let without_ends_width = width.saturating_sub(
+        global_config.progress_suffix.width() + global_config.progress_prefix.width(),
+    );
 
     let bar_full = ((without_ends_width as f64) * full_ratio) as usize;
     let bar_empty = without_ends_width - bar_full;
@@ -166,7 +169,7 @@ impl Memory {
         width: Option<usize>,
     ) -> Result<(), MemoryError> {
         let sys = System::new();
-        let width = width.unwrap_or(global_config.progress_width - INDENT_WIDTH);
+        let width = width.unwrap_or(global_config.progress_width.saturating_sub(INDENT_WIDTH));
 
         let ram_usage =
             MemoryUsage::get_by_name("RAM".to_string(), &sys, "MemAvailable", "MemTotal")?;
@@ -183,7 +186,7 @@ impl Memory {
                     MemoryUsage::get_by_name("Swap".to_string(), &sys, "SwapFree", "SwapTotal")?;
 
                 let min_spacing = 1;
-                let bar_width = (width - min_spacing) / 2;
+                let bar_width = width.saturating_sub(min_spacing) / 2;
                 let spacing = width - 2 * bar_width;
                 let spacing = " ".repeat(spacing);
 

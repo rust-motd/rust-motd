@@ -9,8 +9,13 @@ use crate::default_prepare;
 
 #[derive(Debug, Deserialize, knus::Decode)]
 pub struct Uptime {
-    #[knus(property, default="Up".into())]
+    #[knus(property, default=default_prefix())]
+    #[serde(default = "default_prefix")]
     prefix: String,
+}
+
+fn default_prefix() -> String {
+    "Up".to_string()
 }
 
 #[async_trait]

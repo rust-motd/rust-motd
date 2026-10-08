@@ -69,18 +69,18 @@ pub enum WeatherError {
 
 impl Weather {
     pub fn print_or_error(self) -> Result<(), WeatherError> {
-        let url = match self.url {
-            Some(url) => url,
+        let (url, loc) = match self.url {
+            Some(url) => (url, String::new()),
             None => {
                 let mut base = String::from("https://wttr.in/");
-                let loc = self.loc.replace(", ", ",").replace(' ', "+");
-                base.push_str(&loc);
+                let loc = self.loc.replace(", ", ",");
+                base.push_str(&loc.replace(' ', "+"));
                 match &self.style.as_ref().unwrap_or(&WeatherStyle::Day) {
                     WeatherStyle::Oneline => base.push_str("?format=4"),
                     WeatherStyle::Day => base.push_str("?0"),
                     WeatherStyle::Full => (),
                 }
-                base
+                (base, loc)
             }
         };
 
@@ -106,13 +106,8 @@ impl Weather {
             .read_to_string()?;
 
         let mut body = body.lines();
-        let first_line = body
-            .next()
-            .ok_or(WeatherError::ReplyEmpty)?
-            .replace('+', " ") // de-slugify the placename by removing '+'
-            .replace(',', ", ") // and adding a space after commas
-            .replace("  ", " "); // necessary because sometimes there are already spaces
-                                 // after the comma in the placename
+        let first_line = body.next().ok_or(WeatherError::ReplyEmpty)?;
+        let first_line = first_line.replacen(&loc, &loc.replace(',', ", "), 1);
         let body = body
             .map(|x| [x, "\n"].concat())
             .collect::<Vec<String>>()

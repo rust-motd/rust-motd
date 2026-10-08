@@ -1,4 +1,6 @@
 use clap::Parser;
+use std::path::PathBuf;
+use std::process::ExitCode;
 
 mod command;
 mod components;
@@ -10,11 +12,11 @@ mod component;
 
 #[derive(Parser, Debug)]
 struct Args {
-    config_path: Option<String>,
+    config_path: Option<PathBuf>,
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> ExitCode {
     let args = Args::parse();
 
     match get_config(args.config_path) {
@@ -39,8 +41,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             for component in components {
                 component.print(&config.global, width).await;
             }
+            ExitCode::SUCCESS
         }
-        Err(e) => println!("Config Error: {:?}", miette::Report::new(e)),
+        Err(e) => {
+            println!("Config Error: {:?}", miette::Report::new(e));
+            ExitCode::FAILURE
+        }
     }
-    Ok(())
 }
