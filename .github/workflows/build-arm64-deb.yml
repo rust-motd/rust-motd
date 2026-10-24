@@ -2,6 +2,9 @@ name: Build arm64 .deb (test)
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - "arm64"
 
 jobs:
   build-arm64:
