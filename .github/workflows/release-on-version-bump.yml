@@ -5,7 +5,33 @@ on:
     branches: [main]
 
 jobs:
+  build-deb-arm64:
+    runs-on: ubuntu-24.04-arm
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Install cargo-deb
+        run: cargo install cargo-deb
+
+      - name: Build .deb package
+        run: cargo deb
+
+      - name: Upload .deb package
+        uses: actions/upload-artifact@v4
+        with:
+          name: deb-arm64
+          path: target/debian/*.deb
+          if-no-files-found: error
+
   create-release:
+    needs: build-deb-arm64
     runs-on: ubuntu-latest
 
     steps:
@@ -61,8 +87,14 @@ jobs:
           # Update built from source package build
           VERSION=${{ steps.version.outputs.new }} envsubst '${VERSION}' < PKGBUILD.template > PKGBUILD
 
+      - name: Download arm64 .deb package
+        uses: actions/download-artifact@v4
+        with:
+          name: deb-arm64
+          path: target/arm64-debian
+
       - name: List generated packages
-        run: ls -lha target/{debian,cargo-aur}
+        run: ls -lha target/{debian,arm64-debian,cargo-aur}
 
       - name: Create tag and release
         uses: softprops/action-gh-release@v1
@@ -72,6 +104,7 @@ jobs:
           body: ${{ env.RELEASE_NOTES }}
           files: |
             target/debian/*.deb
+            target/arm64-debian/*.deb
             target/cargo-aur/*.tar.*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
