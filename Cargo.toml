@@ -20,12 +20,12 @@ humantime = "2.4.0"
 indexmap = { version = "2.14.2", features = ["serde"] }
 interpolator = "0.5.0"
 itertools = "0.15.0"
-knus = "3.4.0"
+knus = "3.4.1"
 last-rs = "0.2.2"
 lazy_static = "1.5.1"
-libc = "0.2.190"
+libc = "0.2.191"
 miette = { version="7.6.0", features=["fancy"] }
-openssl = { version = "0.10.81", features = ["vendored"] }
+openssl = { version = "0.10.82", features = ["vendored"] }
 regex = "1.13.1"
 serde = { version = "1.0.229", features = ["derive"] }
 serde_plain = "1.0.2"
@@ -34,9 +34,9 @@ systemstat = "0.2.7"
 termion = "4.0.6"
 thiserror = "2.0.21"
 time = "0.3.55"
-tokio = { version = "1.53.2", features = ["full"] }
-toml = { version = "1.1.6", features = ["preserve_order"] }
+tokio = { version = "1.54.1", features = ["full"] }
+toml = { version = "1.2.0", features = ["preserve_order"] }
 unicode-ellipsis = "0.6.0"
-ureq = "3.4.2"
+ureq = "3.5.1"
 
 [package.metadata.bundle]

@@ -423,7 +423,7 @@ rust-motd /etc/rust-motd.kdl
 Don't forget to make the script executable.
 
 > [!IMPORTANT]
-> `$HOME` is not defined when this script is executed, so you need to pass the config as a parameter to avoid the error: `Config Error: environment variable not found.`
+> `$HOME` is not defined when this script is executed, so you need to pass the config as a parameter to avoid the error: `Configuration file not found.`
 
 #### With PAM
 
@@ -440,7 +440,7 @@ rust-motd /etc/rust-motd.kdl > /etc/motd
 ```
 
 > [!IMPORTANT]
-> `$HOME` is not defined when this script is executed, so you need to pass the config as a parameter to avoid the error: `Config Error: environment variable not found.`
+> `$HOME` is not defined when this script is executed, so you need to pass the config as a parameter to avoid the error: `Configuration file not found.`
 
 ## Alternatives
 
