@@ -95,8 +95,8 @@ impl Component for CgStats {
             }
         );
         let indent = " ".repeat(INDENT_WIDTH);
-        let width = width.unwrap_or(global_config.progress_width - INDENT_WIDTH);
-        let bar_width = width - INDENT_WIDTH - prepared.max_name_width - 1 - 5;
+        let width = width.unwrap_or(global_config.progress_width.saturating_sub(INDENT_WIDTH));
+        let bar_width = width.saturating_sub(INDENT_WIDTH + prepared.max_name_width + 1 + 5);
         for (title, data) in [("Users", &prepared.users), ("Services", &prepared.services)] {
             if !data.is_empty() {
                 println!("{indent}{title}:");
@@ -208,8 +208,10 @@ fn full_color(ratio: f64) -> String {
 }
 
 fn format_bar(global_config: &GlobalConfig, width: usize, full_ratio: f64) -> String {
-    let without_ends_width =
-        width - global_config.progress_suffix.len() - global_config.progress_prefix.len();
+    let without_ends_width = width.saturating_sub(
+        global_config.progress_suffix.chars().count()
+            + global_config.progress_prefix.chars().count(),
+    );
 
     let bar_full = ((without_ends_width as f64) * full_ratio.clamp(0.0, 1.0)).round() as usize;
     let bar_empty = without_ends_width - bar_full;

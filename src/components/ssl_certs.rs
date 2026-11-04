@@ -104,7 +104,7 @@ impl SSLCerts {
                 cert_infos.sort_by(|a, b| a.name.cmp(&b.name));
             }
             SortMethod::Expiration => {
-                cert_infos.sort_by(|a, b| a.expiration.cmp(&b.expiration));
+                cert_infos.sort_by_key(|cert_info| cert_info.expiration);
             }
             SortMethod::Manual => {}
         }

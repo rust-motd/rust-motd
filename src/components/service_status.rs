@@ -52,7 +52,7 @@ impl Component for UserServiceStatus {
 
 #[derive(Error, Debug)]
 pub enum ServiceStatusError {
-    #[error("Empty configuration for system services. Please remove the entire block to disable this component.")]
+    #[error("Empty configuration for services. Please remove the entire block to disable this component.")]
     ConfigEmpty,
 
     #[error(transparent)]
@@ -70,11 +70,21 @@ fn get_service_status(service: &str, user: bool) -> Result<String, ServiceStatus
         args.insert(0, "--user");
     }
 
-    let output = BetterCommand::new(executable)
-        .args(args)
-        .get_output_string()?;
+    let output = BetterCommand::new(executable).args(args).output()?;
+    let status: String = String::from_utf8_lossy(&output.stdout)
+        .split_whitespace()
+        .collect();
 
-    Ok(output.split_whitespace().collect())
+    if status.is_empty() {
+        return Err(BetterCommandError::ExitStatusError {
+            executable: executable.to_string(),
+            status: output.status,
+            error: String::from_utf8_lossy(&output.stderr).to_string(),
+        }
+        .into());
+    }
+
+    Ok(status)
 }
 
 pub fn print_or_error(config: &[Service], user: bool) -> Result<(), ServiceStatusError> {

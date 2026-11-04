@@ -174,11 +174,12 @@ impl Filesystems {
 
         // -2 because "Filesystems" does not count (it is not indented)
         // and because zero indexed
-        let bar_width = column_sizes.iter().sum::<usize>() + (HEADER.len() - 2) * INDENT_WIDTH
-            - global_config.progress_prefix.len()
-            - global_config.progress_suffix.len();
         let fs_display_width =
-            bar_width + global_config.progress_prefix.len() + global_config.progress_suffix.len();
+            column_sizes.iter().sum::<usize>() + (HEADER.len() - 2) * INDENT_WIDTH;
+        let bar_width = fs_display_width.saturating_sub(
+            global_config.progress_prefix.chars().count()
+                + global_config.progress_suffix.chars().count(),
+        );
 
         let prepared_filesystems = PreparedFilesystems {
             bar_width,

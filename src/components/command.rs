@@ -83,7 +83,7 @@ impl Command {
             Color::LightWhite => color::LightWhite.fg_str(),
         };
 
-        println!("{}{}{}", color, &output.trim_end(), style::Reset);
+        println!("{}{}{}", color, output.trim_end(), style::Reset);
 
         Ok(())
     }
