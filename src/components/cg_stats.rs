@@ -18,7 +18,7 @@ use serde::{Deserialize, Serialize};
 use termion::{color, style};
 use thiserror::Error;
 
-use crate::component::{Component, Constraints, PrepareError, PrepareReturn};
+use crate::component::{Component, Constraints, Echo, PrepareReturn};
 use crate::config::global_config::GlobalConfig;
 use crate::constants::INDENT_WIDTH;
 
@@ -43,7 +43,7 @@ struct PreparedStat {
     load: f64, // CPU load [0, 1]
 }
 
-#[derive(Default, Debug)]
+#[derive(Debug)]
 pub struct PreparedCgStats {
     time_span: Duration,
     max_name_width: usize,
@@ -68,7 +68,7 @@ impl Component for CgStats {
             }
             Ok(None) => None,
             Err(e) => Some((
-                Box::new(PrepareError(format!("Cgroup Statistics error: {e}"))),
+                Box::new(Echo(format!("Cgroup Statistics error: {e}"))),
                 None,
             )),
         }
@@ -163,30 +163,33 @@ impl CgStats {
             return Ok(None);
         };
 
-        let mut prepared_cg_stats = PreparedCgStats::default();
-
         // Calculate the statistics
         let time_span = now
             .time
             .duration_since(before.time)
             .map_err(|e| CgStatsError::TimeSpan((&self.state_file).into(), e))?;
         let treshold = self.threshold;
-        prepared_cg_stats.time_span = time_span;
-        prepared_cg_stats.users =
-            get_prepared_stats(&now.user, &before.user, time_span, num_cpus, treshold);
-        prepared_cg_stats.services =
-            get_prepared_stats(&now.system, &before.system, time_span, num_cpus, treshold);
-        for service in &mut prepared_cg_stats.services {
-            service.name = shorten_name(&service.name);
-        }
-        prepared_cg_stats.max_name_width = prepared_cg_stats
-            .users
+        let users = get_prepared_stats(&now.user, &before.user, time_span, num_cpus, treshold);
+        let services =
+            get_prepared_stats(&now.system, &before.system, time_span, num_cpus, treshold)
+                .into_iter()
+                .map(|mut service| {
+                    service.name = shorten_name(&service.name);
+                    service
+                })
+                .collect::<Vec<_>>();
+        let max_name_width = users
             .iter()
-            .chain(prepared_cg_stats.services.iter())
+            .chain(services.iter())
             .map(|s| s.name.chars().count())
             .max()
             .unwrap_or(0);
-        Ok(Some(prepared_cg_stats))
+        Ok(Some(PreparedCgStats {
+            time_span,
+            max_name_width,
+            users,
+            services,
+        }))
     }
 }
 
