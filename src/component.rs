@@ -61,3 +61,15 @@ macro_rules! default_prepare {
         }
     };
 }
+
+/// Prints a line of text, for example an error from the prepare phase, in place of a component
+pub struct Echo(pub String);
+
+#[async_trait]
+impl Component for Echo {
+    async fn print(self: Box<Self>, _global_config: &GlobalConfig, _width: Option<usize>) {
+        println!("{}", self.0);
+        println!();
+    }
+    default_prepare!();
+}

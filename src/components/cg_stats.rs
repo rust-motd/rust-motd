@@ -18,7 +18,7 @@ use serde::{Deserialize, Serialize};
 use termion::{color, style};
 use thiserror::Error;
 
-use crate::component::{Component, Constraints, PrepareReturn};
+use crate::component::{Component, Constraints, Echo, PrepareReturn};
 use crate::config::global_config::GlobalConfig;
 use crate::constants::INDENT_WIDTH;
 
@@ -43,7 +43,7 @@ struct PreparedStat {
     load: f64, // CPU load [0, 1]
 }
 
-#[derive(Default, Debug)]
+#[derive(Debug)]
 pub struct PreparedCgStats {
     time_span: Duration,
     max_name_width: usize,
@@ -55,7 +55,7 @@ pub struct PreparedCgStats {
 impl Component for CgStats {
     fn prepare(mut self: Box<Self>, global_config: &GlobalConfig) -> PrepareReturn {
         match self.prepare_or_error(global_config) {
-            Ok(prepared) => {
+            Ok(Some(prepared)) => {
                 let min_width =
                     INDENT_WIDTH + prepared.max_name_width + "100%".len() + "[=========]".len() + 2 /* spaces */;
                 self.prepared = Some(prepared);
@@ -66,10 +66,11 @@ impl Component for CgStats {
                     }),
                 ))
             }
-            Err(e) => {
-                eprintln!("Cgroup Statistics error: {e}");
-                None
-            }
+            Ok(None) => None,
+            Err(e) => Some((
+                Box::new(Echo(format!("Cgroup Statistics error: {e}"))),
+                None,
+            )),
         }
     }
 
@@ -143,43 +144,52 @@ impl CgStats {
     pub fn prepare_or_error(
         &self,
         _global_config: &GlobalConfig,
-    ) -> Result<PreparedCgStats, CgStatsError> {
+    ) -> Result<Option<PreparedCgStats>, CgStatsError> {
         let num_cpus = available_parallelism()?.get();
         let now = read_cg_state()?;
 
-        let mut prepared_cg_stats = PreparedCgStats::default();
-
-        if let Ok(before) = fs::read_to_string(&self.state_file)
+        let before = fs::read_to_string(&self.state_file)
             .inspect_err(|e| eprintln!("Reading {} failed: {e}", self.state_file))
             .and_then(|s| {
                 toml::from_str::<State>(&s).map_err(|e| {
                     eprintln!("Parsing TOML from {} failed: {e}", self.state_file);
                     io::Error::other(e)
                 })
-            })
-        {
-            // Calculate the statistics
-            let time_span = now
-                .time
-                .duration_since(before.time)
-                .map_err(|e| CgStatsError::TimeSpan((&self.state_file).into(), e))?;
-            let treshold = self.threshold;
-            prepared_cg_stats.time_span = time_span;
-            prepared_cg_stats.users =
-                get_prepared_stats(&now.user, &before.user, time_span, num_cpus, treshold);
-            prepared_cg_stats.services =
-                get_prepared_stats(&now.system, &before.system, time_span, num_cpus, treshold);
-            prepared_cg_stats.max_name_width = prepared_cg_stats
-                .users
-                .iter()
-                .chain(prepared_cg_stats.services.iter())
-                .map(|s| s.name.len())
-                .max()
-                .unwrap_or(0);
-        }
+            });
         fs::write(&self.state_file, toml::to_string(&now)?)
             .map_err(|e| CgStatsError::FileError(PathBuf::from(&self.state_file), e))?;
-        Ok(prepared_cg_stats)
+
+        let Ok(before) = before else {
+            return Ok(None);
+        };
+
+        // Calculate the statistics
+        let time_span = now
+            .time
+            .duration_since(before.time)
+            .map_err(|e| CgStatsError::TimeSpan((&self.state_file).into(), e))?;
+        let treshold = self.threshold;
+        let users = get_prepared_stats(&now.user, &before.user, time_span, num_cpus, treshold);
+        let services =
+            get_prepared_stats(&now.system, &before.system, time_span, num_cpus, treshold)
+                .into_iter()
+                .map(|mut service| {
+                    service.name = shorten_name(&service.name);
+                    service
+                })
+                .collect::<Vec<_>>();
+        let max_name_width = users
+            .iter()
+            .chain(services.iter())
+            .map(|s| s.name.chars().count())
+            .max()
+            .unwrap_or(0);
+        Ok(Some(PreparedCgStats {
+            time_span,
+            max_name_width,
+            users,
+            services,
+        }))
     }
 }
 
@@ -360,30 +370,31 @@ fn read_cg_state() -> Result<State, CgStatsError> {
         user: HashMap::new(),
         system: HashMap::new(),
     };
-    // Read statistics of system services and shorten too long names, e.g.,
-    // docker-dcd9a8c71b756de71a4a837c005840f84e0ed92574704ae1c89409c57980aaee.scope
+    // Read statistics of system services
     state.system = read_stats("system.slice", |key| {
-        let name_no_suffix = SUFFIX_REGEX.replace(key, "");
-        let max_len = 23;
-        if name_no_suffix.len() <= max_len {
-            name_no_suffix.to_string()
-        } else {
-            let mut name = name_no_suffix.to_string();
-            name.truncate(max_len - 3);
-            name += "...";
-            name
-        }
+        SUFFIX_REGEX.replace(key, "").to_string()
     })?;
 
     // Read statistics of users and convert UIDs to user names
     state.user = read_stats("user.slice", |key| match key2username(key) {
         Ok(usename) => usename,
         Err(fallback) => {
-            eprint!("warning: Cannot determine user name for {key}");
+            eprintln!("warning: Cannot determine user name for {key}");
             fallback
         }
     })?;
     Ok(state)
+}
+
+fn shorten_name(name: &str) -> String {
+    let max_len = 23;
+    if name.chars().count() <= max_len {
+        name.to_string()
+    } else {
+        let mut name: String = name.chars().take(max_len - 3).collect();
+        name += "...";
+        name
+    }
 }
 
 #[cfg(test)]
@@ -403,6 +414,19 @@ mod tests {
         assert_eq!(
             key2username("user-4294967286.slice"),
             Err(String::from("4294967286"))
+        );
+    }
+
+    #[test]
+    fn test_shorten_name() {
+        assert_eq!(shorten_name("sshd"), "sshd");
+        assert_eq!(
+            shorten_name("docker-dcd9a8c71b756de71a4a837c005840f84e0ed92574704ae1c89409c57980aaee"),
+            "docker-dcd9a8c71b756..."
+        );
+        assert_eq!(
+            shorten_name(&format!("a{}", "ä".repeat(23))),
+            format!("a{}...", "ä".repeat(19))
         );
     }
 }
