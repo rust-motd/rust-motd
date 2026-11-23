@@ -1,8 +1,8 @@
 use async_trait::async_trait;
 use bytesize::ByteSize;
-use indexmap::IndexMap;
 use itertools::Itertools;
 use std::cmp;
+use std::io;
 use std::iter;
 use systemstat::{Filesystem, Platform, System};
 use termion::{color, style};
@@ -34,126 +34,30 @@ pub struct Filesystems {
 #[async_trait]
 impl Component for Filesystems {
     fn prepare(self: Box<Self>, global_config: &GlobalConfig) -> PrepareReturn {
-        match self.clone().prepare_or_error(global_config) {
-            Ok(prepared_component) => prepared_component,
-            Err(err) => {
-                eprintln!("Filesystems error: {err}");
-                None
-            }
-        }
-    }
-
-    async fn print(self: Box<Self>, _global_config: &GlobalConfig, _width: Option<usize>) {
-        unreachable!("Print should never be called on a raw `Filesystems`. Prepare should be called, returning a `PreparedFilesystems`.");
-    }
-}
-
-/// A prepared, ready-to-print filesystems object
-/// This is returned from the prepare phase
-/// It is generated based on the user's configuration stored in `Filesystems`
-/// and has all the information needed for printing
-struct PreparedFilesystems {
-    column_sizes: Vec<usize>,
-    entries: Vec<Entry>,
-    bar_width: usize,
-}
-
-#[async_trait]
-impl Component for PreparedFilesystems {
-    async fn print(self: Box<Self>, global_config: &GlobalConfig, _width: Option<usize>) {
-        self.print_or_error(global_config).unwrap_or_else(|err| {
-            println!("Filesystem error: {err}");
-        });
-        println!();
-    }
-
-    default_prepare!();
-}
-
-#[derive(Error, Debug)]
-pub enum FilesystemsError {
-    #[error("Could not find mount {mount_point:?}")]
-    MountNotFound { mount_point: String },
-
-    #[error(transparent)]
-    IO(#[from] std::io::Error),
-}
-
-/// Data needed to print one row of the filesystems table
-#[derive(Debug)]
-struct Entry {
-    filesystem_name: String,
-    dev: String,
-    mount_point: String,
-    fs_type: String,
-    used: String,
-    total: String,
-    used_ratio: f64,
-}
-
-fn parse_into_entry(filesystem_name: String, mount: &Filesystem) -> Entry {
-    let total = mount.total.as_u64();
-    let avail = mount.avail.as_u64();
-    let used = total - avail;
-
-    Entry {
-        filesystem_name,
-        mount_point: mount.fs_mounted_on.to_string(),
-        dev: truncate_str(&mount.fs_mounted_from, 26).to_string(),
-        fs_type: mount.fs_type.to_string(),
-        used: ByteSize::b(used).to_string(),
-        total: ByteSize::b(total).to_string(),
-        used_ratio: (used as f64) / (total as f64),
-    }
-}
-
-fn print_row<'a>(items: [&str; 6], column_sizes: impl IntoIterator<Item = &'a usize>) {
-    println!(
-        "{}",
-        Itertools::intersperse(
-            items
-                .iter()
-                .zip(column_sizes.into_iter())
-                .map(|(name, size)| format!("{name: <size$}")),
-            " ".repeat(INDENT_WIDTH)
-        )
-        .collect::<String>()
-    );
-}
-
-impl Filesystems {
-    pub fn new(mounts: Vec<Mount>) -> Self {
-        Self { mounts }
-    }
-
-    fn prepare_or_error(
-        self,
-        global_config: &GlobalConfig,
-    ) -> Result<PrepareReturn, FilesystemsError> {
-        let sys = System::new();
-
         if self.mounts.is_empty() {
-            return Ok(None);
+            return None;
         }
 
-        let mounts = sys.mounts()?;
-        let mounts: IndexMap<String, &Filesystem> = mounts
-            .iter()
-            .map(|fs| (fs.fs_mounted_on.clone(), fs))
-            .collect();
-
-        let entries = self
+        let sys = System::new();
+        let entries: Vec<Result<Entry, FilesystemsError>> = self
             .mounts
             .into_iter()
             .map(
-                |Mount { name, mount_point }| match mounts.get(&mount_point) {
-                    Some(mount) => Ok(parse_into_entry(name, mount)),
-                    _ => Err(FilesystemsError::MountNotFound { mount_point }),
+                |Mount { name, mount_point }| match sys.mount_at(&mount_point) {
+                    Ok(mount) => Ok(parse_into_entry(name, &mount)),
+                    Err(err) if err.kind() == io::ErrorKind::NotFound => {
+                        Err(FilesystemsError::MountNotFound { mount_point })
+                    }
+                    Err(source) => Err(FilesystemsError::IO {
+                        mount_point,
+                        source,
+                    }),
                 },
             )
-            .collect::<Result<Vec<Entry>, FilesystemsError>>()?;
+            .collect();
         let column_sizes = entries
             .iter()
+            .flatten()
             .map(|entry| {
                 vec![
                     entry.filesystem_name.len() + INDENT_WIDTH,
@@ -191,7 +95,93 @@ impl Filesystems {
             min_width: Some(fs_display_width),
         };
 
-        Ok(Some((Box::new(prepared_filesystems), Some(constraints))))
+        Some((Box::new(prepared_filesystems), Some(constraints)))
+    }
+
+    async fn print(self: Box<Self>, _global_config: &GlobalConfig, _width: Option<usize>) {
+        unreachable!("Print should never be called on a raw `Filesystems`. Prepare should be called, returning a `PreparedFilesystems`.");
+    }
+}
+
+/// A prepared, ready-to-print filesystems object
+/// This is returned from the prepare phase
+/// It is generated based on the user's configuration stored in `Filesystems`
+/// and has all the information needed for printing
+struct PreparedFilesystems {
+    column_sizes: Vec<usize>,
+    entries: Vec<Result<Entry, FilesystemsError>>,
+    bar_width: usize,
+}
+
+#[async_trait]
+impl Component for PreparedFilesystems {
+    async fn print(self: Box<Self>, global_config: &GlobalConfig, _width: Option<usize>) {
+        self.print_or_error(global_config).unwrap_or_else(|err| {
+            println!("Filesystem error: {err}");
+        });
+        println!();
+    }
+
+    default_prepare!();
+}
+
+#[derive(Error, Debug)]
+pub enum FilesystemsError {
+    #[error("Could not find mount {mount_point:?}")]
+    MountNotFound { mount_point: String },
+
+    #[error("Could not read mount {mount_point:?}: {source}")]
+    IO {
+        mount_point: String,
+        source: std::io::Error,
+    },
+}
+
+/// Data needed to print one row of the filesystems table
+#[derive(Debug)]
+struct Entry {
+    filesystem_name: String,
+    dev: String,
+    mount_point: String,
+    fs_type: String,
+    used: String,
+    total: String,
+    used_ratio: f64,
+}
+
+fn parse_into_entry(filesystem_name: String, mount: &Filesystem) -> Entry {
+    let total = mount.total.as_u64();
+    let avail = mount.avail.as_u64();
+    let used = total.saturating_sub(mount.free.as_u64());
+
+    Entry {
+        filesystem_name,
+        mount_point: mount.fs_mounted_on.to_string(),
+        dev: truncate_str(&mount.fs_mounted_from, 26).to_string(),
+        fs_type: mount.fs_type.to_string(),
+        used: ByteSize::b(used).display().si().to_string(),
+        total: ByteSize::b(total).display().si().to_string(),
+        used_ratio: (used as f64) / ((used + avail) as f64),
+    }
+}
+
+fn print_row<'a>(items: [&str; 6], column_sizes: impl IntoIterator<Item = &'a usize>) {
+    println!(
+        "{}",
+        Itertools::intersperse(
+            items
+                .iter()
+                .zip(column_sizes.into_iter())
+                .map(|(name, size)| format!("{name: <size$}")),
+            " ".repeat(INDENT_WIDTH)
+        )
+        .collect::<String>()
+    );
+}
+
+impl Filesystems {
+    pub fn new(mounts: Vec<Mount>) -> Self {
+        Self { mounts }
     }
 }
 
@@ -200,6 +190,13 @@ impl PreparedFilesystems {
         print_row(HEADER, &self.column_sizes);
 
         for entry in self.entries {
+            let entry = match entry {
+                Ok(entry) => entry,
+                Err(err) => {
+                    println!("Filesystem error: {err}");
+                    continue;
+                }
+            };
             let bar_full = ((self.bar_width as f64) * entry.used_ratio) as usize;
             let bar_empty = self.bar_width - bar_full;
 
